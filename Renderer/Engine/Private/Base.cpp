@@ -8,7 +8,14 @@ CBase::CBase()
 
 unsigned long CBase::AddRef()
 {
-	return ++m_dwRefCnt;	
+	if (m_dwRefCnt > 100)
+	{
+		int i = 0;
+	}
+
+	return ++m_dwRefCnt;
+
+	
 }
 
 unsigned long CBase::Release()

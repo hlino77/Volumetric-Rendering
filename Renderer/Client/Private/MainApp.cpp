@@ -119,7 +119,7 @@ HRESULT CMainApp::Render()
 	if (1.f <= m_fTimeAcc)
 	{
 		m_fTimeAcc = 0;
-		wsprintf(m_szFPS, TEXT("±ÝÂÊ¾Æ Fighting : %d"), m_iRenderCount);
+		wsprintf(m_szFPS, TEXT("%d"), m_iRenderCount);
 
 		m_iRenderCount = 0;
 	}
