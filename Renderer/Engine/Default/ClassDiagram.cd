@@ -1,0 +1,599 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="CTimer" Collapsed="true">
+    <Position X="3" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACKAABAAGAAQAAABAAACAAAAAAAAAEAAAAAAAAAAAAI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Timer.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CTimer_Manager" Collapsed="true">
+    <Position X="9.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACABAAABAAAAAAAAAAAAIAAAAAAAAAAAAAAgAAAAAI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Timer_Manager.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CGraphic_Device" Collapsed="true">
+    <Position X="12" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAgAACIBAAAAAQAwAAAAAAEAIAEAAAABAAAAo=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Graphic_Device.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CInput_Device" Collapsed="true">
+    <Position X="21" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IAAEABAAAAICAAAAAAIAAAAAADAAAgAAAAIARAAAAAI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Input_Device.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CBase" Collapsed="true">
+    <Position X="40.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAACBAAAEAAAAAAAACAAAAAAAAAAABAAAAI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\Base.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CGameInstance" Collapsed="true">
+    <Position X="50.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACABQADQAACADABAIAAIAACoDAARwASBAAAAALBQCI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\GameInstance.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CLevel" Collapsed="true">
+    <Position X="54.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AABAAAAAAAAAAQAAAAAAQAAAEAAAAAIAAAAACAAAQAI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\Level.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CLevel_Manager" Collapsed="true">
+    <Position X="61.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AABAAAABAAAAAEAAAAAAAAEAAAAAAAACAAAAAAAAQAI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\Level_Manager.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CGameObject" Collapsed="true">
+    <Position X="69.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BABAAAIAAAAAAQAAAAAEAAAAAAKAAAIAABAAKAAAQFI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\GameObject.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CObject_Manager" Collapsed="true">
+    <Position X="77.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BABAAQABAAAAAAQAAAgAIAACAgIAAAAEAAAAAADgQAY=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\Object_Manager.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CLayer" Collapsed="true">
+    <Position X="5.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BABAQQABAAAAAQAAAAAAICAAAAAAAEAAAAAAAAgAQAI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\Layer.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CCamera" Collapsed="true">
+    <Position X="68.25" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AABABAAAAAIBgSIAAAAkAAAAAAAAAABAAAQAAAAAQBI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\Camera.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CLandObject" Collapsed="true">
+    <Position X="70.5" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BABgAAAAAIAAAQABAgAEAAAAAAAAAAAAABAAAAgAQBI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\LandObject.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CComponent" Collapsed="true">
+    <Position X="35.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CAAAAAAAAAAAAUAAAAAEAAAAAQAAAAIAAAAACAAAABI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\Component.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CRenderer" Collapsed="true">
+    <Position X="32.25" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAgAAAAAAAAABQEAAAIEgAAABBAAAEAAAgAAAAAEABI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\Renderer.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CComponent_Manager" Collapsed="true">
+    <Position X="52.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAABAAAgAAAAAAgAAAQAAAAAAAACgAAI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\Component_Manager.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CVIBuffer" Collapsed="true">
+    <Position X="41.25" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AEQBAKAABAAQgQAAAAAEAACQABAAAAIAABIAAACAAJI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\VIBuffer.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CVIBuffer_Rect" Collapsed="true">
+    <Position X="41.25" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAQAAAAAEAAAAAAAAAEAAAAAAAIAAgBI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\VIBuffer_Rect.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CVIBuffer_Terrain" Collapsed="true">
+    <Position X="43.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAQAAAwAEIACAAAAAAEAAAAAAAAAAABI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\VIBuffer_Terrain.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CVIBuffer_Cell" Collapsed="true">
+    <Position X="45.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAQAAAAAEAAAAAAAAAEgAAAAAAAAAABM=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\VIBuffer_Cell.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CVIBuffer_Cube" Collapsed="true">
+    <Position X="36.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAQAAAAAEAABAAAEAAEAAAAAAAAAAABI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\VIBuffer_Cube.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CShader" Collapsed="true">
+    <Position X="23.25" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAIAAQAAAQAAAAAEBAAAECAIkEAAAEAAAAAAABI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\Shader.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CTexture" Collapsed="true">
+    <Position X="27.75" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAEAEAAAASCAAAAEAIAAAQAAAEAAAAAAAAAAABI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\Texture.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CTransform" Collapsed="true">
+    <Position X="30" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>iAAAACCAAgCCiSgAAAEGABQAABAAAEBAAAABAgAAEBI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\Transform.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CModel" Collapsed="true">
+    <Position X="34.5" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>MCEAAAAAACAAAQEAKAQMAEIBCAIEAFRCIBBgAAABEBI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\Model.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CMesh" Collapsed="true">
+    <Position X="39" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ARAAAAAAIAIAAQAAAAAEAAAAAAIACEgAAAAQABABEBI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\Mesh.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CBone" Collapsed="true">
+    <Position X="57" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAAAQMAAAQQAAAAEAAAAAAAAAAEAAFEAQAAAAABI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\Bone.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CAnimation" Collapsed="true">
+    <Position X="63.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gCAEAAAQAAAABQAAACgAAAACIAAAQEAAAAEQAAgAABI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\Animation.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CChannel" Collapsed="true">
+    <Position X="72.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIGAAAAQAAAAAQAAAAAAAAAEAAIAAEAAAAAQAAAAAAI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\Channel.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CNavigation" Collapsed="true">
+    <Position X="48" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AARFAAAQAAAAAUACAAAEIAAAAAAAAEBAABAAAAAAABI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\Navigation.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CCell" Collapsed="true">
+    <Position X="7.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQBAABAAAAABQIAAQAAABAAACASBEIAABIACAAAAQI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\Cell.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CCollider">
+    <Position X="25.5" Y="3.25" Width="1.5" />
+    <NestedTypes>
+      <Enum Name="CCollider::TYPE" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>D:\정의훈\137\Framework\Engine\public\Collider.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAAAAQIAAAAEAAAAIAAIAEAAgBAAAAABABM=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\Collider.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CBounding" Collapsed="true">
+    <Position X="16.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAEAAAAAAQACAAAAAAAAAAAAAAAACBAAAAAAAAM=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\Bounding.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CBounding_AABB" Collapsed="true">
+    <Position X="14.25" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAAAAQAAAAgACABAAACAAEAAABAAAAAAAAM=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\Bounding_AABB.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CBounding_Sphere" Collapsed="true">
+    <Position X="16.5" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAIAAAAAAIAQAIAAhAAAAAAAAAAEAAABAAAAAAAAM=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Bounding_Sphere.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CBounding_OBB" Collapsed="true">
+    <Position X="18.75" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAIQAAAAAQAAAAgAAAAAAAAAAUAAABAAAAAAAgM=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Bounding_OBB.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CPipeLine" Collapsed="true">
+    <Position X="59.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAACAAAASAhCAABAAABQAAMUgAAAAAAAAAAQAI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\PipeLine.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CLight" Collapsed="true">
+    <Position X="66" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAgAAAAAAAAAAQAAAAAAAAABAAAAAEAABAAAAAAAAAY=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\Light.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CLight_Manager" Collapsed="true">
+    <Position X="75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAAAAAAAAAAAAAAAAAAAAAIAAAAAAIBAAAAAAAAAI=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\public\Light_Manager.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Engine::CTag_Finder" Collapsed="true">
+    <Position X="79.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAAAAAAEAAAAAAAAEAAAAAAAAAAAAAACAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Function.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="Engine::tagGraphicDesc" Collapsed="true">
+    <Position X="8.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAQAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAEAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Struct.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="Engine::tagLightDesc" Collapsed="true">
+    <Position X="0.5" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAQAEAAAAAAAAAAQAAEAAAAAAAEAAABAQA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Struct.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="Engine::tagMeshMaterial" Collapsed="true">
+    <Position X="4.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Struct.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="Engine::tagKeyFrame" Collapsed="true">
+    <Position X="0.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAAAAAIAAAAABAAAAAAAAAAAAAAAAAAAAAAAABAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Struct.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="Engine::tagVertex_Position" Collapsed="true">
+    <Position X="83.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAIAAAAAAAQAAAAAAAAAQAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Struct.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="Engine::tagVertex_Position_Texcoord" Collapsed="true">
+    <Position X="88.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAIAAAAAAAQABAAAAAAAQAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Struct.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="Engine::tagVertex_Position_Cube_Texcoord" Collapsed="true">
+    <Position X="85" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAIAAAAAAAQABAAAAAAAQAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Struct.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="Engine::tagVertex_Position_Normal_Texcoord" Collapsed="true">
+    <Position X="86.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAgAAAAAAAAIAAAAAAAQABAAAAAAAQAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Struct.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="Engine::tagVertex_Mesh" Collapsed="true">
+    <Position X="81.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAgAAAAAAAAIAAAACAAQABAAAAAAAQAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Struct.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="Engine::tagVertex_Animation_Mesh" Collapsed="true">
+    <Position X="79.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAgAAAAAAAAIAAAACACQABAAAACAAQAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Struct.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Typedef Name="Engine::GRAPHIC_DESC" Collapsed="true">
+    <Position X="8.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Struct.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::LIGHT_DESC" Collapsed="true">
+    <Position X="0.5" Y="9.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Struct.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::MESH_MATERIAL" Collapsed="true">
+    <Position X="4.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Struct.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::KEYFRAME" Collapsed="true">
+    <Position X="0.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Struct.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::VTXPOS" Collapsed="true">
+    <Position X="86.75" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Struct.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::VTXPOSTEX" Collapsed="true">
+    <Position X="88.5" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Struct.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::VTXCUBE" Collapsed="true">
+    <Position X="81.5" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Struct.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::VTXNORTEX" Collapsed="true">
+    <Position X="85" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Struct.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::VTXMESH" Collapsed="true">
+    <Position X="83.25" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Struct.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::VTXANIMMESH" Collapsed="true">
+    <Position X="79.75" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Struct.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::_bool" Collapsed="true">
+    <Position X="79.75" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Typedef.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::_byte" Collapsed="true">
+    <Position X="81.5" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Typedef.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::_ubyte" Collapsed="true">
+    <Position X="81.5" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Typedef.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::_char" Collapsed="true">
+    <Position X="83.25" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Typedef.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::_tchar" Collapsed="true">
+    <Position X="79.75" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Typedef.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::_short" Collapsed="true">
+    <Position X="88.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Typedef.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::_ushort" Collapsed="true">
+    <Position X="86.75" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Typedef.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::_int" Collapsed="true">
+    <Position X="83.25" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Typedef.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::_uint" Collapsed="true">
+    <Position X="83.25" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Typedef.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::_long" Collapsed="true">
+    <Position X="85" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Typedef.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::_ulong" Collapsed="true">
+    <Position X="85" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Typedef.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::_float" Collapsed="true">
+    <Position X="88.5" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Typedef.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::_double" Collapsed="true">
+    <Position X="86.75" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Typedef.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::_float2" Collapsed="true">
+    <Position X="79.75" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Typedef.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::_float3" Collapsed="true">
+    <Position X="81.5" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Typedef.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::_float4" Collapsed="true">
+    <Position X="83.25" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Typedef.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::_vector" Collapsed="true">
+    <Position X="88.5" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Typedef.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::_fvector" Collapsed="true">
+    <Position X="88.5" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Typedef.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::_gvector" Collapsed="true">
+    <Position X="79.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Typedef.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::_hvector" Collapsed="true">
+    <Position X="81.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Typedef.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::_cvector" Collapsed="true">
+    <Position X="85" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Typedef.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::_float4x4" Collapsed="true">
+    <Position X="85" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Typedef.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::_matrix" Collapsed="true">
+    <Position X="86.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Typedef.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="Engine::_fmatrix" Collapsed="true">
+    <Position X="86.75" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\정의훈\137\Framework\Engine\Public\Engine_Typedef.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Font Name="맑은 고딕" Size="9" />
+</ClassDiagram>
