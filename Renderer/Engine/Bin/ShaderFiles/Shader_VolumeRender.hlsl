@@ -1,6 +1,8 @@
 
 #include "Engine_Shader_Defines.hpp"
 
+#define FLT_MAX 3.402823466e+38F
+
 matrix			g_WorldMatrix, g_ViewMatrix, g_ProjMatrix;
 matrix			g_LightViewMatrix, g_LightProjMatrix;
 matrix			g_ProjMatrixInv;
@@ -51,30 +53,62 @@ struct PS_OUT
 };
 
 
-struct AABB {
-    float3 vMin;
-    float3 vMax;
+struct OBB 
+{
+	float3 vCenter;
+	float3 vExtents;
+	float3x3 vOrientation;
 };
 
 bool Intersect_VolumeBox(float3 vWorldPos, float3 vDir, out float fMin, out float fMax)
 {
-	AABB VolumeBox;
+	OBB VolumeBox;
 
-	VolumeBox.vMin = float3(10.0f, 10.0f, 10.0f);
-	VolumeBox.vMax = float3(30.0f, 30.0f, 30.0f);
 
-	float3 vInvDir = 1.0f / vDir; // Inverse of ray direction
+	VolumeBox.vCenter = float3(20.0f, 20.0f, 20.0f);
+	VolumeBox.vExtents = float3(10.0f, 10.0f, 10.0f);
 
-    float3 vLine1 = (VolumeBox.vMin - vWorldPos) * vInvDir;
-    float3 vLine2 = (VolumeBox.vMax - vWorldPos) * vInvDir;
+	VolumeBox.vOrientation = float3x3(1.0, 0.0, 0.0,
+									  0.0, 1.0, 0.0,
+									  0.0, 0.0, 1.0);
 
-    float3 vMinLine = min(vLine1, vLine2);
-    float3 vMaxLine = max(vLine1, vLine2);
+	fMin = 0.0f;
+	fMax = 1000.0f;
 
-    fMin = max(vMinLine.x, max(vMinLine.y, vMinLine.z));
-    fMax = min(vMaxLine.x, min(vMaxLine.y, vMaxLine.z));
+	float3 vDel = VolumeBox.vCenter - vWorldPos;
 
-    return fMax >= max(0.0, fMin);
+	for (int i = 0; i < 3; ++i) 
+	{
+		float fE = dot(VolumeBox.vOrientation[i], vDel);
+		float fD = dot(VolumeBox.vOrientation[i], vDir);
+
+		if (abs(fD) > 0.001f)
+		{
+			float fT1 = (fE + VolumeBox.vExtents[i]) / fD;
+			float fT2 = (fE - VolumeBox.vExtents[i]) / fD;
+
+			if (fT1 > fT2)
+			{
+				float fTemp = fT1;
+				fT1 = fT2;
+				fT2 = fTemp;
+			}
+
+			fMin = max(fMin, fT1);
+			fMax = min(fMax, fT2);
+
+			if (fMin > fMax) 
+			{
+				return false;
+			}
+		}
+		else if (-fE - VolumeBox.vExtents[i] > 0.0f || -fE + VolumeBox.vExtents[i] < 0.0f)
+		{
+			return false;
+		}
+	}
+
+	return true;
 }
 
 
@@ -82,8 +116,6 @@ bool Intersect_VolumeBox(float3 vWorldPos, float3 vDir, out float fMin, out floa
 PS_OUT PS_MAIN_VOLUMERENDERTEST(PS_IN In)
 {
 	PS_OUT		Out = (PS_OUT)0;
-	
-	//float3 vWorldPos = g_vCamPosition.xyz;
 
 	vector		vClipPos;
 
@@ -101,6 +133,7 @@ PS_OUT PS_MAIN_VOLUMERENDERTEST(PS_IN In)
 	float3		vRayDir = normalize(vWorldPos - g_vCamPosition.xyz);
 	vWorldPos = g_vCamPosition.xyz;
 
+	Out.vColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
 
 	float fMin, fMax;
 
@@ -113,7 +146,7 @@ PS_OUT PS_MAIN_VOLUMERENDERTEST(PS_IN In)
 
 	float fStepSize = 0.5f;
 	int iMaxStep = (fMax - fMin) / fStepSize;
-	
+
 	float3 vSphereWorld = float3(20.0f, 20.0f, 20.0f);
 	float fRadius = 5.0f;
 	
@@ -135,7 +168,6 @@ PS_OUT PS_MAIN_VOLUMERENDERTEST(PS_IN In)
 		discard;
 	}
 	
-	Out.vColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
 	Out.vColor.a *= min(fDensity, 1.0f);
 
 	return Out;
