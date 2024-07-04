@@ -13,9 +13,6 @@
     <Filter Include="01.Levels">
       <UniqueIdentifier>{9927bfef-90a5-4e11-8212-cacd67d008c7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="01.Levels\00.Logo">
-      <UniqueIdentifier>{f7bf0f5d-9c1a-409d-ba96-8f25a183dad7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="01.Levels\01.GamePlay">
       <UniqueIdentifier>{001c8170-e0a0-429b-96c3-38ac67fa7a9c}</UniqueIdentifier>
     </Filter>
@@ -69,9 +66,6 @@
     <ClInclude Include="..\Public\Client_Defines.h">
       <Filter>99.Defines</Filter>
     </ClInclude>
-    <ClInclude Include="..\public\Level_Logo.h">
-      <Filter>01.Levels\00.Logo</Filter>
-    </ClInclude>
     <ClInclude Include="..\Public\Level_GamePlay.h">
       <Filter>01.Levels\01.GamePlay</Filter>
     </ClInclude>
@@ -103,9 +97,6 @@
     </ClCompile>
     <ClCompile Include="..\private\MainApp.cpp">
       <Filter>00.MainApp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\private\Level_Logo.cpp">
-      <Filter>01.Levels\00.Logo</Filter>
     </ClCompile>
     <ClCompile Include="..\Private\Level_GamePlay.cpp">
       <Filter>01.Levels\01.GamePlay</Filter>

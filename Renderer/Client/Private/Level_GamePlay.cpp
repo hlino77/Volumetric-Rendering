@@ -56,30 +56,30 @@ HRESULT CLevel_GamePlay::Ready_Lights()
 	if (FAILED(pGameInstance->Add_Light(LightDesc)))
 		return E_FAIL;
 
-	/* 점 광원을 추가한다. */
-	ZeroMemory(&LightDesc, sizeof LightDesc);
-	LightDesc.eLightType = LIGHT_DESC::LIGHT_POINT;
-	LightDesc.vLightPos = Vec4(35.f, 3.f, 35.f, 1.f);
-	LightDesc.fLightRange = 20.f;
+	///* 점 광원을 추가한다. */
+	//ZeroMemory(&LightDesc, sizeof LightDesc);
+	//LightDesc.eLightType = LIGHT_DESC::LIGHT_POINT;
+	//LightDesc.vLightPos = Vec4(35.f, 3.f, 35.f, 1.f);
+	//LightDesc.fLightRange = 20.f;
 
-	LightDesc.vDiffuse = Vec4(1.f, 1.f, 1.f, 1.f);
-	LightDesc.vAmbient = Vec4(1.f, 1.f, 1.f, 1.f);
-	LightDesc.vSpecular = LightDesc.vDiffuse;
+	//LightDesc.vDiffuse = Vec4(1.f, 1.f, 1.f, 1.f);
+	//LightDesc.vAmbient = Vec4(1.f, 1.f, 1.f, 1.f);
+	//LightDesc.vSpecular = LightDesc.vDiffuse;
 
-	if (FAILED(pGameInstance->Add_Light(LightDesc)))
-		return E_FAIL;
+	//if (FAILED(pGameInstance->Add_Light(LightDesc)))
+	//	return E_FAIL;
 
-	ZeroMemory(&LightDesc, sizeof LightDesc);
-	LightDesc.eLightType = LIGHT_DESC::LIGHT_POINT;
-	LightDesc.vLightPos = Vec4(70.f, 3.f, 35.f, 1.f);
-	LightDesc.fLightRange = 20.f;
+	//ZeroMemory(&LightDesc, sizeof LightDesc);
+	//LightDesc.eLightType = LIGHT_DESC::LIGHT_POINT;
+	//LightDesc.vLightPos = Vec4(70.f, 3.f, 35.f, 1.f);
+	//LightDesc.fLightRange = 20.f;
 
-	LightDesc.vDiffuse = Vec4(1.f, 0.0f, 0.f, 1.f);
-	LightDesc.vAmbient = Vec4(1.f, 1.f, 1.f, 1.f);
-	LightDesc.vSpecular = LightDesc.vDiffuse;
+	//LightDesc.vDiffuse = Vec4(1.f, 0.0f, 0.f, 1.f);
+	//LightDesc.vAmbient = Vec4(1.f, 1.f, 1.f, 1.f);
+	//LightDesc.vSpecular = LightDesc.vDiffuse;
 
-	if (FAILED(pGameInstance->Add_Light(LightDesc)))
-		return E_FAIL;
+	//if (FAILED(pGameInstance->Add_Light(LightDesc)))
+	//	return E_FAIL;
 
 	RELEASE_INSTANCE(CGameInstance);
 
@@ -114,13 +114,13 @@ HRESULT CLevel_GamePlay::Ready_Layer_Camera(const wstring & strLayerTag)
 	CCamera_Debug::CAMERA_DEBUG_DESC			CameraDebugDesc;
 	ZeroMemory(&CameraDebugDesc, sizeof CameraDebugDesc);
 
-	CameraDebugDesc.fMouseSensitive = 0.1f;
+	CameraDebugDesc.fMouseSensitive = 0.4f;
 	CameraDebugDesc.vEye = Vec4(0.f, 10.f, -8.f, 1.f);
 	CameraDebugDesc.vAt = Vec4(0.f, 0.f, 0.f, 1.f);
 	CameraDebugDesc.fFovy = XMConvertToRadians(60.0f);
 	CameraDebugDesc.fAspect = g_iWinSizeX / (_float)g_iWinSizeY;
 	CameraDebugDesc.fNear = 0.2f;
-	CameraDebugDesc.fFar = 300.0f;
+	CameraDebugDesc.fFar = 1000.0f;
 	CameraDebugDesc.fSpeedPerSec = 50.f;
 	CameraDebugDesc.fRotationRadianPerSec = XMConvertToRadians(90.0f);
 

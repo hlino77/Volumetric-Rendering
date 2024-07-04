@@ -4,7 +4,6 @@
 #include "GameInstance.h"
 #include "Loader.h"
 
-#include "Level_Logo.h"
 #include "Level_GamePlay.h"
 
 
@@ -50,9 +49,6 @@ HRESULT CLevel_Loading::LateTick(_float fTimeDelta)
 
 			switch (m_eNextLevel)
 			{
-			case LEVEL_LOGO:
-				pNewLevel = CLevel_Logo::Create(m_pDevice, m_pContext);
-				break;
 			case LEVEL_GAMEPLAY:
 				pNewLevel = CLevel_GamePlay::Create(m_pDevice, m_pContext);
 				break;

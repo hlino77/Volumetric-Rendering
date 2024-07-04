@@ -74,8 +74,6 @@ private:
 	/* 모든레벨에서 사용되는 컴포넌트 원형. */
 	HRESULT Ready_Prototype_Components(); 
 
-	HRESULT Ready_Gara();
-
 public:
 	static CMainApp* Create();
 	virtual void Free() override;

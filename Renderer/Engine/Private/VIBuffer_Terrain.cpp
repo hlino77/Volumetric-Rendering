@@ -1,7 +1,6 @@
 #include "..\Public\VIBuffer_Terrain.h"
 #include "Transform.h"
 #include "Frustum.h"
-#include "QuadTree.h"
 
 CVIBuffer_Terrain::CVIBuffer_Terrain(ID3D11Device * pDevice, ID3D11DeviceContext * pContext)
 	: CVIBuffer(pDevice, pContext)
@@ -15,9 +14,7 @@ CVIBuffer_Terrain::CVIBuffer_Terrain(const CVIBuffer_Terrain & rhs)
 	, m_iNumVerticesX(rhs.m_iNumVerticesX)
 	, m_iNumVerticesZ(rhs.m_iNumVerticesZ)
 	, m_pFrustum(rhs.m_pFrustum)
-	, m_pQuadTree(rhs.m_pQuadTree)
 {
-	Safe_AddRef(m_pQuadTree);
 	Safe_AddRef(m_pFrustum);
 
 }
@@ -178,13 +175,6 @@ HRESULT CVIBuffer_Terrain::Initialize_Prototype(const wstring& strHeightMapFileP
 	Safe_Delete_Array(pVertices);
 	Safe_Delete_Array(pIndices);
 
-	m_pQuadTree = CQuadTree::Create(m_iNumVerticesX * m_iNumVerticesZ - m_iNumVerticesX, 
-		m_iNumVerticesX * m_iNumVerticesZ - 1, 
-		m_iNumVerticesX - 1, 
-		0);
-
-	m_pQuadTree->Make_Neighbors();
-
 	return S_OK;
 }
 
@@ -249,57 +239,6 @@ void CVIBuffer_Terrain::Culling(CTransform * pTerrainTransform)
 	m_pFrustum->Transform_ToLocalSpace(pTerrainTransform->Get_WorldMatrix_Inverse());
 	_uint			iNumIndices = 0;
 
-	D3D11_MAPPED_SUBRESOURCE		SubResource = {};
-
-	m_pContext->Map(m_pIB, 0, D3D11_MAP_WRITE_DISCARD, 0, &SubResource);
-
-	m_pQuadTree->Culling(m_pFrustum, m_pVerticesPos, (_uint*)SubResource.pData, &iNumIndices);
-
-	//for (size_t i = 0; i < m_iNumVerticesZ - 1; i++)
-	//{
-	//	for (size_t j = 0; j < m_iNumVerticesX - 1; j++)
-	//	{
-	//		_uint		iIndex = i * m_iNumVerticesX + j;
-
-	//		_uint		iIndices[4] = {
-	//			iIndex + m_iNumVerticesX,		// 1025
-	//			iIndex + m_iNumVerticesX + 1,	// 1026 
-	//			iIndex + 1,						// 1
-	//			iIndex							// 0
-	//		};
-
-	//		_bool		isIn[4] = {
-	//			m_pFrustum->isIn_Frustum_Local(XMLoadFloat3(&m_pVerticesPos[iIndices[0]]), 0.f),
-	//			m_pFrustum->isIn_Frustum_Local(XMLoadFloat3(&m_pVerticesPos[iIndices[1]]), 0.f),
-	//			m_pFrustum->isIn_Frustum_Local(XMLoadFloat3(&m_pVerticesPos[iIndices[2]]), 0.f),
-	//			m_pFrustum->isIn_Frustum_Local(XMLoadFloat3(&m_pVerticesPos[iIndices[3]]), 0.f)
-	//		};
-
-
-
-	//		/* 오른쪽 위 삼각형의 세 점중 하나가 절두체 안에 있냐 */
-	//		if (true == isIn[0] &&
-	//			true == isIn[1] &&
-	//			true == isIn[2])
-	//		{
-	//			static_cast<_uint*>(SubResource.pData)[iNumIndices++] = iIndices[0];
-	//			static_cast<_uint*>(SubResource.pData)[iNumIndices++] = iIndices[1];
-	//			static_cast<_uint*>(SubResource.pData)[iNumIndices++] = iIndices[2];				
-	//		}
-
-	//		/* 왼쪽 아래 삼각형의 세 점중 하나가 절두체 안에 있냐 */
-	//		if (true == isIn[0] &&
-	//			true == isIn[2] &&
-	//			true == isIn[3])
-	//		{
-	//			static_cast<_uint*>(SubResource.pData)[iNumIndices++] = iIndices[0];
-	//			static_cast<_uint*>(SubResource.pData)[iNumIndices++] = iIndices[2];
-	//			static_cast<_uint*>(SubResource.pData)[iNumIndices++] = iIndices[3];
-	//		}	
-	//	}
-	//}
-	m_iNumIndices = iNumIndices;
-	m_pContext->Unmap(m_pIB, 0);
 
 }
 
@@ -334,7 +273,6 @@ void CVIBuffer_Terrain::Free()
 {
 	__super::Free();
 
-	Safe_Release(m_pQuadTree);
 	Safe_Release(m_pFrustum);
 
 }

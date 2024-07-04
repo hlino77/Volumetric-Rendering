@@ -127,9 +127,6 @@
     <Filter Include="01.Utiltiy\10.Frustum">
       <UniqueIdentifier>{2d3307e6-489e-48b3-8e57-533edc6550d3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="01.Utiltiy\04.Component\VIBuffer\Terrain\QaudTree">
-      <UniqueIdentifier>{8a87fb73-88c4-456c-b8e2-4bc42605b07f}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\public\Base.h">
@@ -255,9 +252,6 @@
     <ClInclude Include="..\public\Frustum.h">
       <Filter>01.Utiltiy\10.Frustum</Filter>
     </ClInclude>
-    <ClInclude Include="..\public\QuadTree.h">
-      <Filter>01.Utiltiy\04.Component\VIBuffer\Terrain\QaudTree</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\private\Base.cpp">
@@ -367,9 +361,6 @@
     </ClCompile>
     <ClCompile Include="..\private\Frustum.cpp">
       <Filter>01.Utiltiy\10.Frustum</Filter>
-    </ClCompile>
-    <ClCompile Include="..\private\QuadTree.cpp">
-      <Filter>01.Utiltiy\04.Component\VIBuffer\Terrain\QaudTree</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

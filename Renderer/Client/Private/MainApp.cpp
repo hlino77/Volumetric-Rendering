@@ -70,8 +70,7 @@ HRESULT CMainApp::Initialize()
 	if (FAILED(m_pGameInstance->Initialize_Engine(LEVEL_END, g_hInstance, GraphicDesc, &m_pDevice, &m_pContext)))
 		return E_FAIL;
 
-	if (FAILED(Ready_Gara()))
-		return E_FAIL;
+
 
 	if (FAILED(Ready_Prototype_Components()))
 		return E_FAIL;
@@ -82,7 +81,7 @@ HRESULT CMainApp::Initialize()
 		return E_FAIL;
 
 	/* 1-4. 게임내에서 사용할 레벨(씬)을 생성한다.   */
-	if (FAILED(Open_Level(LEVEL_LOGO)))
+	if (FAILED(Open_Level(LEVEL_GAMEPLAY)))
 		return E_FAIL;
 
 	
@@ -175,73 +174,6 @@ HRESULT CMainApp::Ready_Prototype_Components()
 	return S_OK;
 }
 
-HRESULT CMainApp::Ready_Gara()
-{
-	ID3D11Texture2D*		pTexture2D = { nullptr };
-
-	D3D11_TEXTURE2D_DESC	TextureDesc;
-	ZeroMemory(&TextureDesc, sizeof TextureDesc);
-
-	TextureDesc.Width = 256;
-	TextureDesc.Height = 256;
-	TextureDesc.MipLevels = 1;
-	TextureDesc.ArraySize = 1;
-	TextureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-
-	TextureDesc.SampleDesc.Quality = 0;
-	TextureDesc.SampleDesc.Count = 1;
-
-	TextureDesc.Usage = D3D11_USAGE_DYNAMIC;
-	TextureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-	TextureDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	TextureDesc.MiscFlags = 0;
-
-	// _ulong		Data = 10ul;
-	_ulong*		pPixel = new _ulong[TextureDesc.Width * TextureDesc.Height];
-
-	for (size_t i = 0; i < 256; i++)
-	{
-		for (size_t j = 0; j < 256; j++)
-		{
-			_uint		iIndex = i * 256 + j;
-
-			pPixel[iIndex] = D3DCOLOR_ARGB(255, 255, 255, 255);
-		}
-	}
-
-
-
-	D3D11_SUBRESOURCE_DATA			InitialData;
-	ZeroMemory(&InitialData, sizeof InitialData);
-	InitialData.pSysMem = pPixel;
-	InitialData.SysMemPitch = TextureDesc.Width * 4;
-
-
-	if (FAILED(m_pDevice->CreateTexture2D(&TextureDesc, &InitialData, &pTexture2D)))
-		return E_FAIL;	
-
-	SaveDDSTextureToFile(m_pContext, pTexture2D, TEXT("../Bin/Resources/Textures/Terrain/MyMask.dds"));
-
-
-	D3D11_MAPPED_SUBRESOURCE	MappedSubResource;
-	ZeroMemory(&MappedSubResource, sizeof MappedSubResource);
-
-	pPixel[0] = D3DCOLOR_ARGB(255, 0, 0, 255);
-
-	m_pContext->Map(pTexture2D, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedSubResource);
-
-	memcpy(MappedSubResource.pData, pPixel, sizeof(_ulong) * 256 * 256);
-
-	m_pContext->Unmap(pTexture2D, 0);
-
-	SaveDDSTextureToFile(m_pContext, pTexture2D, TEXT("../Bin/Resources/Textures/Terrain/MyMask.dds"));
-		
-	Safe_Delete_Array(pPixel);
-	Safe_Release(pTexture2D);
-
-
-	return S_OK;
-}
 
 CMainApp * CMainApp::Create()
 {
