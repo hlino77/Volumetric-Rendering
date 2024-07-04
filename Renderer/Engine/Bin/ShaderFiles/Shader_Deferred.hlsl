@@ -202,20 +202,28 @@ PS_OUT PS_MAIN_DEFERRED(PS_IN In)
 	
 
 	vector		vDiffuse = g_DiffuseTexture.Sample(PointSampler, In.vTexcoord);
-	//if (vDiffuse.a == 0.f)
-		//discard;
+	if (vDiffuse.a == 0.f)
+		discard;
 
 	vector		vShade = g_ShadeTexture.Sample(LinearSampler, In.vTexcoord);
 	vector		vSpecular = g_SpecularTexture.Sample(LinearSampler, In.vTexcoord);
-	vector		vVolumeColor = g_VolumeTexture.Sample(LinearSampler, In.vTexcoord);
+	//vector		vVolumeColor = g_VolumeTexture.Sample(LinearSampler, In.vTexcoord);
 
-	vector vResultColor = (vDiffuse * vShade + vSpecular);
+	Out.vColor = (vDiffuse * vShade + vSpecular);
 
-	Out.vColor = vVolumeColor * vVolumeColor.a + vResultColor * (1.0f - vVolumeColor.a);
+	//Out.vColor = vVolumeColor * vVolumeColor.a + vResultColor * (1.0f - vVolumeColor.a);
 	//Out.vColor = vVolumeColor;
 
-	if (Out.vColor.a == 0.f)
-		discard;
+
+	return Out;
+}
+
+
+PS_OUT PS_MAIN_DEFERRED_VOLUMERENDER(PS_IN In)
+{
+	PS_OUT		Out = (PS_OUT)0;
+	
+	Out.vColor = g_VolumeTexture.Sample(LinearSampler, In.vTexcoord);
 
 	return Out;
 }
@@ -274,7 +282,7 @@ technique11 DefaultTechnique
 		PixelShader = compile ps_5_0 PS_MAIN_DEFERRED();
 	}
 	
-	pass Deferred_AlphaBlend
+	pass Deferred_VolumeRender
 	{
 		SetRasterizerState(RS_Default);
 		SetDepthStencilState(DSS_None, 0);
@@ -284,7 +292,7 @@ technique11 DefaultTechnique
 		GeometryShader = NULL;
 		HullShader = NULL;
 		DomainShader = NULL;
-		PixelShader = compile ps_5_0 PS_MAIN_DEFERRED();
+		PixelShader = compile ps_5_0 PS_MAIN_DEFERRED_VOLUMERENDER();
 	}
 	
 }
