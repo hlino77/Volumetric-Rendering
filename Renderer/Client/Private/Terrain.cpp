@@ -25,6 +25,8 @@ HRESULT CTerrain::Initialize(void* pArg)
 	if (FAILED(Ready_Components()))
 		return E_FAIL;
 
+	m_pTransformCom->Set_State(CTransform::STATE::STATE_POSITION, Vec3(-500.0f, 0.0f, -500.0f));
+
 	return S_OK;
 }
 

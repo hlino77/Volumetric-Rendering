@@ -367,6 +367,9 @@
     <FxCompile Include="..\Bin\ShaderFiles\Shader_Deferred.hlsl">
       <Filter>01.Utiltiy\07.ShaderFiles</Filter>
     </FxCompile>
+    <FxCompile Include="..\Bin\ShaderFiles\Shader_VolumeRender.hlsl">
+      <Filter>01.Utiltiy\07.ShaderFiles</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />

@@ -55,7 +55,7 @@ HRESULT CRenderer::Initialize_Prototype()
 
 	/* For.Target_VolumeRender */
 	if (FAILED(m_pTarget_Manager->Add_RenderTarget(m_pDevice, m_pContext, TEXT("Target_VolumeRender"),
-		ViewportDesc.Width, ViewportDesc.Height, DXGI_FORMAT_R32G32B32A32_FLOAT, Vec4(1.0f, 1.0f, 1.0f, 1.f))))
+		ViewportDesc.Width, ViewportDesc.Height, DXGI_FORMAT_R32G32B32A32_FLOAT, Vec4(0.0f, 0.0f, 0.0f, 0.f))))
 		return E_FAIL;
 
 #ifdef _DEBUG
@@ -70,7 +70,7 @@ HRESULT CRenderer::Initialize_Prototype()
 	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_Specular"), 300.0f, 300.0f, 200.0f, 200.0f)))
 		return E_FAIL;
 
-	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_LightDepth"), ViewportDesc.Width - 250.0f, 250.0f, 500.0f, 500.0f)))
+	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_VolumeRender"), ViewportDesc.Width - 250.0f, 250.0f, 500.0f, 500.0f)))
 		return E_FAIL;
 
 
@@ -88,6 +88,10 @@ HRESULT CRenderer::Initialize_Prototype()
 		return E_FAIL;
 	/* 이 렌더타겟들은 게임내에 존재하는 빛으로부터 연산한 결과를 저장받는다. */
 	/* For.MRT_Lights */
+
+	if (FAILED(m_pTarget_Manager->Add_MRT(TEXT("MRT_VolumeRender"), TEXT("Target_VolumeRender"))))
+		return E_FAIL;
+
 	if (FAILED(m_pTarget_Manager->Add_MRT(TEXT("MRT_Lights"), TEXT("Target_Shade"))))
 		return E_FAIL;
 	if (FAILED(m_pTarget_Manager->Add_MRT(TEXT("MRT_Lights"), TEXT("Target_Specular"))))
@@ -102,6 +106,10 @@ HRESULT CRenderer::Initialize_Prototype()
 		return E_FAIL;
 
 	m_pShader = CShader::Create(m_pDevice, m_pContext, TEXT("../Bin/ShaderFiles/Shader_Deferred.hlsl"), VTXPOSTEX::Elements, VTXPOSTEX::iNumElements);
+	if (nullptr == m_pShader)
+		return E_FAIL;
+
+	m_pVolumeRenderShader = CShader::Create(m_pDevice, m_pContext, TEXT("../Bin/ShaderFiles/Shader_VolumeRender.hlsl"), VTXPOSTEX::Elements, VTXPOSTEX::iNumElements);
 	if (nullptr == m_pShader)
 		return E_FAIL;
 
@@ -143,6 +151,8 @@ HRESULT CRenderer::Draw_RenderObjects()
 	if (FAILED(Render_NonBlend()))
 		return E_FAIL;
 	if (FAILED(Render_LightAcc()))
+		return E_FAIL;
+	if (FAILED(Render_Volume()))
 		return E_FAIL;
 	if (FAILED(Render_Deferred()))
 		return E_FAIL;
@@ -264,6 +274,41 @@ HRESULT CRenderer::Render_LightAcc()
 	return S_OK;
 }
 
+HRESULT CRenderer::Render_Volume()
+{
+	if (FAILED(m_pTarget_Manager->Begin_MRT(m_pContext, TEXT("MRT_VolumeRender"))))
+		return E_FAIL;
+
+	if (FAILED(m_pVolumeRenderShader->Bind_Matrix("g_WorldMatrix", &m_WorldMatrix)))
+		return E_FAIL;
+	if (FAILED(m_pVolumeRenderShader->Bind_Matrix("g_ViewMatrix", &m_ViewMatrix)))
+		return E_FAIL;
+	if (FAILED(m_pVolumeRenderShader->Bind_Matrix("g_ProjMatrix", &m_ProjMatrix)))
+		return E_FAIL;
+
+	CPipeLine* pPipeLine = GET_INSTANCE(CPipeLine);
+
+	if (FAILED(m_pVolumeRenderShader->Bind_Matrix("g_ViewMatrixInv", &pPipeLine->Get_Transform_Matrix_Inverse(CPipeLine::D3DTS_VIEW))))
+		return E_FAIL;
+	if (FAILED(m_pVolumeRenderShader->Bind_Matrix("g_ProjMatrixInv", &pPipeLine->Get_Transform_Matrix_Inverse(CPipeLine::D3DTS_PROJ))))
+		return E_FAIL;
+	if (FAILED(m_pVolumeRenderShader->Bind_RawValue("g_vCamPosition", &pPipeLine->Get_CamPosition(), sizeof(Vec3))))
+		return E_FAIL;
+
+	RELEASE_INSTANCE(CPipeLine);
+
+	if (FAILED(m_pVolumeRenderShader->Begin(0)))
+		return E_FAIL;
+
+	if (FAILED(m_pVIBuffer->Render()))
+		return E_FAIL;
+
+	if (FAILED(m_pTarget_Manager->End_MRT(m_pContext)))
+		return E_FAIL;
+
+	return S_OK;
+}
+
 HRESULT CRenderer::Render_Deferred()
 {
 	D3D11_VIEWPORT		ViewportDesc;
@@ -292,6 +337,9 @@ HRESULT CRenderer::Render_Deferred()
 		return E_FAIL;
 
 	if (FAILED(m_pTarget_Manager->Bind_SRV(m_pShader, TEXT("Target_LightDepth"), "g_LightDepthTexture")))
+		return E_FAIL;
+
+	if (FAILED(m_pTarget_Manager->Bind_SRV(m_pShader, TEXT("Target_VolumeRender"), "g_VolumeTexture")))
 		return E_FAIL;
 
 	Matrix		ViewMatrix, ProjMatrix;
@@ -369,12 +417,12 @@ HRESULT CRenderer::Render_Debug()
 	if (FAILED(m_pShader->Bind_Matrix("g_ProjMatrix", &m_ProjMatrix)))
 		return E_FAIL;
 
-	//if (FAILED(m_pTarget_Manager->Render(TEXT("MRT_GameObjects"), m_pShader, m_pVIBuffer)))
-	//	return E_FAIL;
-	//if (FAILED(m_pTarget_Manager->Render(TEXT("MRT_Lights"), m_pShader, m_pVIBuffer)))
-	//	return E_FAIL;
-	//if (FAILED(m_pTarget_Manager->Render(TEXT("MRT_LightDepth"), m_pShader, m_pVIBuffer)))
-	//	return E_FAIL;
+	if (FAILED(m_pTarget_Manager->Render(TEXT("MRT_GameObjects"), m_pShader, m_pVIBuffer)))
+		return E_FAIL;
+	if (FAILED(m_pTarget_Manager->Render(TEXT("MRT_Lights"), m_pShader, m_pVIBuffer)))
+		return E_FAIL;
+	if (FAILED(m_pTarget_Manager->Render(TEXT("MRT_VolumeRender"), m_pShader, m_pVIBuffer)))
+		return E_FAIL;
 
 
 
