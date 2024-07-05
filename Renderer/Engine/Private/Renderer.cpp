@@ -5,6 +5,7 @@
 #include "VIBuffer_Rect.h"
 #include "PipeLine.h"
 #include "Shader.h"
+#include "Cloud.h"
 
 CRenderer::CRenderer(ID3D11Device * pDevice, ID3D11DeviceContext * pContext)
 	: CComponent(pDevice, pContext)
@@ -111,6 +112,10 @@ HRESULT CRenderer::Initialize_Prototype()
 
 	m_pVolumeRenderShader = CShader::Create(m_pDevice, m_pContext, TEXT("../Bin/ShaderFiles/Shader_VolumeRender.hlsl"), VTXPOSTEX::Elements, VTXPOSTEX::iNumElements);
 	if (nullptr == m_pShader)
+		return E_FAIL;
+
+	m_pCloud = CCloud::Create(m_pDevice, m_pContext);
+	if (nullptr == m_pCloud)
 		return E_FAIL;
 
 	m_WorldMatrix = XMMatrixIdentity();

@@ -127,6 +127,9 @@
     <Filter Include="01.Utiltiy\10.Frustum">
       <UniqueIdentifier>{2d3307e6-489e-48b3-8e57-533edc6550d3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="01.Utiltiy\04.Component\Renderer\Cloud">
+      <UniqueIdentifier>{7374dce8-8737-4240-880f-311cbcf2b064}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\public\Base.h">
@@ -252,6 +255,9 @@
     <ClInclude Include="..\public\Frustum.h">
       <Filter>01.Utiltiy\10.Frustum</Filter>
     </ClInclude>
+    <ClInclude Include="..\Public\Cloud.h">
+      <Filter>01.Utiltiy\04.Component\Renderer\Cloud</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\private\Base.cpp">
@@ -361,6 +367,9 @@
     </ClCompile>
     <ClCompile Include="..\private\Frustum.cpp">
       <Filter>01.Utiltiy\10.Frustum</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\Cloud.cpp">
+      <Filter>01.Utiltiy\04.Component\Renderer\Cloud</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -169,6 +169,7 @@
     <ClInclude Include="..\Bin\ShaderFiles\Engine_Shader_Defines.hpp" />
     <ClInclude Include="..\public\Base.h" />
     <ClInclude Include="..\public\Camera.h" />
+    <ClInclude Include="..\Public\Cloud.h" />
     <ClInclude Include="..\public\Component.h" />
     <ClInclude Include="..\public\Component_Manager.h" />
     <ClInclude Include="..\public\CustomFont.h" />
@@ -211,6 +212,7 @@
   <ItemGroup>
     <ClCompile Include="..\private\Base.cpp" />
     <ClCompile Include="..\private\Camera.cpp" />
+    <ClCompile Include="..\Private\Cloud.cpp" />
     <ClCompile Include="..\private\Component.cpp" />
     <ClCompile Include="..\private\Component_Manager.cpp" />
     <ClCompile Include="..\private\CustomFont.cpp" />

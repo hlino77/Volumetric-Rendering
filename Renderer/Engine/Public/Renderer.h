@@ -48,6 +48,8 @@ private:
 	class CShader*				m_pShader = { nullptr };
 	class CShader*				m_pVolumeRenderShader = { nullptr };
 
+	class CCloud*				m_pCloud = { nullptr };
+
 	Matrix					m_WorldMatrix, m_ViewMatrix, m_ProjMatrix;
 
 #ifdef _DEBUG
