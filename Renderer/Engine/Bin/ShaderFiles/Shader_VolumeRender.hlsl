@@ -1,8 +1,6 @@
 
 #include "Engine_Shader_Defines.hpp"
 
-#define FLT_MAX 3.402823466e+38F
-
 matrix			g_WorldMatrix, g_ViewMatrix, g_ProjMatrix;
 matrix			g_LightViewMatrix, g_LightProjMatrix;
 matrix			g_ProjMatrixInv;
@@ -144,8 +142,8 @@ PS_OUT PS_MAIN_VOLUMERENDERTEST(PS_IN In)
 
 	vWorldPos += vRayDir * fMin;
 
-	float fStepSize = 0.5f;
-	int iMaxStep = (fMax - fMin) / fStepSize;
+	int iMaxStep = 100;
+	float fStepSize = (fMax - fMin) / (float)iMaxStep;
 
 	float3 vSphereWorld = float3(20.0f, 20.0f, 20.0f);
 	float fRadius = 5.0f;
@@ -156,10 +154,10 @@ PS_OUT PS_MAIN_VOLUMERENDERTEST(PS_IN In)
 	{
 		if (distance(vSphereWorld, vWorldPos) < fRadius)
 		{
-			fDensity += 0.01f;
+			fDensity += 0.02f * fStepSize;
 		}
 	
-		fDensity += 0.01f;
+		fDensity += 0.02f * fStepSize;
 		vWorldPos += vRayDir * fStepSize;
 	}
 	
