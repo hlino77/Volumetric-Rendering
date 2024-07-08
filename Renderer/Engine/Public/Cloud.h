@@ -37,6 +37,7 @@ private:
 
 	ID3D11ShaderResourceView*	m_pSRV = { nullptr };
 
+	float						m_fOffset = 0.0f;
 
 public:
 	static CCloud* Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);

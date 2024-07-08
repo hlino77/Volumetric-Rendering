@@ -3,13 +3,23 @@ sampler LinearSampler = sampler_state{
 	Filter = MIN_MAG_MIP_LINEAR;
 	AddressU = wrap;
 	AddressV = wrap;
+	AddressW = wrap;
 };
 
 sampler PointSampler = sampler_state{
 	Filter = MIN_MAG_MIP_POINT;
 	AddressU = wrap;
 	AddressV = wrap;
+	AddressW = wrap;
 };
+
+sampler CloudSampler = sampler_state{
+	Filter = MIN_MAG_MIP_POINT;
+	AddressU = mirror;
+	AddressV = mirror;
+	AddressW = mirror;
+};
+
 RasterizerState RS_Wireframe
 {
 	FillMode = wireframe;

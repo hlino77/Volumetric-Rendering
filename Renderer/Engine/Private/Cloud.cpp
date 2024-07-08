@@ -43,6 +43,7 @@ void CCloud::PriorityTick(_float fTimeDelta)
 
 void CCloud::Tick(_float fTimeDelta)
 {
+
 }
 
 void CCloud::LateTick(_float fTimeDelta)

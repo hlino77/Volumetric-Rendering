@@ -307,18 +307,14 @@ HRESULT CRenderer::Render_Volume()
 		return E_FAIL;
 	}
 
-	CGameInstance* pGameInstance = GET_INSTANCE(CGameInstance);
-	if (pGameInstance->Get_DIKeyState(DIK_Y) & 0x80)
-	{
-		m_fTest = min(m_fTest + 0.0001f, 1.0f);
-	}
+	m_fTest += 0.0001f;
 
-	if (pGameInstance->Get_DIKeyState(DIK_H) & 0x80)
+	/*if (m_fTest > 1.0f)
 	{
-		m_fTest = max(m_fTest - 0.0001f, 0.0f);
-	}
+		m_fTest -= 1.0f;
+	}*/
 
-	if (FAILED(m_pVolumeRenderShader->Bind_RawValue("g_fTest", &m_fTest, sizeof(float))))
+	if (FAILED(m_pVolumeRenderShader->Bind_RawValue("g_fOffset", &m_fTest, sizeof(float))))
 	{
 		return E_FAIL;
 	}

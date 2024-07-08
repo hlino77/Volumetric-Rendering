@@ -10,7 +10,7 @@ vector			g_vCamPosition;
 
 texture3D		g_NoiseTexture;
 
-float			g_fTest;
+float			g_fOffset = 0.0f;
 
 
 struct VS_IN
@@ -164,7 +164,8 @@ PS_OUT PS_MAIN_VOLUMERENDERTEST(PS_IN In)
 	for (int i = 0; i < iMaxStep; ++i)
 	{
 		float3 vTexcoord = float3(remap(vLocal.x, 0.0f, 20.0f, 0.0f, 1.0f), remap(vLocal.y, 0.0f, 20.0f, 0.0f, 1.0f), remap(vLocal.z, 0.0f, 20.0f, 0.0f, 1.0f));
-		fDensity += g_NoiseTexture.Sample(LinearSampler, vTexcoord).x * fStepSize * 0.04f;
+		vTexcoord += g_fOffset;
+		fDensity += g_NoiseTexture.Sample(CloudSampler, vTexcoord).x * fStepSize * 0.04f;
 		
 		
 		vLocal += vRayDir * fStepSize;
@@ -183,15 +184,15 @@ PS_OUT PS_MAIN_VOLUMERENDERTEST(PS_IN In)
 }
 
 
-PS_OUT PS_MAIN_CLOUDRENDERTEST(PS_IN In)
+PS_OUT PS_MAIN_PERLINWORLEYTEST(PS_IN In)
 {
 	PS_OUT		Out = (PS_OUT)0;
 	
-	float3 vTexcoord = float3(In.vTexcoord.x, In.vTexcoord.y, g_fTest);
+	//float3 vTexcoord = float3(In.vTexcoord.x, In.vTexcoord.y, g_fTest);
 
-	float fValue = g_NoiseTexture.Sample(LinearSampler, vTexcoord).x;
+	//float fValue = g_NoiseTexture.Sample(LinearSampler, vTexcoord).x;
 	
-	Out.vColor = float4(fValue, fValue, fValue, 1.0f);
+	//Out.vColor = float4(fValue, fValue, fValue, 1.0f);
 
 	return Out;
 }
@@ -221,7 +222,7 @@ technique11 DefaultTechnique
 		GeometryShader = NULL;
 		HullShader = NULL;
 		DomainShader = NULL;
-		PixelShader = compile ps_5_0 PS_MAIN_CLOUDRENDERTEST();
+		PixelShader = compile ps_5_0 PS_MAIN_PERLINWORLEYTEST();
 	}
 }
 
