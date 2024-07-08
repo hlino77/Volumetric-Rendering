@@ -6,6 +6,7 @@
 #include "PipeLine.h"
 #include "Shader.h"
 #include "Cloud.h"
+#include "GameInstance.h"
 
 CRenderer::CRenderer(ID3D11Device * pDevice, ID3D11DeviceContext * pContext)
 	: CComponent(pDevice, pContext)
@@ -306,9 +307,25 @@ HRESULT CRenderer::Render_Volume()
 		return E_FAIL;
 	}
 
+	CGameInstance* pGameInstance = GET_INSTANCE(CGameInstance);
+	if (pGameInstance->Get_DIKeyState(DIK_Y) & 0x80)
+	{
+		m_fTest = min(m_fTest + 0.0001f, 1.0f);
+	}
+
+	if (pGameInstance->Get_DIKeyState(DIK_H) & 0x80)
+	{
+		m_fTest = max(m_fTest - 0.0001f, 0.0f);
+	}
+
+	if (FAILED(m_pVolumeRenderShader->Bind_RawValue("g_fTest", &m_fTest, sizeof(float))))
+	{
+		return E_FAIL;
+	}
+
 	RELEASE_INSTANCE(CPipeLine);
 
-	if (FAILED(m_pVolumeRenderShader->Begin(1)))
+	if (FAILED(m_pVolumeRenderShader->Begin(0)))
 		return E_FAIL;
 
 	if (FAILED(m_pVIBuffer->Render()))

@@ -70,11 +70,11 @@ float worleyNoise(float3 uv, float freq)
     float3 p = frac(uv);
     
     float minDist = 10000.0;
-    for (float x = -1.0; x <= 1.0; ++x)
+    for (int x = -1; x <= 1; ++x)
     {
-        for(float y = -1.0; y <= 1.0; ++y)
+        for(int y = -1; y <= 1; ++y)
         {
-            for(float z = -1.0; z <= 1.0; ++z)
+            for(int z = -1; z <= 1; ++z)
             {
                 float3 offset = float3(x, y, z);
                 float3 Input = id + offset;
@@ -88,7 +88,7 @@ float worleyNoise(float3 uv, float freq)
     }
     
     // inverted worley noise
-    return 1.0 - minDist;
+    return 1.0f - minDist;
 }
 
 
@@ -119,7 +119,7 @@ float worleyFbm(float3 p, float freq)
 void CSMain(uint3 DTid : SV_DispatchThreadID)
 {
     
-    float3 uv = float3(DTid.x / 128, DTid.y / 128, DTid.z / 128);
+    float3 uv = float3(DTid.x / 128.f, DTid.y / 128.f, DTid.z / 128.f);
 
     float4 col = float4(0.0f, 0.0f, 0.0f, 0.0f);
     

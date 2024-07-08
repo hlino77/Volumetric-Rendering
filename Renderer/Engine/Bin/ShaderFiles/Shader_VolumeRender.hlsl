@@ -10,6 +10,9 @@ vector			g_vCamPosition;
 
 texture3D		g_NoiseTexture;
 
+float			g_fTest;
+
+
 struct VS_IN
 {
 	float3		vPosition : POSITION;
@@ -152,16 +155,16 @@ PS_OUT PS_MAIN_VOLUMERENDERTEST(PS_IN In)
 	int iMaxStep = 50;
 	float fStepSize = (fMax - fMin) / (float)iMaxStep;
 
-	float3 vSphereWorld = float3(20.0f, 20.0f, 20.0f);
-	float3 vLocal = vWorldPos - vSphereWorld;
+	//float3 vSphereWorld = float3(20.0f, 20.0f, 20.0f);
+	float3 vLocal = vWorldPos - float3(10.0f, 10.0f, 10.0f);
 	float fRadius = 5.0f;
 	
 	float fDensity = 0.0f;
 	
 	for (int i = 0; i < iMaxStep; ++i)
 	{
-		float3 vTexcoord = float3(remap(vLocal.x, 0.0f, 20.0f, 0.0f, 1.0f), remap(vLocal.x, 0.0f, 20.0f, 0.0f, 1.0f), remap(vLocal.x, 0.0f, 20.0f, 0.0f, 1.0f));
-		fDensity += g_NoiseTexture.Sample(LinearSampler, vTexcoord).y * fStepSize * 0.03f;
+		float3 vTexcoord = float3(remap(vLocal.x, 0.0f, 20.0f, 0.0f, 1.0f), remap(vLocal.y, 0.0f, 20.0f, 0.0f, 1.0f), remap(vLocal.z, 0.0f, 20.0f, 0.0f, 1.0f));
+		fDensity += g_NoiseTexture.Sample(LinearSampler, vTexcoord).x * fStepSize * 0.04f;
 		
 		
 		vLocal += vRayDir * fStepSize;
@@ -184,11 +187,11 @@ PS_OUT PS_MAIN_CLOUDRENDERTEST(PS_IN In)
 {
 	PS_OUT		Out = (PS_OUT)0;
 	
-	float3 vTexcoord = float3(In.vTexcoord, 0.5f);
+	float3 vTexcoord = float3(In.vTexcoord.x, In.vTexcoord.y, g_fTest);
 
 	float fValue = g_NoiseTexture.Sample(LinearSampler, vTexcoord).x;
 	
-	Out.vColor = float4(fValue, fValue, fValue, 0.5f);
+	Out.vColor = float4(fValue, fValue, fValue, 1.0f);
 
 	return Out;
 }
