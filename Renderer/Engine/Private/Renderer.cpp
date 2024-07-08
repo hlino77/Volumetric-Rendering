@@ -308,7 +308,7 @@ HRESULT CRenderer::Render_Volume()
 
 	RELEASE_INSTANCE(CPipeLine);
 
-	if (FAILED(m_pVolumeRenderShader->Begin(0)))
+	if (FAILED(m_pVolumeRenderShader->Begin(1)))
 		return E_FAIL;
 
 	if (FAILED(m_pVIBuffer->Render()))

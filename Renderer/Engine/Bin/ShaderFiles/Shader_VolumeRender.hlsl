@@ -59,6 +59,12 @@ struct OBB
 	float3x3 vOrientation;
 };
 
+float remap(float x, float a, float b, float c, float d)
+{
+    return (((x - a) / (b - a)) * (d - c)) + c;
+}
+
+
 bool Intersect_VolumeBox(float3 vWorldPos, float3 vDir, out float fMin, out float fMax)
 {
 	OBB VolumeBox;
@@ -143,23 +149,24 @@ PS_OUT PS_MAIN_VOLUMERENDERTEST(PS_IN In)
 
 	vWorldPos += vRayDir * fMin;
 
-	int iMaxStep = 100;
+	int iMaxStep = 50;
 	float fStepSize = (fMax - fMin) / (float)iMaxStep;
 
 	float3 vSphereWorld = float3(20.0f, 20.0f, 20.0f);
+	float3 vLocal = vWorldPos - vSphereWorld;
 	float fRadius = 5.0f;
 	
 	float fDensity = 0.0f;
 	
 	for (int i = 0; i < iMaxStep; ++i)
 	{
-		if (distance(vSphereWorld, vWorldPos) < fRadius)
-		{
-			fDensity += 0.02f * fStepSize;
-		}
-	
-		fDensity += 0.02f * fStepSize;
+		float3 vTexcoord = float3(remap(vLocal.x, 0.0f, 20.0f, 0.0f, 1.0f), remap(vLocal.x, 0.0f, 20.0f, 0.0f, 1.0f), remap(vLocal.x, 0.0f, 20.0f, 0.0f, 1.0f));
+		fDensity += g_NoiseTexture.Sample(LinearSampler, vTexcoord).y * fStepSize * 0.03f;
+		
+		
+		vLocal += vRayDir * fStepSize;
 		vWorldPos += vRayDir * fStepSize;
+
 	}
 	
 	if (fDensity == 0.0f)
@@ -172,9 +179,23 @@ PS_OUT PS_MAIN_VOLUMERENDERTEST(PS_IN In)
 	return Out;
 }
 
+
+PS_OUT PS_MAIN_CLOUDRENDERTEST(PS_IN In)
+{
+	PS_OUT		Out = (PS_OUT)0;
+	
+	float3 vTexcoord = float3(In.vTexcoord, 0.5f);
+
+	float fValue = g_NoiseTexture.Sample(LinearSampler, vTexcoord).x;
+	
+	Out.vColor = float4(fValue, fValue, fValue, 0.5f);
+
+	return Out;
+}
+
 technique11 DefaultTechnique
 {
-	pass Deferred
+	pass VolumeRender
 	{
 		SetRasterizerState(RS_Default);
 		SetDepthStencilState(DSS_None, 0);
@@ -187,7 +208,18 @@ technique11 DefaultTechnique
 		PixelShader = compile ps_5_0 PS_MAIN_VOLUMERENDERTEST();
 	}
 
-	
+	pass CloudRender
+	{
+		SetRasterizerState(RS_Default);
+		SetDepthStencilState(DSS_None, 0);
+		SetBlendState(BS_AlphaBlend, float4(0.f, 0.f, 0.f, 1.f), 0xffffffff);
+
+		VertexShader = compile vs_5_0 VS_MAIN();
+		GeometryShader = NULL;
+		HullShader = NULL;
+		DomainShader = NULL;
+		PixelShader = compile ps_5_0 PS_MAIN_CLOUDRENDERTEST();
+	}
 }
 
 
