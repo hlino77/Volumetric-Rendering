@@ -301,6 +301,11 @@ HRESULT CRenderer::Render_Volume()
 	if (FAILED(m_pVolumeRenderShader->Bind_RawValue("g_vCamPosition", &pPipeLine->Get_CamPosition(), sizeof(Vec3))))
 		return E_FAIL;
 
+	if (FAILED(m_pVolumeRenderShader->Bind_Texture("g_NoiseTexture", m_pCloud->Get_SRV())))
+	{
+		return E_FAIL;
+	}
+
 	RELEASE_INSTANCE(CPipeLine);
 
 	if (FAILED(m_pVolumeRenderShader->Begin(0)))

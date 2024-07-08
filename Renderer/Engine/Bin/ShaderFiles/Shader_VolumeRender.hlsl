@@ -8,6 +8,7 @@ matrix			g_ViewMatrixInv;
 
 vector			g_vCamPosition;
 
+texture3D		g_NoiseTexture;
 
 struct VS_IN
 {

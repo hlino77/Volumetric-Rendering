@@ -251,6 +251,7 @@
     <ClCompile Include="..\Public\Engine_Struct.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="..\Bin\ShaderFiles\CShader_PerlinWorley.hlsl" />
     <FxCompile Include="..\Bin\ShaderFiles\Shader_Deferred.hlsl" />
     <FxCompile Include="..\Bin\ShaderFiles\Shader_VolumeRender.hlsl" />
   </ItemGroup>

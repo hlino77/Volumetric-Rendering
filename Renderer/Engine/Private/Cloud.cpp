@@ -1,5 +1,6 @@
 #include "..\Public\Cloud.h"
 #include "GameInstance.h"
+#include "NoiseGenerator.h"
 
 CCloud::CCloud(ID3D11Device * pDevice, ID3D11DeviceContext * pContext)
 	: m_pDevice(pDevice)
@@ -15,13 +16,17 @@ CCloud::CCloud(const CCloud & rhs)
 	, m_pContext(rhs.m_pContext)
 	
 {
-
 	Safe_AddRef(m_pDevice);
 	Safe_AddRef(m_pContext);
 }
 
 HRESULT CCloud::Initialize_Prototype()
 {
+	if (FAILED(Ready_For_NoiseTexture3D()))
+	{
+		return E_FAIL;
+	}
+
 	return S_OK;
 }
 
@@ -51,8 +56,16 @@ HRESULT CCloud::Render()
 
 HRESULT CCloud::Ready_For_NoiseTexture3D()
 {
+	CNoiseGenerator* pNoiseGenerator = CNoiseGenerator::Create(m_pDevice, m_pContext);
 
+	m_pSRV = pNoiseGenerator->Generate_Perlin_Worley();
 
+	if (m_pSRV == nullptr)
+	{
+		return E_FAIL;
+	}
+
+	Safe_Release(pNoiseGenerator);
 
 	return S_OK;
 }
@@ -76,7 +89,7 @@ void CCloud::Free()
 {
 	__super::Free();
 
-
+	Safe_Release(m_pSRV);
 	Safe_Release(m_pDevice);
 	Safe_Release(m_pContext);
 }

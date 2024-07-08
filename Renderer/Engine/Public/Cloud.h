@@ -20,7 +20,10 @@ public:
 	virtual void LateTick(_float fTimeDelta);
 	virtual HRESULT Render();
 
-	
+	ID3D11ShaderResourceView* Get_SRV()
+	{
+		return m_pSRV;
+	}
 private:
 	HRESULT Ready_For_NoiseTexture3D();
 
@@ -32,8 +35,9 @@ private:
 
 	BoundingBox					m_tBoundingBox;
 
-	ID3D11Texture3D*			m_pTexture2D = { nullptr };
 	ID3D11ShaderResourceView*	m_pSRV = { nullptr };
+
+
 public:
 	static CCloud* Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 	virtual void Free() override;
