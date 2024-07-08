@@ -117,6 +117,7 @@ HRESULT CRenderer::Initialize_Prototype()
 	m_pCloud = CCloud::Create(m_pDevice, m_pContext);
 	if (nullptr == m_pCloud)
 		return E_FAIL;
+	Safe_AddRef(m_pCloud);
 
 	m_WorldMatrix = XMMatrixIdentity();
 	m_WorldMatrix._11 = ViewportDesc.Width;
@@ -468,6 +469,7 @@ void CRenderer::Free()
 {
 	__super::Free();
 	
+	Safe_Release(m_pCloud);
 	Safe_Release(m_pShader);
 	Safe_Release(m_pVIBuffer);
 

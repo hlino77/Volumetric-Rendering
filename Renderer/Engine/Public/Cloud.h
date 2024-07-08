@@ -2,17 +2,13 @@
 
 #include "Base.h"
 
-/* 클라이엉ㄴ트에서 제작할 다양한 게임오브젝트들의 부모가된다. */
-
 BEGIN(Engine)
 
 class ENGINE_DLL CCloud : public CBase
 {
 private:
-	/* 원형을 생성할 때 */
 	CCloud(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
-	/* 사본을 생성할 때 */
-	CCloud(const CCloud& rhs); /* 복사 생성자. */
+	CCloud(const CCloud& rhs);
 	virtual ~CCloud() = default;
 
 
@@ -23,14 +19,21 @@ public:
 	virtual void Tick(_float fTimeDelta);
 	virtual void LateTick(_float fTimeDelta);
 	virtual HRESULT Render();
-	virtual HRESULT Render_LightDepth() { return S_OK; }
 
-protected:
-	ID3D11Device*			m_pDevice = { nullptr };
-	ID3D11DeviceContext*	m_pContext = { nullptr };
+	
+private:
+	HRESULT Ready_For_NoiseTexture3D();
 
-	BoundingBox				m_tBoundingBox;
 
+private:
+
+	ID3D11Device*				m_pDevice = { nullptr };
+	ID3D11DeviceContext*		m_pContext = { nullptr };
+
+	BoundingBox					m_tBoundingBox;
+
+	ID3D11Texture3D*			m_pTexture2D = { nullptr };
+	ID3D11ShaderResourceView*	m_pSRV = { nullptr };
 public:
 	static CCloud* Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 	virtual void Free() override;

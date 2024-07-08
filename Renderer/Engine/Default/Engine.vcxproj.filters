@@ -258,6 +258,9 @@
     <ClInclude Include="..\Public\Cloud.h">
       <Filter>01.Utiltiy\04.Component\Renderer\Cloud</Filter>
     </ClInclude>
+    <ClInclude Include="..\Public\NoiseGenerator.h">
+      <Filter>01.Utiltiy\04.Component\Renderer\Cloud</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\private\Base.cpp">
@@ -369,6 +372,9 @@
       <Filter>01.Utiltiy\10.Frustum</Filter>
     </ClCompile>
     <ClCompile Include="..\Private\Cloud.cpp">
+      <Filter>01.Utiltiy\04.Component\Renderer\Cloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\NoiseGenerator.cpp">
       <Filter>01.Utiltiy\04.Component\Renderer\Cloud</Filter>
     </ClCompile>
   </ItemGroup>

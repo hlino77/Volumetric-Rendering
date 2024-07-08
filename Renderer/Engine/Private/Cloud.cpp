@@ -49,6 +49,16 @@ HRESULT CCloud::Render()
 	return S_OK;
 }
 
+HRESULT CCloud::Ready_For_NoiseTexture3D()
+{
+
+
+
+	return S_OK;
+}
+
+
+
 CCloud* CCloud::Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
 	CCloud* pInstance = new CCloud(pDevice, pContext);
