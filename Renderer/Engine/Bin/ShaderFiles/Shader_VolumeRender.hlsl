@@ -62,9 +62,9 @@ struct OBB
 	float3x3 vOrientation;
 };
 
-float remap(float x, float a, float b, float c, float d)
+float remap(float fValue, float fIn1, float fIn2, float fOut1, float fOut2)
 {
-    return (((x - a) / (b - a)) * (d - c)) + c;
+    return fOut1 + (fValue - fIn1) * (fOut2 - fOut1) / (fIn2 - fIn1);
 }
 
 
@@ -228,8 +228,10 @@ PS_OUT PS_MAIN_PERLINWORLEYTEST(PS_IN In)
 	{
 		if (vWorldPos.x > 0.0f && vWorldPos.x < 50.0f && vWorldPos.y > 0.0f && vWorldPos.y < 50.0f && vWorldPos.z > 0.0f && vWorldPos.z < 50.0f)
 		{
-			float3 vTexcoord = float3(remap(vWorldPos.x, 0.0f, 50.0f, 0.0f, 1.0f), remap(vWorldPos.y, 0.0f, 50.0f, 0.0f, 1.0f), remap(vWorldPos.z, 0.0f, 50.0f, 0.0f, 1.0f));
-			fDensity += g_NoiseTexture.Sample(CloudSampler, vTexcoord).x * 0.03f;
+			//float3 vTexcoord = float3(remap(vWorldPos.x, 0.0f, 50.0f, 0.0f, 1.0f), remap(vWorldPos.y, 0.0f, 50.0f, 0.0f, 1.0f), remap(vWorldPos.z, 0.0f, 50.0f, 0.0f, 1.0f));
+			//vTexcoord *= 0.3f;
+			//fDensity += g_NoiseTexture.Sample(CloudSampler, vTexcoord).x * 0.04f;
+			fDensity += 0.03f;
 		}
 		vWorldPos += vRayDir;
 	}

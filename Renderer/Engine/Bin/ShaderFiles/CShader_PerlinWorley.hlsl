@@ -125,10 +125,10 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
     
     float freq = 4.0f;
     
-    float pfbm = lerp(1.0f, perlinfbm(uv * 0.5f, 4.0f, 7), 0.5f);
+    float pfbm = lerp(1.0f, perlinfbm(uv, 4.0f, 7), 0.5f);
     pfbm = abs(pfbm * 2.0f - 1.0f); // billowy perlin noise
     
-    float fPerlinWorley = remap(pfbm, 0.0, 1.0, worleyFbm(uv * 0.5f, freq), 1.0); // perlin-worley
+    float fPerlinWorley = remap(pfbm, 0.0, 1.0, worleyFbm(uv, freq), 1.0); // perlin-worley
     float fWorley1 = worleyFbm(uv, freq);
     float fWorley2 = worleyFbm(uv, freq * 2.0f);
     float fWorley3 = worleyFbm(uv, freq * 4.0f);
