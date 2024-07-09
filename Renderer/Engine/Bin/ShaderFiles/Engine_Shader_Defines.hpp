@@ -14,10 +14,10 @@ sampler PointSampler = sampler_state{
 };
 
 sampler CloudSampler = sampler_state{
-	Filter = MIN_MAG_MIP_POINT;
-	AddressU = mirror;
-	AddressV = mirror;
-	AddressW = mirror;
+	Filter = MIN_MAG_MIP_LINEAR;
+	AddressU = wrap;
+	AddressV = wrap;
+	AddressW = wrap;
 };
 
 RasterizerState RS_Wireframe

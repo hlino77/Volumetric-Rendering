@@ -125,12 +125,19 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
     
     float freq = 4.0f;
     
-    float pfbm = lerp(1.0f, perlinfbm(uv, 4.0f, 7), 0.5f);
+    float pfbm = lerp(1.0f, perlinfbm(uv * 0.5f, 4.0f, 7), 0.5f);
     pfbm = abs(pfbm * 2.0f - 1.0f); // billowy perlin noise
     
-    col.g += worleyFbm(uv, freq);
-    col.x += remap(pfbm, 0.0, 1.0, col.g, 1.0); // perlin-worley
-    
+    float fPerlinWorley = remap(pfbm, 0.0, 1.0, worleyFbm(uv * 0.5f, freq), 1.0); // perlin-worley
+    float fWorley1 = worleyFbm(uv, freq);
+    float fWorley2 = worleyFbm(uv, freq * 2.0f);
+    float fWorley3 = worleyFbm(uv, freq * 4.0f);
+
+    float fWfbm = fWorley1 * 0.625f + fWorley2 * 0.125f + fWorley3 * 0.25f;
+
+    col.x = remap(fPerlinWorley, fWfbm - 1.0f, 1.0f, 0.0f, 1.0f);
+    col.x = remap(col.x, 0.85f, 1.0f, 0.0f, 1.0f);
+
     OutputTexture[DTid] = col;
 }
 

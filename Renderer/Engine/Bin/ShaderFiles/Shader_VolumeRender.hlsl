@@ -68,58 +68,76 @@ float remap(float x, float a, float b, float c, float d)
 }
 
 
-bool Intersect_VolumeBox(float3 vWorldPos, float3 vDir, out float fMin, out float fMax)
+bool CheckRayYRange(float3 vPos, float3 vDir, float fYMin, float fYMax, out float3 vStart, out float3 vEnd)
 {
-	OBB VolumeBox;
+   if (vPos.y >= fYMin && vPos.y <= fYMax)
+    {
+        // 시작점이 범위 내에 있는 경우
+        vStart = vPos;
 
+        // t_max 값을 계산하여 끝점을 구함
+        float fTMax = (fYMax - vPos.y) / vDir.y;
+		vEnd = vPos + fTMax * vDir;
+        return true;
+    }
+    else
+    {
+        // 시작점이 범위 밖에 있는 경우
+        float t1 = (fYMin - vPos.y) / vDir.y;
+        float t2 = (fYMax - vPos.y) / vDir.y;
 
-	VolumeBox.vCenter = float3(20.0f, 20.0f, 20.0f);
-	VolumeBox.vExtents = float3(10.0f, 10.0f, 10.0f);
+        if (t1 > t2)
+        {
+            float temp = t1;
+            t1 = t2;
+            t2 = temp;
+        }
 
-	VolumeBox.vOrientation = float3x3(1.0, 0.0, 0.0,
-									  0.0, 1.0, 0.0,
-									  0.0, 0.0, 1.0);
+        if (t2 >= 0)
+        {
+            // t1이 음수인 경우를 처리 (시작점이 범위 아래쪽에 있고, 레이가 위로 향하는 경우)
+            if (t1 < 0)
+            {
+                t1 = 0;
+            }
 
-	fMin = 0.0f;
-	fMax = 1000.0f;
+            vStart = vPos + t1 * vDir;
+            vEnd = vPos + t2 * vDir;
+            return true;
+        }
+    }
 
-	float3 vDel = VolumeBox.vCenter - vWorldPos;
-
-	for (int i = 0; i < 3; ++i) 
-	{
-		float fE = dot(VolumeBox.vOrientation[i], vDel);
-		float fD = dot(VolumeBox.vOrientation[i], vDir);
-
-		if (abs(fD) > 0.001f)
-		{
-			float fT1 = (fE + VolumeBox.vExtents[i]) / fD;
-			float fT2 = (fE - VolumeBox.vExtents[i]) / fD;
-
-			if (fT1 > fT2)
-			{
-				float fTemp = fT1;
-				fT1 = fT2;
-				fT2 = fTemp;
-			}
-
-			fMin = max(fMin, fT1);
-			fMax = min(fMax, fT2);
-
-			if (fMin > fMax) 
-			{
-				return false;
-			}
-		}
-		else if (-fE - VolumeBox.vExtents[i] > 0.0f || -fE + VolumeBox.vExtents[i] < 0.0f)
-		{
-			return false;
-		}
-	}
-
-	return true;
+    return false;
 }
 
 
+float3 Compute_Texcoord(float3 vWorldPos)
+{
+	float3 vTexcoord = float3(0.0f, 0.0f, 0.0f);
+
+	vTexcoord.x = fmod(vWorldPos.x, 100.0f);
+	vTexcoord.y = fmod(vWorldPos.y, 50.0f);
+	vTexcoord.z = fmod(vWorldPos.z, 100.0f);
+
+	if (vTexcoord.x < 0.0f)
+	{
+		vTexcoord.x = 100.0f - vTexcoord.x;
+	}
+	if (vTexcoord.y < 0.0f)
+	{
+		vTexcoord.y = 50.0f - vTexcoord.y;
+	}
+	if (vTexcoord.z < 0.0f)
+	{
+		vTexcoord.z = 100.0f - vTexcoord.z;
+	}
+	
+	vTexcoord.x = remap(vTexcoord.x, 0.0f, 100.0f, 0.0f, 1.0f);
+	vTexcoord.y = remap(vTexcoord.y, 0.0f, 100.0f, 0.0f, 1.0f);
+	vTexcoord.z = remap(vTexcoord.z, 0.0f, 100.0f, 0.0f, 1.0f);
+
+	return vTexcoord;
+}
 
 PS_OUT PS_MAIN_VOLUMERENDERTEST(PS_IN In)
 {
@@ -141,36 +159,33 @@ PS_OUT PS_MAIN_VOLUMERENDERTEST(PS_IN In)
 	float3		vRayDir = normalize(vWorldPos - g_vCamPosition.xyz);
 	vWorldPos = g_vCamPosition.xyz;
 
-	Out.vColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
-
-	float fMin, fMax;
-
-	if (Intersect_VolumeBox(vWorldPos, vRayDir, fMin, fMax) == false)
+	float3 vStart, vEnd;
+	if (CheckRayYRange(vWorldPos, vRayDir, 100.0f, 120.0f, vStart, vEnd) == false)
 	{
 		discard;
 	}
+	
+	Out.vColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
+	vWorldPos = vStart;
 
-	vWorldPos += vRayDir * fMin;
-
-	int iMaxStep = 50;
-	float fStepSize = (fMax - fMin) / (float)iMaxStep;
+	int iMaxStep = 10;
+	float fLength =  min(1000.0f, length(vEnd - vStart));
+	float fStepSize = fLength / (float)iMaxStep;
 
 	//float3 vSphereWorld = float3(20.0f, 20.0f, 20.0f);
-	float3 vLocal = vWorldPos - float3(10.0f, 10.0f, 10.0f);
 	float fRadius = 5.0f;
 	
 	float fDensity = 0.0f;
 	
 	for (int i = 0; i < iMaxStep; ++i)
 	{
-		float3 vTexcoord = float3(remap(vLocal.x, 0.0f, 20.0f, 0.0f, 1.0f), remap(vLocal.y, 0.0f, 20.0f, 0.0f, 1.0f), remap(vLocal.z, 0.0f, 20.0f, 0.0f, 1.0f));
-		vTexcoord += g_fOffset;
-		fDensity += g_NoiseTexture.Sample(CloudSampler, vTexcoord).x * fStepSize * 0.04f;
+		float3 vTexcoord = Compute_Texcoord(vWorldPos);
+		//vTexcoord += g_fOffset;
+		//vTexcoord *= 0.25f;
+		fDensity += g_NoiseTexture.Sample(CloudSampler, vTexcoord).x * fStepSize * 0.5f;
 		
-		
-		vLocal += vRayDir * fStepSize;
+		//fDensity = fStepSize * 0.05f;
 		vWorldPos += vRayDir * fStepSize;
-
 	}
 	
 	if (fDensity == 0.0f)
@@ -187,12 +202,44 @@ PS_OUT PS_MAIN_VOLUMERENDERTEST(PS_IN In)
 PS_OUT PS_MAIN_PERLINWORLEYTEST(PS_IN In)
 {
 	PS_OUT		Out = (PS_OUT)0;
-	
-	//float3 vTexcoord = float3(In.vTexcoord.x, In.vTexcoord.y, g_fTest);
 
-	//float fValue = g_NoiseTexture.Sample(LinearSampler, vTexcoord).x;
+	vector		vClipPos;
+
+	vClipPos.x = In.vTexcoord.x * 2.f - 1.f;
+	vClipPos.y = In.vTexcoord.y * -2.f + 1.f;
+	vClipPos.z = 1.f;
+	vClipPos.w = 1.f;
+
+	vClipPos = vClipPos * 1000.0f;
+	vClipPos = mul(vClipPos, g_ProjMatrixInv);
+
+	vClipPos = mul(vClipPos, g_ViewMatrixInv);
 	
-	//Out.vColor = float4(fValue, fValue, fValue, 1.0f);
+	float3		vWorldPos = vClipPos.xyz;
+	float3		vRayDir = normalize(vWorldPos - g_vCamPosition.xyz);
+	vWorldPos = g_vCamPosition.xyz;
+	
+	Out.vColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
+	
+	int iMaxStep = 100;
+	float fDensity = 0.0f;	
+
+	for (int i = 0; i < iMaxStep; ++i)
+	{
+		if (vWorldPos.x > 0.0f && vWorldPos.x < 50.0f && vWorldPos.y > 0.0f && vWorldPos.y < 50.0f && vWorldPos.z > 0.0f && vWorldPos.z < 50.0f)
+		{
+			float3 vTexcoord = float3(remap(vWorldPos.x, 0.0f, 50.0f, 0.0f, 1.0f), remap(vWorldPos.y, 0.0f, 50.0f, 0.0f, 1.0f), remap(vWorldPos.z, 0.0f, 50.0f, 0.0f, 1.0f));
+			fDensity += g_NoiseTexture.Sample(CloudSampler, vTexcoord).x * 0.03f;
+		}
+		vWorldPos += vRayDir;
+	}
+	
+	if (fDensity == 0.0f)
+	{
+		discard;
+	}
+	
+	Out.vColor.a *= min(fDensity, 1.0f);
 
 	return Out;
 }
