@@ -40,9 +40,6 @@
     <Filter Include="02.GameObjects\Camera\Debug">
       <UniqueIdentifier>{b848d910-d440-4932-a887-9d28dbf7ce27}</UniqueIdentifier>
     </Filter>
-    <Filter Include="02.GameObjects\Sky">
-      <UniqueIdentifier>{52c0b38f-19ce-4a44-af80-90c4802fa57b}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -84,9 +81,6 @@
     <ClInclude Include="..\public\Camera_Debug.h">
       <Filter>02.GameObjects\Camera\Debug</Filter>
     </ClInclude>
-    <ClInclude Include="..\Public\Sky.h">
-      <Filter>02.GameObjects\Sky</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -115,9 +109,6 @@
     </ClCompile>
     <ClCompile Include="..\private\Camera_Debug.cpp">
       <Filter>02.GameObjects\Camera\Debug</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Private\Sky.cpp">
-      <Filter>02.GameObjects\Sky</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

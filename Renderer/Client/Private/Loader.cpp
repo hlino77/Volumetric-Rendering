@@ -6,7 +6,6 @@
 #include "Camera_Debug.h"
 #include "BackGround.h"
 #include "Terrain.h"
-#include "Sky.h"
 
 
 
@@ -240,11 +239,6 @@ HRESULT CLoader::Loading_For_Level_GamePlay()
 		CCamera_Debug::Create(m_pDevice, m_pContext))))
 		return E_FAIL;
 
-
-	/* For.Prototype_GameObject_Sky */
-	if (FAILED(pGameInstance->Add_Prototype(TEXT("Prototype_GameObject_Sky"),
-		CSky::Create(m_pDevice, m_pContext))))
-		return E_FAIL;
 
 	Safe_Release(pGameInstance);
 
