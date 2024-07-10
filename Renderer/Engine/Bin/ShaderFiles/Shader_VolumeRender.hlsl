@@ -139,6 +139,7 @@ float3 Compute_Texcoord(float3 vWorldPos)
 	return vTexcoord;
 }
 
+
 PS_OUT PS_MAIN_VOLUMERENDERTEST(PS_IN In)
 {
 	PS_OUT		Out = (PS_OUT)0;
@@ -198,7 +199,6 @@ PS_OUT PS_MAIN_VOLUMERENDERTEST(PS_IN In)
 	return Out;
 }
 
-
 PS_OUT PS_MAIN_PERLINWORLEYTEST(PS_IN In)
 {
 	PS_OUT		Out = (PS_OUT)0;
@@ -222,18 +222,20 @@ PS_OUT PS_MAIN_PERLINWORLEYTEST(PS_IN In)
 	Out.vColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
 	
 	int iMaxStep = 100;
+	float fStepLength = 5.0f;
 	float fDensity = 0.0f;	
 
 	for (int i = 0; i < iMaxStep; ++i)
 	{
-		if (vWorldPos.x > 0.0f && vWorldPos.x < 50.0f && vWorldPos.y > 0.0f && vWorldPos.y < 50.0f && vWorldPos.z > 0.0f && vWorldPos.z < 50.0f)
+		if (vWorldPos.x > 0.0f && vWorldPos.x < 500.0f && vWorldPos.y > 100.0f && vWorldPos.y < 200.0f && vWorldPos.z > 0.0f && vWorldPos.z < 500.0f)
 		{
-			//float3 vTexcoord = float3(remap(vWorldPos.x, 0.0f, 50.0f, 0.0f, 1.0f), remap(vWorldPos.y, 0.0f, 50.0f, 0.0f, 1.0f), remap(vWorldPos.z, 0.0f, 50.0f, 0.0f, 1.0f));
-			//vTexcoord *= 0.3f;
-			//fDensity += g_NoiseTexture.Sample(CloudSampler, vTexcoord).x * 0.04f;
-			fDensity += 0.03f;
+			float3 vTexcoord = float3(remap(vWorldPos.x, 0.0f, 500.0f, 0.0f, 1.0f), remap(vWorldPos.y, 100.0f, 200.0f, 0.0f, 1.0f), remap(vWorldPos.z, 0.0f, 500.0f, 0.0f, 1.0f));
+			vTexcoord.z += g_fOffset;
+			float fSampleDensity = g_NoiseTexture.Sample(CloudSampler, vTexcoord).x;
+			fDensity += fSampleDensity * fStepLength * 0.1f;
+			
 		}
-		vWorldPos += vRayDir;
+		vWorldPos += vRayDir * fStepLength;
 	}
 	
 	if (fDensity == 0.0f)
@@ -243,6 +245,17 @@ PS_OUT PS_MAIN_PERLINWORLEYTEST(PS_IN In)
 	
 	Out.vColor.a *= min(fDensity, 1.0f);
 
+	return Out;
+}
+
+
+PS_OUT PS_MAIN_PERLINWORLEY2D(PS_IN In)
+{
+	PS_OUT		Out = (PS_OUT)0;
+
+	float4 vSample = g_NoiseTexture.Sample(CloudSampler, float3(In.vTexcoord.x, g_fOffset, In.vTexcoord.y));
+	float fDensity = 0.0f;
+	Out.vColor = float4(1.0f, 1.0f, 1.0f, fDensity);
 	return Out;
 }
 
@@ -272,6 +285,19 @@ technique11 DefaultTechnique
 		HullShader = NULL;
 		DomainShader = NULL;
 		PixelShader = compile ps_5_0 PS_MAIN_PERLINWORLEYTEST();
+	}
+
+	pass PerlinWorley2D
+	{
+		SetRasterizerState(RS_Default);
+		SetDepthStencilState(DSS_None, 0);
+		SetBlendState(BS_AlphaBlend, float4(0.f, 0.f, 0.f, 1.f), 0xffffffff);
+
+		VertexShader = compile vs_5_0 VS_MAIN();
+		GeometryShader = NULL;
+		HullShader = NULL;
+		DomainShader = NULL;
+		PixelShader = compile ps_5_0 PS_MAIN_PERLINWORLEY2D();
 	}
 }
 

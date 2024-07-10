@@ -33,7 +33,7 @@ ID3D11ShaderResourceView* CNoiseGenerator::Generate_Perlin_Worley()
 
 	ID3D11UnorderedAccessView* pUAV = nullptr;
 	D3D11_UNORDERED_ACCESS_VIEW_DESC tUAVDesc = {};
-	tUAVDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	tUAVDesc.Format = DXGI_FORMAT_R16G16B16A16_UNORM;
 	tUAVDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE3D;
 	tUAVDesc.Texture3D.MipSlice = 0;
 	tUAVDesc.Texture3D.FirstWSlice = 0;
@@ -59,7 +59,7 @@ ID3D11ShaderResourceView* CNoiseGenerator::Generate_Perlin_Worley()
 
 	ID3D11ShaderResourceView* pSRV = nullptr;
 	D3D11_SHADER_RESOURCE_VIEW_DESC tSRVDesc = {};
-	tSRVDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	tSRVDesc.Format = DXGI_FORMAT_R16G16B16A16_UNORM;
 	tSRVDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
 	tSRVDesc.Texture3D.MostDetailedMip = 0;
 	tSRVDesc.Texture3D.MipLevels = 1;
@@ -104,7 +104,7 @@ HRESULT CNoiseGenerator::Ready_3DTexture()
 	tDesc.Height = 128;
 	tDesc.Depth = 128;
 	tDesc.MipLevels = 1;
-	tDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	tDesc.Format = DXGI_FORMAT_R16G16B16A16_UNORM;
 	tDesc.Usage = D3D11_USAGE_DEFAULT;
 	tDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
 

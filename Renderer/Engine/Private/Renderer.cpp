@@ -74,7 +74,8 @@ HRESULT CRenderer::Initialize_Prototype()
 
 	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_VolumeRender"), ViewportDesc.Width - 250.0f, 250.0f, 500.0f, 500.0f)))
 		return E_FAIL;
-
+		/*if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_VolumeRender"), ViewportDesc.Width * 0.5f, ViewportDesc.Height * 0.5f, ViewportDesc.Width, ViewportDesc.Height)))
+			return E_FAIL;*/
 
 
 
@@ -307,7 +308,17 @@ HRESULT CRenderer::Render_Volume()
 		return E_FAIL;
 	}
 
-	m_fTest += 0.0001f;
+	//m_fTest += 0.0001f;
+
+	CGameInstance* pGameInstance = GET_INSTANCE(CGameInstance);
+	if (pGameInstance->Get_DIKeyState(DIK_Y) & 0x80)
+	{
+		m_fTest += 0.0001f;
+	}
+	if (pGameInstance->Get_DIKeyState(DIK_H) & 0x80)
+	{
+		m_fTest -= 0.0001f;
+	}
 
 	/*if (m_fTest > 1.0f)
 	{
