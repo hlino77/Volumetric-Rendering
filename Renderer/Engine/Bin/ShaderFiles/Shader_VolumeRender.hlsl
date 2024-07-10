@@ -235,22 +235,33 @@ bool Check_BoxIn(float3 vWorldPos)
 
 float Calculate_Light(float fDensity, float3 vWorldPos, float fCos)
 {
+	float fSunDensity = 0.0f;
+
 	float3 vDir = -g_vLightDir;
+	
+	[loop]
 	for (int i = 0; i < g_iSunStep; ++i)
 	{
 		if (Check_BoxIn(vWorldPos) == true)
 		{
+			float3 vTexcoord = float3(remap(vWorldPos.x, 0.0f, 500.0f, 0.0f, 1.0f), remap(vWorldPos.y, 100.0f, 200.0f, 0.0f, 1.0f), remap(vWorldPos.z, 0.0f, 500.0f, 0.0f, 1.0f));
+			vTexcoord.z += g_fOffset;
+			float fSampleDensity = g_NoiseTexture.Sample(CloudSampler, vTexcoord).x * g_fSunStepLength * 0.05f;
 			
+			fSunDensity += fSampleDensity * g_fSunStepLength * fDensity * 0.01f;
 		}
+		vWorldPos += vDir * g_fSunStepLength;
 	}
+	
 
-	return fDensity * g_fStepLength * 0.05f;
+	return fSunDensity;
 }
 
 float4 RayMarch(float3 vStartPos, float3 vRayDir)
 {
 	float fDensity = 0.0f;
-	
+	float fSunDensity = 0.0f;
+
 	for (int i = 0; i < g_iMaxStep; ++i)
 	{
 		if (Check_BoxIn(vStartPos))
@@ -261,7 +272,8 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir)
 
 			if (fSampleDensity > 0.0f)
 			{
-				fDensity += Calculate_Light(fSampleDensity, vStartPos, dot(vRayDir, -g_vLightDir));
+				fDensity += fSampleDensity * g_fStepLength * 0.05f;
+				fSunDensity += Calculate_Light(fSampleDensity, vStartPos, dot(vRayDir, -g_vLightDir));
 			}
 		}
 		vStartPos += vRayDir * g_fStepLength;
@@ -272,7 +284,11 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir)
 		discard;
 	}
 	
-	return float4(1.0f, 1.0f, 1.0f, min(fDensity, 1.0f));
+	fDensity = min(fDensity, 1.0f);
+	fSunDensity = min(fSunDensity, 1.0f);
+	fSunDensity = 1.0f - fSunDensity;
+	
+	return float4(fSunDensity, fSunDensity, fSunDensity, min(fDensity, 1.0f));
 }
 
 
