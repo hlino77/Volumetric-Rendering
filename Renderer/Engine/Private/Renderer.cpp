@@ -7,6 +7,7 @@
 #include "Shader.h"
 #include "Cloud.h"
 #include "GameInstance.h"
+#include "Texture.h"
 
 CRenderer::CRenderer(ID3D11Device * pDevice, ID3D11DeviceContext * pContext)
 	: CComponent(pDevice, pContext)
@@ -114,6 +115,10 @@ HRESULT CRenderer::Initialize_Prototype()
 
 	m_pVolumeRenderShader = CShader::Create(m_pDevice, m_pContext, TEXT("../Bin/ShaderFiles/Shader_VolumeRender.hlsl"), VTXPOSTEX::Elements, VTXPOSTEX::iNumElements);
 	if (nullptr == m_pShader)
+		return E_FAIL;
+
+	m_pBlueNoiseTexture = CTexture::Create(m_pDevice, m_pContext, TEXT("../Bin/Resources/Textures/BlueNoise470.png"));
+	if (nullptr == m_pBlueNoiseTexture)
 		return E_FAIL;
 
 	m_pCloud = CCloud::Create(m_pDevice, m_pContext);
@@ -304,6 +309,11 @@ HRESULT CRenderer::Render_Volume()
 		return E_FAIL;
 
 	if (FAILED(m_pVolumeRenderShader->Bind_Texture("g_NoiseTexture", m_pCloud->Get_SRV())))
+	{
+		return E_FAIL;
+	}
+
+	if (FAILED(m_pBlueNoiseTexture->Bind_ShaderResource(m_pVolumeRenderShader, "g_BlueNoiseTexture", 0)))
 	{
 		return E_FAIL;
 	}

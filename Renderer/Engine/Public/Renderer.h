@@ -46,9 +46,12 @@ private:
 private:
 	class CVIBuffer_Rect*		m_pVIBuffer = { nullptr };
 	class CShader*				m_pShader = { nullptr };
-	class CShader*				m_pVolumeRenderShader = { nullptr };
 
+
+	//Volumetric Cloud Test
+	class CShader*				m_pVolumeRenderShader = { nullptr };
 	class CCloud*				m_pCloud = { nullptr };
+	class CTexture*				m_pBlueNoiseTexture = { nullptr };
 
 	Matrix					m_WorldMatrix, m_ViewMatrix, m_ProjMatrix;
 

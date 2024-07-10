@@ -9,9 +9,21 @@ matrix			g_ViewMatrixInv;
 vector			g_vCamPosition;
 
 texture3D		g_NoiseTexture;
+texture2D		g_BlueNoiseTexture;
 
+
+
+//Test
+
+float3			g_vLightDir = float3(1.0f, -1.0f, 1.0f);
 float			g_fOffset = 0.0f;
+float			g_fStepLength = 5.0f;
+float			g_fSunStepLength = 10.0f;
+int				g_iMaxStep = 100;
+int				g_iSunStep = 10;
 
+float3			g_vBoxMin = float3(0.0f, 100.0f, 0.0f);
+float3			g_vBoxMax = float3(500.0f, 200.0f, 500.0f);
 
 struct VS_IN
 {
@@ -199,6 +211,71 @@ PS_OUT PS_MAIN_VOLUMERENDERTEST(PS_IN In)
 	return Out;
 }
 
+float Blue_Noise(float2 vTexcoord, float fStepLength)
+{
+	return (g_BlueNoiseTexture.Sample(LinearSampler, vTexcoord).x - 0.5f) * 2.0f * fStepLength;
+}
+
+bool Check_BoxIn(float3 vWorldPos)
+{
+	if (vWorldPos.x > g_vBoxMin.x 
+		&& vWorldPos.x < g_vBoxMax.x 
+		&& vWorldPos.y > g_vBoxMin.y 
+		&& vWorldPos.y < g_vBoxMax.y 
+		&& vWorldPos.z > g_vBoxMin.z 
+		&& vWorldPos.z < g_vBoxMax.z)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+
+
+float Calculate_Light(float fDensity, float3 vWorldPos, float fCos)
+{
+	float3 vDir = -g_vLightDir;
+	for (int i = 0; i < g_iSunStep; ++i)
+	{
+		if (Check_BoxIn(vWorldPos) == true)
+		{
+			
+		}
+	}
+
+	return fDensity * g_fStepLength * 0.05f;
+}
+
+float4 RayMarch(float3 vStartPos, float3 vRayDir)
+{
+	float fDensity = 0.0f;
+	
+	for (int i = 0; i < g_iMaxStep; ++i)
+	{
+		if (Check_BoxIn(vStartPos))
+		{
+			float3 vTexcoord = float3(remap(vStartPos.x, 0.0f, 500.0f, 0.0f, 1.0f), remap(vStartPos.y, 100.0f, 200.0f, 0.0f, 1.0f), remap(vStartPos.z, 0.0f, 500.0f, 0.0f, 1.0f));
+			vTexcoord.z += g_fOffset;
+			float fSampleDensity = g_NoiseTexture.Sample(CloudSampler, vTexcoord).x;
+
+			if (fSampleDensity > 0.0f)
+			{
+				fDensity += Calculate_Light(fSampleDensity, vStartPos, dot(vRayDir, -g_vLightDir));
+			}
+		}
+		vStartPos += vRayDir * g_fStepLength;
+	}
+	
+	if (fDensity == 0.0f)
+	{
+		discard;
+	}
+	
+	return float4(1.0f, 1.0f, 1.0f, min(fDensity, 1.0f));
+}
+
+
 PS_OUT PS_MAIN_PERLINWORLEYTEST(PS_IN In)
 {
 	PS_OUT		Out = (PS_OUT)0;
@@ -218,32 +295,9 @@ PS_OUT PS_MAIN_PERLINWORLEYTEST(PS_IN In)
 	float3		vWorldPos = vClipPos.xyz;
 	float3		vRayDir = normalize(vWorldPos - g_vCamPosition.xyz);
 	vWorldPos = g_vCamPosition.xyz;
-	
-	Out.vColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
-	
-	int iMaxStep = 100;
-	float fStepLength = 5.0f;
-	float fDensity = 0.0f;	
+	vWorldPos += vRayDir * Blue_Noise(In.vTexcoord, g_fStepLength);
 
-	for (int i = 0; i < iMaxStep; ++i)
-	{
-		if (vWorldPos.x > 0.0f && vWorldPos.x < 500.0f && vWorldPos.y > 100.0f && vWorldPos.y < 200.0f && vWorldPos.z > 0.0f && vWorldPos.z < 500.0f)
-		{
-			float3 vTexcoord = float3(remap(vWorldPos.x, 0.0f, 500.0f, 0.0f, 1.0f), remap(vWorldPos.y, 100.0f, 200.0f, 0.0f, 1.0f), remap(vWorldPos.z, 0.0f, 500.0f, 0.0f, 1.0f));
-			vTexcoord.z += g_fOffset;
-			float fSampleDensity = g_NoiseTexture.Sample(CloudSampler, vTexcoord).x;
-			fDensity += fSampleDensity * fStepLength * 0.1f;
-			
-		}
-		vWorldPos += vRayDir * fStepLength;
-	}
-	
-	if (fDensity == 0.0f)
-	{
-		discard;
-	}
-	
-	Out.vColor.a *= min(fDensity, 1.0f);
+	Out.vColor = RayMarch(vWorldPos, vRayDir);
 
 	return Out;
 }
