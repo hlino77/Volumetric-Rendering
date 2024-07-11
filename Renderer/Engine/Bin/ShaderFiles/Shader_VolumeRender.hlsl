@@ -25,6 +25,11 @@ int				g_iSunStep = 10;
 float3			g_vBoxMin = float3(0.0f, 100.0f, 0.0f);
 float3			g_vBoxMax = float3(500.0f, 200.0f, 500.0f);
 
+float			g_fHenyeyGreensteinGForward = 0.4f;
+float			g_fHenyeyGreensteinGBackward = 0.179f;
+float			g_fPrecipitation = 1.0f;
+
+
 struct VS_IN
 {
 	float3		vPosition : POSITION;
@@ -232,8 +237,38 @@ bool Check_BoxIn(float3 vWorldPos)
 }
 
 
+float Beer_Law(float fDensity)
+{
+	float fD = -fDensity * g_fPrecipitation;
+	return max(exp(fD), exp(fD * 0.5f) * 0.7f);
+}
 
-float Calculate_Light(float fDensity, float3 vWorldPos, float fCos)
+float Beer_Lambert_Law(float fDensity)
+{
+    return exp(-fDensity * g_fPrecipitation);
+}
+
+float Henyey_Greenstein_Phase(float fCos, float fG)
+{
+	float fG2 = fG * fG;
+	return ((1.0f - fG2) / pow(1.0f + fG2 - 2.0f * fG * fCos, 1.5f)) / 4.0f * 3.1415f;
+}
+
+float Powder_Effect(float fDensity, float fCos)
+{
+	float fPowder = 1.0f - exp(-fDensity * 2.0f);
+	return lerp(1.0f, fPowder, clamp((-fCos * 0.5f) + 0.5f, 0.0f, 1.0f));
+}
+
+float Calculate_Light_Energy(float fDensity, float fCos, float fPowderDensity) 
+{ 
+	float fBeerPowder = 2.0f * Beer_Law(fDensity) * Powder_Effect(fPowderDensity, fCos);
+	float HG = max(Henyey_Greenstein_Phase(fCos, g_fHenyeyGreensteinGForward), Henyey_Greenstein_Phase(fCos, g_fHenyeyGreensteinGBackward)) * 0.07f + 0.8f;
+	return fBeerPowder * HG;
+}
+
+
+float Calculate_LightDensity(float fDensity, float3 vWorldPos, float fCos)
 {
 	float fSunDensity = 0.0f;
 
@@ -246,9 +281,9 @@ float Calculate_Light(float fDensity, float3 vWorldPos, float fCos)
 		{
 			float3 vTexcoord = float3(remap(vWorldPos.x, 0.0f, 500.0f, 0.0f, 1.0f), remap(vWorldPos.y, 100.0f, 200.0f, 0.0f, 1.0f), remap(vWorldPos.z, 0.0f, 500.0f, 0.0f, 1.0f));
 			vTexcoord.z += g_fOffset;
-			float fSampleDensity = g_NoiseTexture.Sample(CloudSampler, vTexcoord).x * g_fSunStepLength * 0.05f;
+			float fSampleDensity = g_NoiseTexture.Sample(CloudSampler, vTexcoord).x;
 			
-			fSunDensity += fSampleDensity * g_fSunStepLength * fDensity * 0.01f;
+			fSunDensity += fSampleDensity;
 		}
 		vWorldPos += vDir * g_fSunStepLength;
 	}
@@ -259,8 +294,12 @@ float Calculate_Light(float fDensity, float3 vWorldPos, float fCos)
 
 float4 RayMarch(float3 vStartPos, float3 vRayDir)
 {
-	float fDensity = 0.0f;
 	float fSunDensity = 0.0f;
+	float fAccum_Transmittance = 1.0f;
+	float fAlpha = 0.0f;
+	float fCos = dot(vRayDir, -g_vLightDir);
+	float3 vSunColor = float3(1.0f, 0.0f, 0.0f);
+	float3 vResultColor = float3(0.0f, 0.0f, 0.0f);
 
 	for (int i = 0; i < g_iMaxStep; ++i)
 	{
@@ -268,27 +307,31 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir)
 		{
 			float3 vTexcoord = float3(remap(vStartPos.x, 0.0f, 500.0f, 0.0f, 1.0f), remap(vStartPos.y, 100.0f, 200.0f, 0.0f, 1.0f), remap(vStartPos.z, 0.0f, 500.0f, 0.0f, 1.0f));
 			vTexcoord.z += g_fOffset;
+			
 			float fSampleDensity = g_NoiseTexture.Sample(CloudSampler, vTexcoord).x;
-
+			
 			if (fSampleDensity > 0.0f)
 			{
-				fDensity += fSampleDensity * g_fStepLength * 0.05f;
-				fSunDensity += Calculate_Light(fSampleDensity, vStartPos, dot(vRayDir, -g_vLightDir));
+				float fStep_Transmittance = Beer_Lambert_Law(fSampleDensity * g_fStepLength);
+				fAlpha += (1.0f - fStep_Transmittance) * (1.0f - fAlpha);
+				fAccum_Transmittance *= fStep_Transmittance;
+
+				fSunDensity += Calculate_LightDensity(fSampleDensity, vStartPos, fCos);
+				//fSunDensity * g_fStepLength
+				float3 vScatteredLight = Calculate_Light_Energy(fSunDensity * g_fStepLength, fCos, fSampleDensity * g_fStepLength) * vSunColor * fAlpha;
+				float3 vAmbientLight = float3(1.0f, 1.0f, 1.0f) * 6.0f;
+				vResultColor += (vAmbientLight + vScatteredLight) * fAccum_Transmittance * fSampleDensity;
 			}
 		}
 		vStartPos += vRayDir * g_fStepLength;
 	}
 	
-	if (fDensity == 0.0f)
+	if (fAlpha == 0.0f)
 	{
 		discard;
 	}
 	
-	fDensity = min(fDensity, 1.0f);
-	fSunDensity = min(fSunDensity, 1.0f);
-	fSunDensity = 1.0f - fSunDensity;
-	
-	return float4(fSunDensity, fSunDensity, fSunDensity, min(fDensity, 1.0f));
+	return float4(vResultColor, fAlpha);
 }
 
 

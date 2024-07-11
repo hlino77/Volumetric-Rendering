@@ -133,7 +133,7 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
     float fWorley2 = worleyFbm(vUV, fFreq * 2.0f);
     float fWorley3 = worleyFbm(vUV, fFreq * 4.0f);
 
-    float fWfbm = fWorley1 * 0.625f + fWorley2 * 0.125f + fWorley3 * 0.25f;
+    float fWfbm = fWorley1 * 0.625f + fWorley2 * 0.25f + fWorley3 * 0.125f;
 
     vColor.x = remap(fPerlinWorley, fWfbm - 1.0f, 1.0f, 0.0f, 1.0f);
     vColor.x = remap(vColor.x, 0.85f, 1.0f, 0.0f, 1.0f);
