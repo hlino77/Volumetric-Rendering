@@ -27,7 +27,7 @@ float3			g_vBoxMax = float3(500.0f, 200.0f, 500.0f);
 
 float			g_fHenyeyGreensteinGForward = 0.4f;
 float			g_fHenyeyGreensteinGBackward = 0.179f;
-float			g_fPrecipitation = 1.0f;
+float			g_fPrecipitation = 0.75f;
 
 
 struct VS_IN
@@ -239,8 +239,9 @@ bool Check_BoxIn(float3 vWorldPos)
 
 float Beer_Law(float fDensity)
 {
-	float fD = -fDensity * g_fPrecipitation;
+	float fD = fDensity * -g_fPrecipitation;
 	return max(exp(fD), exp(fD * 0.5f) * 0.7f);
+	//return fD;
 }
 
 float Beer_Lambert_Law(float fDensity)
@@ -251,7 +252,7 @@ float Beer_Lambert_Law(float fDensity)
 float Henyey_Greenstein_Phase(float fCos, float fG)
 {
 	float fG2 = fG * fG;
-	return ((1.0f - fG2) / pow(1.0f + fG2 - 2.0f * fG * fCos, 1.5f)) / 4.0f * 3.1415f;
+	return ((1.0f - fG2) / pow(1.0f + fG2 - 2.0f * fG * fCos, 1.5f)) / (4.0f * 3.1415f);
 }
 
 float Powder_Effect(float fDensity, float fCos)
@@ -263,12 +264,13 @@ float Powder_Effect(float fDensity, float fCos)
 float Calculate_Light_Energy(float fDensity, float fCos, float fPowderDensity) 
 { 
 	float fBeerPowder = 2.0f * Beer_Law(fDensity) * Powder_Effect(fPowderDensity, fCos);
-	float HG = max(Henyey_Greenstein_Phase(fCos, g_fHenyeyGreensteinGForward), Henyey_Greenstein_Phase(fCos, g_fHenyeyGreensteinGBackward)) * 0.07f + 0.8f;
-	return fBeerPowder * HG;
+	//float HG = max(Henyey_Greenstein_Phase(fCos, g_fHenyeyGreensteinGForward), Henyey_Greenstein_Phase(fCos, g_fHenyeyGreensteinGBackward)) * 0.07f + 0.8f;
+	//return fBeerPowder;
+	return fBeerPowder;
 }
 
 
-float Calculate_LightDensity(float fDensity, float3 vWorldPos, float fCos)
+float Calculate_LightDensity(float3 vWorldPos)
 {
 	float fSunDensity = 0.0f;
 
@@ -294,7 +296,6 @@ float Calculate_LightDensity(float fDensity, float3 vWorldPos, float fCos)
 
 float4 RayMarch(float3 vStartPos, float3 vRayDir)
 {
-	float fSunDensity = 0.0f;
 	float fAccum_Transmittance = 1.0f;
 	float fAlpha = 0.0f;
 	float fCos = dot(vRayDir, -g_vLightDir);
@@ -309,17 +310,18 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir)
 			vTexcoord.z += g_fOffset;
 			
 			float fSampleDensity = g_NoiseTexture.Sample(CloudSampler, vTexcoord).x;
-			
+			float fStep_Transmittance = Beer_Lambert_Law(fSampleDensity * g_fStepLength);
+			fAccum_Transmittance *= fStep_Transmittance;
+
 			if (fSampleDensity > 0.0f)
 			{
-				float fStep_Transmittance = Beer_Lambert_Law(fSampleDensity * g_fStepLength);
+				
 				fAlpha += (1.0f - fStep_Transmittance) * (1.0f - fAlpha);
-				fAccum_Transmittance *= fStep_Transmittance;
-
-				fSunDensity += Calculate_LightDensity(fSampleDensity, vStartPos, fCos);
+				
+				float fSunDensity = Calculate_LightDensity(vStartPos);
 				//fSunDensity * g_fStepLength
-				float3 vScatteredLight = Calculate_Light_Energy(fSunDensity * g_fStepLength, fCos, fSampleDensity * g_fStepLength) * vSunColor * fAlpha;
-				float3 vAmbientLight = float3(1.0f, 1.0f, 1.0f) * 6.0f;
+				float3 vScatteredLight = Calculate_Light_Energy(fSunDensity * g_fSunStepLength, fCos, fSampleDensity * g_fStepLength) * vSunColor * 3.0f * fAlpha;
+				float3 vAmbientLight = float3(1.0f, 1.0f, 1.0f) * 4.0f;
 				vResultColor += (vAmbientLight + vScatteredLight) * fAccum_Transmittance * fSampleDensity;
 			}
 		}
