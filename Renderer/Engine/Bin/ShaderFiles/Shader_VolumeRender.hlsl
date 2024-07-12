@@ -23,11 +23,11 @@ int				g_iMaxStep = 100;
 int				g_iSunStep = 10;
 
 float3			g_vBoxMin = float3(0.0f, 100.0f, 0.0f);
-float3			g_vBoxMax = float3(500.0f, 200.0f, 500.0f);
+float3			g_vBoxMax = float3(300.0f, 400.0f, 300.0f);
 
 float			g_fHenyeyGreensteinGForward = 0.4f;
 float			g_fHenyeyGreensteinGBackward = 0.179f;
-float			g_fPrecipitation = 0.75f;
+float			g_fPrecipitation = 1.0f;
 
 
 struct VS_IN
@@ -263,7 +263,7 @@ float Powder_Effect(float fDensity, float fCos)
 
 float Calculate_Light_Energy(float fDensity, float fCos, float fPowderDensity) 
 { 
-	float fBeerPowder = 2.0f * Beer_Law(fDensity) * Powder_Effect(fPowderDensity, fCos);
+	float fBeerPowder = 2.0f * Beer_Law(fDensity); //* Powder_Effect(fPowderDensity, fCos);
 	//float HG = max(Henyey_Greenstein_Phase(fCos, g_fHenyeyGreensteinGForward), Henyey_Greenstein_Phase(fCos, g_fHenyeyGreensteinGBackward)) * 0.07f + 0.8f;
 	return fBeerPowder;
 }
@@ -280,9 +280,10 @@ float Calculate_LightDensity(float3 vWorldPos)
 	{
 		if (Check_BoxIn(vWorldPos) == true)
 		{
-			float3 vTexcoord = float3(remap(vWorldPos.x, 0.0f, 500.0f, 0.0f, 1.0f), remap(vWorldPos.y, 100.0f, 200.0f, 0.0f, 1.0f), remap(vWorldPos.z, 0.0f, 500.0f, 0.0f, 1.0f));
+			float3 vTexcoord = float3(remap(vWorldPos.x, g_vBoxMin.x, g_vBoxMax.x, 0.0f, 1.0f), remap(vWorldPos.y, g_vBoxMin.y, g_vBoxMax.y, 0.0f, 1.0f), remap(vWorldPos.z, g_vBoxMin.z, g_vBoxMax.z, 0.0f, 1.0f));
+			//vTexcoord *= 0.5f;
 			vTexcoord.z += g_fOffset;
-			float fSampleDensity = g_NoiseTexture.Sample(CloudSampler, vTexcoord).x;
+			float fSampleDensity = g_NoiseTexture.SampleLevel(CloudSampler, vTexcoord, 0.0f).x;
 			
 			fSunDensity += fSampleDensity;
 		}
@@ -299,16 +300,17 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir)
 	float fAlpha = 0.0f;
 	float fCos = dot(vRayDir, -g_vLightDir);
 	float3 vSunColor = float3(1.0f, 0.0f, 0.0f);
-	float3 vResultColor = float3(0.0f, 0.0f, 0.0f);
+	float3 vResultColor = float3(0.4f, 0.4f, 0.4f);
 
 	for (int i = 0; i < g_iMaxStep; ++i)
 	{
 		if (Check_BoxIn(vStartPos))
 		{
-			float3 vTexcoord = float3(remap(vStartPos.x, 0.0f, 500.0f, 0.0f, 1.0f), remap(vStartPos.y, 100.0f, 200.0f, 0.0f, 1.0f), remap(vStartPos.z, 0.0f, 500.0f, 0.0f, 1.0f));
+			float3 vTexcoord = float3(remap(vStartPos.x, g_vBoxMin.x, g_vBoxMax.x, 0.0f, 1.0f), remap(vStartPos.y, g_vBoxMin.y, g_vBoxMax.y, 0.0f, 1.0f), remap(vStartPos.z, g_vBoxMin.z, g_vBoxMax.z, 0.0f, 1.0f));
+			//vTexcoord *= 0.5f;
 			vTexcoord.z += g_fOffset;
 			
-			float fSampleDensity = g_NoiseTexture.Sample(CloudSampler, vTexcoord).x;
+			float fSampleDensity = g_NoiseTexture.SampleLevel(CloudSampler, vTexcoord, 0.0f).x;
 			float fStep_Transmittance = Beer_Lambert_Law(fSampleDensity * g_fStepLength);
 			fAccum_Transmittance *= fStep_Transmittance;
 

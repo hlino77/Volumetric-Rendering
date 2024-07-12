@@ -127,16 +127,17 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
     
     float fPfbm = lerp(1.0f, perlinfbm(vUV, 4.0f, 7), 0.5f);
     fPfbm = abs(fPfbm * 2.0f - 1.0f); // billowy perlin noise
-    
-    float fPerlinWorley = remap(fPfbm, 0.0, 1.0, worleyFbm(vUV, fFreq), 1.0); // perlin-worley
+
     float fWorley1 = worleyFbm(vUV, fFreq);
     float fWorley2 = worleyFbm(vUV, fFreq * 2.0f);
     float fWorley3 = worleyFbm(vUV, fFreq * 4.0f);
+    float fPerlinWorley = remap(fPfbm, 0.0f, 1.0f, fWorley1, 1.0f); // perlin-worley
+    
 
     float fWfbm = fWorley1 * 0.625f + fWorley2 * 0.25f + fWorley3 * 0.125f;
 
     vColor.x = remap(fPerlinWorley, fWfbm - 1.0f, 1.0f, 0.0f, 1.0f);
-    vColor.x = remap(vColor.x, 0.85f, 1.0f, 0.0f, 1.0f);
+    vColor.x = remap(vColor.x, 0.88f, 1.0f, 0.0f, 1.0f);
    
     OutputTexture[DTid] = vColor;
 }
