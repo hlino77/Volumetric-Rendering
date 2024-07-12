@@ -246,7 +246,7 @@ float Beer_Law(float fDensity)
 
 float Beer_Lambert_Law(float fDensity)
 {
-    return exp(-fDensity * g_fPrecipitation);
+    return exp(fDensity * -g_fPrecipitation);
 }
 
 float Henyey_Greenstein_Phase(float fCos, float fG)
@@ -265,7 +265,6 @@ float Calculate_Light_Energy(float fDensity, float fCos, float fPowderDensity)
 { 
 	float fBeerPowder = 2.0f * Beer_Law(fDensity) * Powder_Effect(fPowderDensity, fCos);
 	//float HG = max(Henyey_Greenstein_Phase(fCos, g_fHenyeyGreensteinGForward), Henyey_Greenstein_Phase(fCos, g_fHenyeyGreensteinGBackward)) * 0.07f + 0.8f;
-	//return fBeerPowder;
 	return fBeerPowder;
 }
 
@@ -319,11 +318,12 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir)
 				fAlpha += (1.0f - fStep_Transmittance) * (1.0f - fAlpha);
 				
 				float fSunDensity = Calculate_LightDensity(vStartPos);
-				//fSunDensity * g_fStepLength
 				float3 vScatteredLight = Calculate_Light_Energy(fSunDensity * g_fSunStepLength, fCos, fSampleDensity * g_fStepLength) * vSunColor * 3.0f * fAlpha;
 				float3 vAmbientLight = float3(1.0f, 1.0f, 1.0f) * 4.0f;
 				vResultColor += (vAmbientLight + vScatteredLight) * fAccum_Transmittance * fSampleDensity;
 			}
+
+			
 		}
 		vStartPos += vRayDir * g_fStepLength;
 	}
