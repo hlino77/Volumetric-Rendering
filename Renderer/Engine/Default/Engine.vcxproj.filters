@@ -385,7 +385,13 @@
     <FxCompile Include="..\Bin\ShaderFiles\Shader_VolumeRender.hlsl">
       <Filter>01.Utiltiy\07.ShaderFiles</Filter>
     </FxCompile>
-    <FxCompile Include="..\Bin\ShaderFiles\CShader_PerlinWorley.hlsl">
+    <FxCompile Include="..\Bin\ShaderFiles\CShader_Shape.hlsl">
+      <Filter>01.Utiltiy\07.ShaderFiles</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Bin\ShaderFiles\Noise.hlsl">
+      <Filter>01.Utiltiy\07.ShaderFiles</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Bin\ShaderFiles\CShader_Detail.hlsl">
       <Filter>01.Utiltiy\07.ShaderFiles</Filter>
     </FxCompile>
   </ItemGroup>

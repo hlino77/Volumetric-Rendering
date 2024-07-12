@@ -1,9 +1,4 @@
 
-#include "Engine_Shader_Defines.hpp"
-
-
-
-RWTexture3D<float4> OutputTexture;
 
 #define UI0 1597334673U
 #define UI1 3812015801U
@@ -112,50 +107,4 @@ float worleyFbm(float3 p, float freq)
     return worleyNoise(p * freq, freq) * 0.625f +
         	 worleyNoise(p * freq * 2.0f, freq * 2.0f) * 0.25f +
         	 worleyNoise(p * freq * 4.0f, freq * 4.0f) * 0.125f;
-}
-
-
-[numthreads(8, 8, 8)]
-void CSMain(uint3 DTid : SV_DispatchThreadID)
-{
-    
-    float3 vUV = float3(DTid.x / 128.f, DTid.y / 128.f, DTid.z / 128.f);
-
-    float4 vColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
-    
-    float fFreq = 4.0f;
-    
-    float fPfbm = lerp(1.0f, perlinfbm(vUV, 4.0f, 7), 0.5f);
-    fPfbm = abs(fPfbm * 2.0f - 1.0f); // billowy perlin noise
-
-    float fWorley1 = worleyFbm(vUV, fFreq);
-    float fWorley2 = worleyFbm(vUV, fFreq * 2.0f);
-    float fWorley3 = worleyFbm(vUV, fFreq * 4.0f);
-    float fPerlinWorley = remap(fPfbm, 0.0f, 1.0f, fWorley1, 1.0f); // perlin-worley
-    
-
-    float fWfbm = fWorley1 * 0.625f + fWorley2 * 0.25f + fWorley3 * 0.125f;
-
-    vColor.x = remap(fPerlinWorley, fWfbm - 1.0f, 1.0f, 0.0f, 1.0f);
-    vColor.x = remap(vColor.x, 0.88f, 1.0f, 0.0f, 1.0f);
-   
-    OutputTexture[DTid] = vColor;
-}
-
-
-
-
-technique11 DefaultTechnique
-{
-	pass Compute0
-	{
-		VertexShader = NULL;
-		GeometryShader = NULL;
-		ComputeShader = compile cs_5_0 CSMain();
-		HullShader = NULL;
-		DomainShader = NULL;
-		PixelShader = NULL;
-	}
-
-	
 }

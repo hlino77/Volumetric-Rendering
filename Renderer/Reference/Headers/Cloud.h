@@ -22,7 +22,7 @@ public:
 
 	ID3D11ShaderResourceView* Get_SRV()
 	{
-		return m_pSRV;
+		return m_pShapeSRV;
 	}
 private:
 	HRESULT Ready_For_NoiseTexture3D();
@@ -35,7 +35,8 @@ private:
 
 	BoundingBox					m_tBoundingBox;
 
-	ID3D11ShaderResourceView*	m_pSRV = { nullptr };
+	ID3D11ShaderResourceView*	m_pShapeSRV = { nullptr };
+	ID3D11ShaderResourceView*	m_pDetailSRV = { nullptr };
 
 	float						m_fOffset = 0.0f;
 

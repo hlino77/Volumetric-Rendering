@@ -59,9 +59,16 @@ HRESULT CCloud::Ready_For_NoiseTexture3D()
 {
 	CNoiseGenerator* pNoiseGenerator = CNoiseGenerator::Create(m_pDevice, m_pContext);
 
-	m_pSRV = pNoiseGenerator->Generate_Perlin_Worley();
+	m_pShapeSRV = pNoiseGenerator->Generate_ShapeNoise();
 
-	if (m_pSRV == nullptr)
+	if (m_pShapeSRV == nullptr)
+	{
+		return E_FAIL;
+	}
+
+	m_pDetailSRV = pNoiseGenerator->Generate_DetailNoise();
+
+	if (m_pDetailSRV == nullptr)
 	{
 		return E_FAIL;
 	}
@@ -90,7 +97,9 @@ void CCloud::Free()
 {
 	__super::Free();
 
-	Safe_Release(m_pSRV);
+	Safe_Release(m_pDetailSRV);
+	Safe_Release(m_pShapeSRV);
+
 	Safe_Release(m_pDevice);
 	Safe_Release(m_pContext);
 }

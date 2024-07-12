@@ -121,6 +121,10 @@ HRESULT CRenderer::Initialize_Prototype()
 	if (nullptr == m_pBlueNoiseTexture)
 		return E_FAIL;
 
+	m_pCurlNoiseTexture = CTexture::Create(m_pDevice, m_pContext, TEXT("../Bin/Resources/Textures/CurlNoise.png"));
+	if (nullptr == m_pCurlNoiseTexture)
+		return E_FAIL;
+
 	m_pCloud = CCloud::Create(m_pDevice, m_pContext);
 	if (nullptr == m_pCloud)
 		return E_FAIL;
@@ -314,6 +318,11 @@ HRESULT CRenderer::Render_Volume()
 	}
 
 	if (FAILED(m_pBlueNoiseTexture->Bind_ShaderResource(m_pVolumeRenderShader, "g_BlueNoiseTexture", 0)))
+	{
+		return E_FAIL;
+	}
+
+	if (FAILED(m_pBlueNoiseTexture->Bind_ShaderResource(m_pCurlNoiseTexture, "g_CurlNoiseTexture", 0)))
 	{
 		return E_FAIL;
 	}
