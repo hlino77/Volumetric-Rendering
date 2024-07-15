@@ -322,7 +322,7 @@ HRESULT CRenderer::Render_Volume()
 		return E_FAIL;
 	}
 
-	if (FAILED(m_pBlueNoiseTexture->Bind_ShaderResource(m_pCurlNoiseTexture, "g_CurlNoiseTexture", 0)))
+	if (FAILED(m_pCurlNoiseTexture->Bind_ShaderResource(m_pVolumeRenderShader, "g_CurlNoiseTexture", 0)))
 	{
 		return E_FAIL;
 	}

@@ -28,7 +28,7 @@ float3			g_vBoxMax = float3(300.0f, 400.0f, 300.0f);
 
 float			g_fHenyeyGreensteinGForward = 0.4f;
 float			g_fHenyeyGreensteinGBackward = 0.179f;
-float			g_fPrecipitation = 0.7f;
+float			g_fPrecipitation = 1.5f;
 
 
 struct VS_IN
@@ -272,7 +272,7 @@ float Calculate_Light_Energy(float fDensity, float fCos, float fPowderDensity)
 float Sample_CloudDensity(float3 vWorldPos)
 {
 	float3 vTexcoord = float3(remap(vWorldPos.x, g_vBoxMin.x, g_vBoxMax.x, 0.0f, 1.0f), remap(vWorldPos.y, g_vBoxMin.y, g_vBoxMax.y, 0.0f, 1.0f), remap(vWorldPos.z, g_vBoxMin.z, g_vBoxMax.z, 0.0f, 1.0f));
-	//vTexcoord *= 0.5f;
+	vTexcoord *= 0.5f;
 	vTexcoord.z += g_fOffset;
 	
 	float4 vSample = g_NoiseTexture.SampleLevel(CloudSampler, vTexcoord, 0.0f);
@@ -281,7 +281,7 @@ float Sample_CloudDensity(float3 vWorldPos)
 
     float fDensity = remap(vSample.x, 1.0f - fWfbm, 1.0f, 0.0f, 1.0f);
     fDensity = remap(fDensity, 0.8f, 1.0f, 0.0f, 1.0f);
-	fDensity *= 0.8f;
+	fDensity *= 0.2f;
    
 	return clamp(fDensity, 0.0f, 1.0f);
 }
@@ -315,7 +315,7 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir)
 	float fAccum_Transmittance = 1.0f;
 	float fAlpha = 0.0f;
 	float fCos = dot(vRayDir, -g_vLightDir);
-	float3 vSunColor = float3(1.0f, 0.7f, 0.0f);
+	float3 vSunColor = float3(1.0f, 1.0f, 1.0f);
 	float3 vResultColor = float3(0.0f, 0.0f, 0.0f);
 
 	for (int i = 0; i < g_iMaxStep; ++i)
@@ -325,7 +325,6 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir)
 			float fSampleDensity = Sample_CloudDensity(vStartPos);
 			
 			float fStep_Transmittance = Beer_Lambert_Law(fSampleDensity * g_fStepLength);
-			fAccum_Transmittance *= fStep_Transmittance;
 
 			if (fSampleDensity > 0.0f)
 			{
@@ -333,12 +332,13 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir)
 				fAlpha += (1.0f - fStep_Transmittance) * (1.0f - fAlpha);
 				
 				float fSunDensity = Calculate_LightDensity(vStartPos);
-				float3 vScatteredLight = Calculate_Light_Energy(fSunDensity * g_fSunStepLength, fCos, fSampleDensity * g_fStepLength) * vSunColor * 3.0f * fAlpha;
-				float3 vAmbientLight = float3(1.0f, 1.0f, 1.0f) * 5.0f;
+				float3 vScatteredLight = Calculate_Light_Energy(fSunDensity * g_fSunStepLength, fCos, fSampleDensity * g_fStepLength) * vSunColor * 6.0f * fAlpha;
+				float3 vAmbientLight = float3(1.0f, 1.0f, 1.0f) * 3.0f;
 				vResultColor += (vAmbientLight + vScatteredLight) * fAccum_Transmittance * fSampleDensity;
+
+				fAccum_Transmittance *= fStep_Transmittance;
 			}
 
-			
 		}
 		vStartPos += vRayDir * g_fStepLength;
 	}

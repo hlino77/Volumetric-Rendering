@@ -52,6 +52,7 @@ private:
 	class CShader*				m_pVolumeRenderShader = { nullptr };
 	class CCloud*				m_pCloud = { nullptr };
 	class CTexture*				m_pBlueNoiseTexture = { nullptr };
+	class CTexture*				m_pCurlNoiseTexture = { nullptr };
 
 	Matrix					m_WorldMatrix, m_ViewMatrix, m_ProjMatrix;
 
