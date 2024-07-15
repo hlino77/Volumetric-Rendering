@@ -299,10 +299,10 @@ float Sample_CloudDensity(float3 vWorldPos)
     fDensity = remap(fDensity, fCoverage, 1.0f, 0.0f, 1.0f);
 	fDensity *= 0.3f;
 
-	float4 vDetail = g_DetailTexture.SampleLevel(CloudSampler, vTexcoord * 5.0f, 0.0f);
+	/*float4 vDetail = g_DetailTexture.SampleLevel(CloudSampler, vTexcoord * 5.0f, 0.0f);
 	float fDetailfbm = vDetail.x * 0.625f + vDetail.y * 0.25f + vDetail.z * 0.125f;
 
-	fDensity -= fDetailfbm * 0.15f;
+	fDensity -= fDetailfbm * 0.15f;*/
 	
    
 	return saturate(fDensity);
@@ -405,9 +405,9 @@ PS_OUT PS_MAIN_PERLINWORLEY2D(PS_IN In)
 {
 	PS_OUT		Out = (PS_OUT)0;
 
-	float4 vSample = g_ShapeTexture.Sample(CloudSampler, float3(In.vTexcoord.x, g_fOffset, In.vTexcoord.y));
-	float fDensity = 0.0f;
-	Out.vColor = float4(1.0f, 1.0f, 1.0f, fDensity);
+	float4 vSample = g_ShapeTexture.Sample(CloudSampler, float3(In.vTexcoord.x * 2.0f, In.vTexcoord.y * 2.0f, g_fOffset));
+	float fDensity = vSample.y;
+	Out.vColor = float4(fDensity, fDensity, fDensity, 1.0f);
 	return Out;
 }
 
