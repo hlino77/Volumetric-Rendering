@@ -20,9 +20,14 @@ public:
 	virtual void LateTick(_float fTimeDelta);
 	virtual HRESULT Render();
 
-	ID3D11ShaderResourceView* Get_SRV()
+	ID3D11ShaderResourceView* Get_ShapeSRV()
 	{
 		return m_pShapeSRV;
+	}
+
+	ID3D11ShaderResourceView* Get_DetailSRV()
+	{
+		return m_pDetailSRV;
 	}
 private:
 	HRESULT Ready_For_NoiseTexture3D();

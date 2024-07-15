@@ -8,7 +8,9 @@ matrix			g_ViewMatrixInv;
 
 vector			g_vCamPosition;
 
-texture3D		g_NoiseTexture;
+texture3D		g_ShapeTexture;
+texture3D		g_DetailTexture;
+
 texture2D		g_BlueNoiseTexture;
 texture2D		g_CurlNoiseTexture;
 
@@ -24,12 +26,14 @@ int				g_iMaxStep = 100;
 int				g_iSunStep = 10;
 
 float3			g_vBoxMin = float3(0.0f, 100.0f, 0.0f);
-float3			g_vBoxMax = float3(300.0f, 400.0f, 300.0f);
+float3			g_vBoxMax = float3(600.0f, 400.0f, 600.0f);
 
 float			g_fHenyeyGreensteinGForward = 0.4f;
 float			g_fHenyeyGreensteinGBackward = 0.179f;
 float			g_fPrecipitation = 1.5f;
-
+float			g_fCurlNoiseScale = 7.44f;
+float			g_fDetailNoiseScale = 5.5f;
+float			g_fDetailNoiseModif = 0.5f;
 
 struct VS_IN
 {
@@ -201,7 +205,7 @@ PS_OUT PS_MAIN_VOLUMERENDERTEST(PS_IN In)
 		float3 vTexcoord = Compute_Texcoord(vWorldPos);
 		//vTexcoord += g_fOffset;
 		//vTexcoord *= 0.25f;
-		fDensity += g_NoiseTexture.Sample(CloudSampler, vTexcoord).x * fStepSize * 0.5f;
+		fDensity += g_ShapeTexture.Sample(CloudSampler, vTexcoord).x * fStepSize * 0.5f;
 		
 		//fDensity = fStepSize * 0.05f;
 		vWorldPos += vRayDir * fStepSize;
@@ -235,6 +239,11 @@ bool Check_BoxIn(float3 vWorldPos)
 	}
 
 	return false;
+}
+
+float Height_Fraction(float3 vWorldPos)
+{
+	return saturate((vWorldPos.y - g_vBoxMin.y) / (g_vBoxMax.y - 50.0f - g_vBoxMin.y));
 }
 
 
@@ -272,18 +281,31 @@ float Calculate_Light_Energy(float fDensity, float fCos, float fPowderDensity)
 float Sample_CloudDensity(float3 vWorldPos)
 {
 	float3 vTexcoord = float3(remap(vWorldPos.x, g_vBoxMin.x, g_vBoxMax.x, 0.0f, 1.0f), remap(vWorldPos.y, g_vBoxMin.y, g_vBoxMax.y, 0.0f, 1.0f), remap(vWorldPos.z, g_vBoxMin.z, g_vBoxMax.z, 0.0f, 1.0f));
-	vTexcoord *= 0.5f;
+	//vTexcoord.x *= 2.0f;
+	//vTexcoord.z *= 2.0f;
+	vTexcoord.y *= 0.5f;
 	vTexcoord.z += g_fOffset;
 	
-	float4 vSample = g_NoiseTexture.SampleLevel(CloudSampler, vTexcoord, 0.0f);
+	float fHeightFraction = Height_Fraction(vWorldPos);
+
+	float4 vSample = g_ShapeTexture.SampleLevel(CloudSampler, vTexcoord, 0.0f);
 
 	float fWfbm = vSample.y * 0.625f + vSample.z * 0.25f + vSample.w * 0.125f;
 
     float fDensity = remap(vSample.x, 1.0f - fWfbm, 1.0f, 0.0f, 1.0f);
-    fDensity = remap(fDensity, 0.8f, 1.0f, 0.0f, 1.0f);
-	fDensity *= 0.2f;
+
+	float fCoverage = lerp(0.6f, 1.0f, fHeightFraction);
+
+    fDensity = remap(fDensity, fCoverage, 1.0f, 0.0f, 1.0f);
+	fDensity *= 0.3f;
+
+	float4 vDetail = g_DetailTexture.SampleLevel(CloudSampler, vTexcoord * 5.0f, 0.0f);
+	float fDetailfbm = vDetail.x * 0.625f + vDetail.y * 0.25f + vDetail.z * 0.125f;
+
+	fDensity -= fDetailfbm * 0.15f;
+	
    
-	return clamp(fDensity, 0.0f, 1.0f);
+	return saturate(fDensity);
 }
 
 
@@ -383,7 +405,7 @@ PS_OUT PS_MAIN_PERLINWORLEY2D(PS_IN In)
 {
 	PS_OUT		Out = (PS_OUT)0;
 
-	float4 vSample = g_NoiseTexture.Sample(CloudSampler, float3(In.vTexcoord.x, g_fOffset, In.vTexcoord.y));
+	float4 vSample = g_ShapeTexture.Sample(CloudSampler, float3(In.vTexcoord.x, g_fOffset, In.vTexcoord.y));
 	float fDensity = 0.0f;
 	Out.vColor = float4(1.0f, 1.0f, 1.0f, fDensity);
 	return Out;
