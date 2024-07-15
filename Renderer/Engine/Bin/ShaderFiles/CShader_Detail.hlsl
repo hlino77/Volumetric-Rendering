@@ -12,7 +12,8 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
 {
     
     float3 vUV = float3(DTid.x / 32.f, DTid.y / 32.f, DTid.z / 32.f);
-    
+    vUV += float3(1.0f, 1.0f, 1.0f);
+
     float fFreq = 8.0f;
     
     float fWorley1 = worleyFbm(vUV, fFreq);
