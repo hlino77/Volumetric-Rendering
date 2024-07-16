@@ -18,7 +18,10 @@ texture2D		g_CurlNoiseTexture;
 
 //Test
 
-float3			g_vLightDir = float3(1.0f, -1.0f, 1.0f);
+float3			g_vLightPos = float3(-1000.0f, 1000.0f, -1000.0f);
+
+
+
 float			g_fOffset = 0.0f;
 float			g_fStepLength = 5.0f;
 float			g_fSunStepLength = 10.0f;
@@ -28,12 +31,13 @@ int				g_iSunStep = 10;
 float3			g_vBoxMin = float3(0.0f, 100.0f, 0.0f);
 float3			g_vBoxMax = float3(600.0f, 400.0f, 600.0f);
 
-float			g_fHenyeyGreensteinGForward = 0.4f;
-float			g_fHenyeyGreensteinGBackward = 0.179f;
-float			g_fPrecipitation = 1.5f;
+float			g_fHenyeyGreensteinGForward = 0.3f;
+float			g_fHenyeyGreensteinGBackward = -0.3f;
+float			g_fAbsorption = 1.5f;
 float			g_fCurlNoiseScale = 7.44f;
-float			g_fDetailNoiseScale = 5.5f;
+float			g_fDetailNoiseScale = 0.15f;
 float			g_fDetailNoiseModif = 0.5f;
+bool			g_bUseLight = true;
 
 struct VS_IN
 {
@@ -249,14 +253,14 @@ float Height_Fraction(float3 vWorldPos)
 
 float Beer_Law(float fDensity)
 {
-	float fD = fDensity * -g_fPrecipitation;
+	float fD = fDensity * -g_fAbsorption;
 	return max(exp(fD), exp(fD * 0.5f) * 0.7f);
 	//return fD;
 }
 
 float Beer_Lambert_Law(float fDensity)
 {
-    return exp(fDensity * -g_fPrecipitation);
+    return exp(fDensity * -g_fAbsorption);
 }
 
 float Henyey_Greenstein_Phase(float fCos, float fG)
@@ -274,8 +278,9 @@ float Powder_Effect(float fDensity, float fCos)
 float Calculate_Light_Energy(float fDensity, float fCos, float fPowderDensity) 
 { 
 	float fBeerPowder = 2.0f * Beer_Law(fDensity); //* Powder_Effect(fPowderDensity, fCos);
-	//float HG = max(Henyey_Greenstein_Phase(fCos, g_fHenyeyGreensteinGForward), Henyey_Greenstein_Phase(fCos, g_fHenyeyGreensteinGBackward)) * 0.07f + 0.8f;
-	return fBeerPowder;
+	float fHG = max(Henyey_Greenstein_Phase(fCos, g_fHenyeyGreensteinGForward), Henyey_Greenstein_Phase(fCos, g_fHenyeyGreensteinGBackward)) * 5.0f;
+	//return fBeerPowder * HG;
+	return fBeerPowder * fHG;
 }
 
 float Sample_CloudDensity(float3 vWorldPos)
@@ -292,17 +297,17 @@ float Sample_CloudDensity(float3 vWorldPos)
 
 	float fWfbm = vSample.y * 0.625f + vSample.z * 0.25f + vSample.w * 0.125f;
 
-    float fDensity = remap(vSample.x, 1.0f - fWfbm, 1.0f, 0.0f, 1.0f);
+    float fDensity = remap(vSample.x, fWfbm - 1.0f, 1.0f, 0.0f, 1.0f);
 
-	float fCoverage = lerp(0.6f, 1.0f, fHeightFraction);
+	float fCoverage = lerp(0.8f, 1.0f, fHeightFraction);
 
     fDensity = remap(fDensity, fCoverage, 1.0f, 0.0f, 1.0f);
 	fDensity *= 0.3f;
 
-	/*float4 vDetail = g_DetailTexture.SampleLevel(CloudSampler, vTexcoord * 5.0f, 0.0f);
-	float fDetailfbm = vDetail.x * 0.625f + vDetail.y * 0.25f + vDetail.z * 0.125f;
+	//float4 vDetail = g_DetailTexture.SampleLevel(CloudSampler, vTexcoord * 5.0f, 0.0f);
+	//float fDetailfbm = vDetail.x * 0.625f + vDetail.y * 0.25f + vDetail.z * 0.125f;
 
-	fDensity -= fDetailfbm * 0.15f;*/
+	//fDensity -= fDetailfbm * g_fDetailNoiseScale;
 	
    
 	return saturate(fDensity);
@@ -313,7 +318,7 @@ float Calculate_LightDensity(float3 vWorldPos)
 {
 	float fSunDensity = 0.0f;
 
-	float3 vDir = -g_vLightDir;
+	float3 vDir = normalize(g_vLightPos - vWorldPos);
 	
 	[loop]
 	for (int i = 0; i < g_iSunStep; ++i)
@@ -328,7 +333,7 @@ float Calculate_LightDensity(float3 vWorldPos)
 	}
 	
 
-	return fSunDensity;
+	return saturate(fSunDensity);
 }
 
 
@@ -336,9 +341,11 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir)
 {
 	float fAccum_Transmittance = 1.0f;
 	float fAlpha = 0.0f;
-	float fCos = dot(vRayDir, -g_vLightDir);
-	float3 vSunColor = float3(1.0f, 1.0f, 1.0f);
+	
+	float3 vLightColor = float3(1.0f, 1.0f, 1.0f);
 	float3 vResultColor = float3(0.0f, 0.0f, 0.0f);
+
+	float fTotalDensity = 0.0f;
 
 	for (int i = 0; i < g_iMaxStep; ++i)
 	{
@@ -350,13 +357,21 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir)
 
 			if (fSampleDensity > 0.0f)
 			{
-				
+				float fCos = dot(vRayDir, normalize(g_vLightPos - vStartPos));
+
 				fAlpha += (1.0f - fStep_Transmittance) * (1.0f - fAlpha);
+				fTotalDensity += fSampleDensity * g_fStepLength;
 				
 				float fSunDensity = Calculate_LightDensity(vStartPos);
-				float3 vScatteredLight = Calculate_Light_Energy(fSunDensity * g_fSunStepLength, fCos, fSampleDensity * g_fStepLength) * vSunColor * 6.0f * fAlpha;
-				float3 vAmbientLight = float3(1.0f, 1.0f, 1.0f) * 3.0f;
-				vResultColor += (vAmbientLight + vScatteredLight) * fAccum_Transmittance * fSampleDensity;
+				float3 vScatteredLight = Calculate_Light_Energy(fSunDensity * g_fSunStepLength, fCos, fSampleDensity * g_fStepLength) * vLightColor * 6.0f * fAlpha;
+				float3 vLight = float3(1.0f, 1.0f, 1.0f);
+
+				if (g_bUseLight == true)
+				{
+					vLight += vScatteredLight;
+				}
+
+				vResultColor += vLight * fAccum_Transmittance * fSampleDensity;
 
 				fAccum_Transmittance *= fStep_Transmittance;
 			}
@@ -365,10 +380,6 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir)
 		vStartPos += vRayDir * g_fStepLength;
 	}
 	
-	if (fAlpha == 0.0f)
-	{
-		discard;
-	}
 	
 	return float4(vResultColor, fAlpha);
 }
@@ -406,8 +417,16 @@ PS_OUT PS_MAIN_PERLINWORLEY2D(PS_IN In)
 	PS_OUT		Out = (PS_OUT)0;
 
 	float4 vSample = g_ShapeTexture.Sample(CloudSampler, float3(In.vTexcoord.x * 2.0f, In.vTexcoord.y * 2.0f, g_fOffset));
-	float fDensity = vSample.y;
+
+	float fWfbm = vSample.y * 0.625f + vSample.z * 0.25f + vSample.w * 0.125f;
+
+    float fDensity = remap(vSample.x, fWfbm - 1.0f, 1.0f, 0.0f, 1.0f);
+
+    fDensity = remap(fDensity, 0.8f, 1.0f, 0.0f, 1.0f);
+	fDensity *= 0.5f;
+
 	Out.vColor = float4(fDensity, fDensity, fDensity, 1.0f);
+
 	return Out;
 }
 

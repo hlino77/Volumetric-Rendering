@@ -344,12 +344,22 @@ HRESULT CRenderer::Render_Volume()
 		m_fTest -= 0.0001f;
 	}
 
+	if (pGameInstance->Get_DIKeyState(DIK_L) & 0x80)
+	{
+		m_bUseLight = !m_bUseLight;
+	}
+
 	/*if (m_fTest > 1.0f)
 	{
 		m_fTest -= 1.0f;
 	}*/
 
 	if (FAILED(m_pVolumeRenderShader->Bind_RawValue("g_fOffset", &m_fTest, sizeof(float))))
+	{
+		return E_FAIL;
+	}
+
+	if (FAILED(m_pVolumeRenderShader->Bind_RawValue("g_bUseLight", &m_bUseLight, sizeof(bool))))
 	{
 		return E_FAIL;
 	}
