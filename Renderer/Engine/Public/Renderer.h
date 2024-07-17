@@ -57,7 +57,7 @@ private:
 	Matrix					m_WorldMatrix, m_ViewMatrix, m_ProjMatrix;
 
 	float	m_fTest = 0.0f;
-	bool	m_bUseLight = false;
+	bool	m_bUseLight = true;
 
 
 #ifdef _DEBUG

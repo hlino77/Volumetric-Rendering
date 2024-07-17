@@ -278,7 +278,7 @@ float Powder_Effect(float fDensity, float fCos)
 float Calculate_Light_Energy(float fDensity, float fCos, float fPowderDensity) 
 { 
 	float fBeerPowder = 2.0f * Beer_Law(fDensity); //* Powder_Effect(fPowderDensity, fCos);
-	float fHG = max(Henyey_Greenstein_Phase(fCos, g_fHenyeyGreensteinGForward), Henyey_Greenstein_Phase(fCos, g_fHenyeyGreensteinGBackward)) * 5.0f;
+	float fHG = max(Henyey_Greenstein_Phase(fCos, g_fHenyeyGreensteinGForward), Henyey_Greenstein_Phase(fCos, g_fHenyeyGreensteinGBackward));
 	//return fBeerPowder * HG;
 	return fBeerPowder * fHG;
 }
@@ -304,10 +304,10 @@ float Sample_CloudDensity(float3 vWorldPos)
     fDensity = remap(fDensity, fCoverage, 1.0f, 0.0f, 1.0f);
 	fDensity *= 0.3f;
 
-	//float4 vDetail = g_DetailTexture.SampleLevel(CloudSampler, vTexcoord * 5.0f, 0.0f);
-	//float fDetailfbm = vDetail.x * 0.625f + vDetail.y * 0.25f + vDetail.z * 0.125f;
+	float4 vDetail = g_DetailTexture.SampleLevel(CloudSampler, vTexcoord * 5.0f, 0.0f);
+	float fDetailfbm = vDetail.x * 0.625f + vDetail.y * 0.25f + vDetail.z * 0.125f;
 
-	//fDensity -= fDetailfbm * g_fDetailNoiseScale;
+	fDensity -= fDetailfbm * g_fDetailNoiseScale;
 	
    
 	return saturate(fDensity);
@@ -364,7 +364,7 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir)
 				
 				float fSunDensity = Calculate_LightDensity(vStartPos);
 				float3 vScatteredLight = Calculate_Light_Energy(fSunDensity * g_fSunStepLength, fCos, fSampleDensity * g_fStepLength) * vLightColor * 6.0f * fAlpha;
-				float3 vLight = float3(1.0f, 1.0f, 1.0f);
+				float3 vLight = float3(1.0f, 1.0f, 1.0f) * 2.0f;
 
 				if (g_bUseLight == true)
 				{
