@@ -18,7 +18,7 @@ texture2D		g_CurlNoiseTexture;
 
 //Test
 
-float3			g_vLightPos = float3(-1000.0f, 1000.0f, -1000.0f);
+float3			g_vLightPos = float3(-10000.0f, 10000.0f, -10000.0f);
 
 
 
@@ -29,7 +29,7 @@ int				g_iMaxStep = 100;
 int				g_iSunStep = 10;
 
 float			g_fEccentricity = 0.6f;
-float			g_fSilverIntencity = 0.01f;
+float			g_fSilverIntencity = 0.2f;
 float			g_fSilverSpread = 0.7f;
 
 float3			g_vBoxMin = float3(0.0f, 100.0f, 0.0f);
@@ -280,7 +280,7 @@ float Powder_Effect(float fDensity, float fCos)
 float Calculate_Light_Energy(float fDensity, float fCos, float fPowderDensity) 
 { 
 	float fBeerPowder = 2.0f * Beer_Law(fDensity);
-	float fHG = max(Henyey_Greenstein_Phase(fCos, g_fEccentricity), g_fSilverIntencity * Henyey_Greenstein_Phase(fCos, 0.99f - g_fSilverSpread));
+	float fHG = max(0.2f, max(Henyey_Greenstein_Phase(fCos, g_fEccentricity), g_fSilverIntencity * Henyey_Greenstein_Phase(fCos, 0.99f - g_fSilverSpread)));
 	return fBeerPowder * fHG;
 }
 
@@ -353,7 +353,7 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir)
 		{
 			float fSampleDensity = Sample_CloudDensity(vStartPos);
 			
-			float fStep_Transmittance = Beer_Law(fSampleDensity * g_fStepLength);
+			float fStep_Transmittance = Beer_Lambert_Law(fSampleDensity * g_fStepLength);
 
 
 			if (fSampleDensity > 0.0f)
