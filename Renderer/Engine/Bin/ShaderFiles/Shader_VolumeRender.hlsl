@@ -28,12 +28,14 @@ float			g_fSunStepLength = 10.0f;
 int				g_iMaxStep = 100;
 int				g_iSunStep = 10;
 
+float			g_fEccentricity = 0.6f;
+float			g_fSilverIntencity = 0.01f;
+float			g_fSilverSpread = 0.7f;
+
 float3			g_vBoxMin = float3(0.0f, 100.0f, 0.0f);
 float3			g_vBoxMax = float3(600.0f, 400.0f, 600.0f);
 
-float			g_fHenyeyGreensteinGForward = 0.3f;
-float			g_fHenyeyGreensteinGBackward = -0.3f;
-float			g_fAbsorption = 1.5f;
+float			g_fAbsorption = 0.8f;
 float			g_fCurlNoiseScale = 7.44f;
 float			g_fDetailNoiseScale = 0.15f;
 float			g_fDetailNoiseModif = 0.5f;
@@ -254,7 +256,7 @@ float Height_Fraction(float3 vWorldPos)
 float Beer_Law(float fDensity)
 {
 	float fD = fDensity * -g_fAbsorption;
-	return max(exp(fD), exp(fD * 0.5f) * 0.7f);
+	return max(exp(fD), exp(fD * 0.25f) * 0.7f);
 	//return fD;
 }
 
@@ -277,9 +279,8 @@ float Powder_Effect(float fDensity, float fCos)
 
 float Calculate_Light_Energy(float fDensity, float fCos, float fPowderDensity) 
 { 
-	float fBeerPowder = 2.0f * Beer_Law(fDensity); //* Powder_Effect(fPowderDensity, fCos);
-	float fHG = max(Henyey_Greenstein_Phase(fCos, g_fHenyeyGreensteinGForward), Henyey_Greenstein_Phase(fCos, g_fHenyeyGreensteinGBackward));
-	//return fBeerPowder * HG;
+	float fBeerPowder = 2.0f * Beer_Law(fDensity);
+	float fHG = max(Henyey_Greenstein_Phase(fCos, g_fEccentricity), g_fSilverIntencity * Henyey_Greenstein_Phase(fCos, 0.99f - g_fSilverSpread));
 	return fBeerPowder * fHG;
 }
 
@@ -340,7 +341,6 @@ float Calculate_LightDensity(float3 vWorldPos)
 float4 RayMarch(float3 vStartPos, float3 vRayDir)
 {
 	float fAccum_Transmittance = 1.0f;
-	float fAlpha = 0.0f;
 	
 	float3 vLightColor = float3(1.0f, 1.0f, 1.0f);
 	float3 vResultColor = float3(0.0f, 0.0f, 0.0f);
@@ -353,25 +353,19 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir)
 		{
 			float fSampleDensity = Sample_CloudDensity(vStartPos);
 			
-			float fStep_Transmittance = Beer_Lambert_Law(fSampleDensity * g_fStepLength);
+			float fStep_Transmittance = Beer_Law(fSampleDensity * g_fStepLength);
+
 
 			if (fSampleDensity > 0.0f)
 			{
 				float fCos = dot(vRayDir, normalize(g_vLightPos - vStartPos));
 
-				fAlpha += (1.0f - fStep_Transmittance) * (1.0f - fAlpha);
 				fTotalDensity += fSampleDensity * g_fStepLength;
 				
 				float fSunDensity = Calculate_LightDensity(vStartPos);
-				float3 vScatteredLight = Calculate_Light_Energy(fSunDensity * g_fSunStepLength, fCos, fSampleDensity * g_fStepLength) * vLightColor * 6.0f * fAlpha;
-				float3 vLight = float3(1.0f, 1.0f, 1.0f) * 2.0f;
-
-				if (g_bUseLight == true)
-				{
-					vLight += vScatteredLight;
-				}
-
-				vResultColor += vLight * fAccum_Transmittance * fSampleDensity;
+				
+				float3 vScatteredLight = Calculate_Light_Energy(fSunDensity * g_fSunStepLength, fCos, fSampleDensity * g_fStepLength) * vLightColor * 2.0f;
+				vResultColor += vScatteredLight * fAccum_Transmittance * fSampleDensity * g_fStepLength;
 
 				fAccum_Transmittance *= fStep_Transmittance;
 			}
@@ -381,7 +375,7 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir)
 	}
 	
 	
-	return float4(vResultColor, fAlpha);
+	return float4(vResultColor, 1.0f);
 }
 
 
