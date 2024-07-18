@@ -18,24 +18,26 @@ texture2D		g_CurlNoiseTexture;
 
 //Test
 
-float3			g_vLightPos = float3(-10000.0f, 10000.0f, -10000.0f);
+float3			g_vLightPos = float3(-1.0f, 1.0f, -1.0f) * 6300e5;
 
+float			g_fMaxHeight = 1000.0f;
+float			g_fMinHeight = 600.0f;
+float3			g_vEarthCenter = float3(0.0f, -6300e3 + 600.0f, 0.0f);
+float			g_fEarthRadius = 6300e3;
 
 
 float			g_fOffset = 0.0f;
-float			g_fStepLength = 5.0f;
-float			g_fSunStepLength = 10.0f;
 int				g_iMaxStep = 100;
+
 int				g_iSunStep = 10;
+float			g_fSunStepLength = 30.0f;
 
 float			g_fEccentricity = 0.6f;
 float			g_fSilverIntencity = 0.2f;
 float			g_fSilverSpread = 0.7f;
 
-float3			g_vBoxMin = float3(0.0f, 100.0f, 0.0f);
-float3			g_vBoxMax = float3(600.0f, 400.0f, 600.0f);
 
-float			g_fAbsorption = 0.8f;
+float			g_fAbsorption = 1.0f;
 float			g_fCurlNoiseScale = 7.44f;
 float			g_fDetailNoiseScale = 0.15f;
 float			g_fDetailNoiseModif = 0.5f;
@@ -96,160 +98,61 @@ float remap(float fValue, float fIn1, float fIn2, float fOut1, float fOut2)
 }
 
 
-bool CheckRayYRange(float3 vPos, float3 vDir, float fYMin, float fYMax, out float3 vStart, out float3 vEnd)
-{
-   if (vPos.y >= fYMin && vPos.y <= fYMax)
-    {
-        // 시작점이 범위 내에 있는 경우
-        vStart = vPos;
-
-        // t_max 값을 계산하여 끝점을 구함
-        float fTMax = (fYMax - vPos.y) / vDir.y;
-		vEnd = vPos + fTMax * vDir;
-        return true;
-    }
-    else
-    {
-        // 시작점이 범위 밖에 있는 경우
-        float t1 = (fYMin - vPos.y) / vDir.y;
-        float t2 = (fYMax - vPos.y) / vDir.y;
-
-        if (t1 > t2)
-        {
-            float temp = t1;
-            t1 = t2;
-            t2 = temp;
-        }
-
-        if (t2 >= 0)
-        {
-            // t1이 음수인 경우를 처리 (시작점이 범위 아래쪽에 있고, 레이가 위로 향하는 경우)
-            if (t1 < 0)
-            {
-                t1 = 0;
-            }
-
-            vStart = vPos + t1 * vDir;
-            vEnd = vPos + t2 * vDir;
-            return true;
-        }
-    }
-
-    return false;
-}
-
-
-float3 Compute_Texcoord(float3 vWorldPos)
-{
-	float3 vTexcoord = float3(0.0f, 0.0f, 0.0f);
-
-	vTexcoord.x = fmod(vWorldPos.x, 100.0f);
-	vTexcoord.y = fmod(vWorldPos.y, 50.0f);
-	vTexcoord.z = fmod(vWorldPos.z, 100.0f);
-
-	if (vTexcoord.x < 0.0f)
-	{
-		vTexcoord.x = 100.0f - vTexcoord.x;
-	}
-	if (vTexcoord.y < 0.0f)
-	{
-		vTexcoord.y = 50.0f - vTexcoord.y;
-	}
-	if (vTexcoord.z < 0.0f)
-	{
-		vTexcoord.z = 100.0f - vTexcoord.z;
-	}
-	
-	vTexcoord.x = remap(vTexcoord.x, 0.0f, 100.0f, 0.0f, 1.0f);
-	vTexcoord.y = remap(vTexcoord.y, 0.0f, 100.0f, 0.0f, 1.0f);
-	vTexcoord.z = remap(vTexcoord.z, 0.0f, 100.0f, 0.0f, 1.0f);
-
-	return vTexcoord;
-}
-
-
 PS_OUT PS_MAIN_VOLUMERENDERTEST(PS_IN In)
 {
 	PS_OUT		Out = (PS_OUT)0;
 
 	vector		vClipPos;
 
-	vClipPos.x = In.vTexcoord.x * 2.f - 1.f;
-	vClipPos.y = In.vTexcoord.y * -2.f + 1.f;
-	vClipPos.z = 1.f;
-	vClipPos.w = 1.f;
-
-	vClipPos = vClipPos * 1000.0f;
-	vClipPos = mul(vClipPos, g_ProjMatrixInv);
-
-	vClipPos = mul(vClipPos, g_ViewMatrixInv);
-	
-	float3		vWorldPos = vClipPos.xyz;
-	float3		vRayDir = normalize(vWorldPos - g_vCamPosition.xyz);
-	vWorldPos = g_vCamPosition.xyz;
-
-	float3 vStart, vEnd;
-	if (CheckRayYRange(vWorldPos, vRayDir, 100.0f, 120.0f, vStart, vEnd) == false)
-	{
-		discard;
-	}
-	
-	Out.vColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
-	vWorldPos = vStart;
-
-	int iMaxStep = 10;
-	float fLength =  min(1000.0f, length(vEnd - vStart));
-	float fStepSize = fLength / (float)iMaxStep;
-
-	//float3 vSphereWorld = float3(20.0f, 20.0f, 20.0f);
-	float fRadius = 5.0f;
-	
-	float fDensity = 0.0f;
-	
-	for (int i = 0; i < iMaxStep; ++i)
-	{
-		float3 vTexcoord = Compute_Texcoord(vWorldPos);
-		//vTexcoord += g_fOffset;
-		//vTexcoord *= 0.25f;
-		fDensity += g_ShapeTexture.Sample(CloudSampler, vTexcoord).x * fStepSize * 0.5f;
-		
-		//fDensity = fStepSize * 0.05f;
-		vWorldPos += vRayDir * fStepSize;
-	}
-	
-	if (fDensity == 0.0f)
-	{
-		discard;
-	}
-	
-	Out.vColor.a *= min(fDensity, 1.0f);
-
 	return Out;
 }
+
 
 float Blue_Noise(float2 vTexcoord, float fStepLength)
 {
 	return (g_BlueNoiseTexture.Sample(LinearSampler, vTexcoord).x - 0.5f) * 2.0f * fStepLength;
 }
 
-bool Check_BoxIn(float3 vWorldPos)
+float3 Ray_Sphere_Intersection(float3 vOrigin, float3 vRayDir, float3 vCenter, float fRadius)
 {
-	if (vWorldPos.x > g_vBoxMin.x 
-		&& vWorldPos.x < g_vBoxMax.x 
-		&& vWorldPos.y > g_vBoxMin.y 
-		&& vWorldPos.y < g_vBoxMax.y 
-		&& vWorldPos.z > g_vBoxMin.z 
-		&& vWorldPos.z < g_vBoxMax.z)
+    float3 l = vOrigin - vCenter;
+	float a = 1.0f;
+	float b = 2.0f * dot(vRayDir, l);
+	float c = dot(l, l) - pow(fRadius, 2);
+	float D = pow(b, 2) - 4.0f * a * c;
+	
+    if (D < 0.0f)
+		return vOrigin;
+	else if (abs(D) - 0.00005f <= 0.0f)
+		return vOrigin + vRayDir * (-0.5f * b / a);
+	else
 	{
-		return true;
-	}
+		float q = 0.0f;
+		if (b > 0.0f) 
+            q = -0.5f * (b + sqrt(D));
+		else 
+            q = -0.5f * (b - sqrt(D));
+		
+		float h1 = q / a;
+		float h2 = c / q;
+		float2 t = float2(min(h1, h2), max(h1, h2));
 
-	return false;
+		if (t.x < 0.0f) 
+        {
+			t.x = t.y;
+			
+            if (t.x < 0.0f)
+				return vOrigin;
+		}
+        
+		return vOrigin + t.x * vRayDir;
+	}
 }
+
 
 float Height_Fraction(float3 vWorldPos)
 {
-	return saturate((vWorldPos.y - g_vBoxMin.y) / (g_vBoxMax.y - 50.0f - g_vBoxMin.y));
+	return  clamp((distance(vWorldPos,  g_vEarthCenter) - (g_fMinHeight + g_fEarthRadius)) / (g_fMaxHeight - g_fMinHeight), 0.0f, 1.0f);
 }
 
 
@@ -280,19 +183,17 @@ float Powder_Effect(float fDensity, float fCos)
 float Calculate_Light_Energy(float fDensity, float fCos, float fPowderDensity) 
 { 
 	float fBeerPowder = 2.0f * Beer_Law(fDensity);
-	float fHG = max(0.2f, max(Henyey_Greenstein_Phase(fCos, g_fEccentricity), g_fSilverIntencity * Henyey_Greenstein_Phase(fCos, 0.99f - g_fSilverSpread)));
+	//float fHG = max(Henyey_Greenstein_Phase(fCos, g_fEccentricity), g_fSilverIntencity * Henyey_Greenstein_Phase(fCos, 0.99f - g_fSilverSpread));
+	float fHG = lerp(Henyey_Greenstein_Phase(fCos, 0.8f), Henyey_Greenstein_Phase(fCos, -0.5f), 0.5f);
 	return fBeerPowder * fHG;
 }
 
 float Sample_CloudDensity(float3 vWorldPos)
 {
-	float3 vTexcoord = float3(remap(vWorldPos.x, g_vBoxMin.x, g_vBoxMax.x, 0.0f, 1.0f), remap(vWorldPos.y, g_vBoxMin.y, g_vBoxMax.y, 0.0f, 1.0f), remap(vWorldPos.z, g_vBoxMin.z, g_vBoxMax.z, 0.0f, 1.0f));
-	//vTexcoord.x *= 2.0f;
-	//vTexcoord.z *= 2.0f;
-	vTexcoord.y *= 0.5f;
-	vTexcoord.z += g_fOffset;
-	
+	float3 vTexcoord = vWorldPos * 0.0002f;
+
 	float fHeightFraction = Height_Fraction(vWorldPos);
+
 
 	float4 vSample = g_ShapeTexture.SampleLevel(CloudSampler, vTexcoord, 0.0f);
 
@@ -300,12 +201,15 @@ float Sample_CloudDensity(float3 vWorldPos)
 
     float fDensity = remap(vSample.x, fWfbm - 1.0f, 1.0f, 0.0f, 1.0f);
 
-	float fCoverage = lerp(0.8f, 1.0f, fHeightFraction);
+	fDensity *= saturate(remap(fHeightFraction, 0.0f, 0.25f * (1.0f - fDensity), 0.0f, 1.0f))
+           * saturate(remap(fHeightFraction, 0.75f * 1.0f, 1.0f, 1.0f, 0.0f));
+
+	float fCoverage = lerp(0.75f, 1.0f, fHeightFraction);
 
     fDensity = remap(fDensity, fCoverage, 1.0f, 0.0f, 1.0f);
 	fDensity *= 0.3f;
 
-	float4 vDetail = g_DetailTexture.SampleLevel(CloudSampler, vTexcoord * 5.0f, 0.0f);
+	float4 vDetail = g_DetailTexture.SampleLevel(CloudSampler, vTexcoord * 10.0f, 0.0f);
 	float fDetailfbm = vDetail.x * 0.625f + vDetail.y * 0.25f + vDetail.z * 0.125f;
 
 	fDensity -= fDetailfbm * g_fDetailNoiseScale;
@@ -315,22 +219,20 @@ float Sample_CloudDensity(float3 vWorldPos)
 }
 
 
-float Calculate_LightDensity(float3 vWorldPos)
+float Calculate_LightDensity(float3 vStart)
 {
 	float fSunDensity = 0.0f;
 
-	float3 vDir = normalize(g_vLightPos - vWorldPos);
+	float3 vDir = normalize(g_vLightPos - vStart);
 	
 	[loop]
 	for (int i = 0; i < g_iSunStep; ++i)
 	{
-		if (Check_BoxIn(vWorldPos) == true)
-		{
-			float fSampleDensity = Sample_CloudDensity(vWorldPos);
+		float fSampleDensity = Sample_CloudDensity(vStart);
 			
-			fSunDensity += fSampleDensity;
-		}
-		vWorldPos += vDir * g_fSunStepLength;
+		fSunDensity += fSampleDensity;
+
+		vStart += vDir * g_fSunStepLength;
 	}
 	
 
@@ -338,44 +240,48 @@ float Calculate_LightDensity(float3 vWorldPos)
 }
 
 
-float4 RayMarch(float3 vStartPos, float3 vRayDir)
+float4 RayMarch(float3 vStartPos, float3 vRayDir, float fStepLength)
 {
 	float fAccum_Transmittance = 1.0f;
 	
 	float3 vLightColor = float3(1.0f, 1.0f, 1.0f);
 	float3 vResultColor = float3(0.0f, 0.0f, 0.0f);
-
 	float fTotalDensity = 0.0f;
 
 	for (int i = 0; i < g_iMaxStep; ++i)
 	{
-		if (Check_BoxIn(vStartPos))
+		if (vStartPos.y > 10.0f)
 		{
 			float fSampleDensity = Sample_CloudDensity(vStartPos);
 			
-			float fStep_Transmittance = Beer_Lambert_Law(fSampleDensity * g_fStepLength);
+			float fStep_Transmittance = Beer_Lambert_Law(fSampleDensity * fStepLength);
 
 
 			if (fSampleDensity > 0.0f)
 			{
-				float fCos = dot(vRayDir, normalize(g_vLightPos - vStartPos));
-
-				fTotalDensity += fSampleDensity * g_fStepLength;
+				float3 vLightDir = normalize(g_vLightPos - vStartPos);
+				float fCos = dot(vRayDir, vLightDir);
+			
+				fTotalDensity += fSampleDensity * fStepLength;
 				
 				float fSunDensity = Calculate_LightDensity(vStartPos);
-				
-				float3 vScatteredLight = Calculate_Light_Energy(fSunDensity * g_fSunStepLength, fCos, fSampleDensity * g_fStepLength) * vLightColor * 2.0f;
-				vResultColor += vScatteredLight * fAccum_Transmittance * fSampleDensity * g_fStepLength;
-
+			
+				float3 vScatteredLight = Calculate_Light_Energy(fSunDensity * g_fSunStepLength, fCos, fSampleDensity * fStepLength) * vLightColor * 5.0f;
+				vResultColor += vScatteredLight* fAccum_Transmittance * fSampleDensity * fStepLength;
+			
 				fAccum_Transmittance *= fStep_Transmittance;
 			}
-
 		}
-		vStartPos += vRayDir * g_fStepLength;
+
+		vStartPos += vRayDir * fStepLength;
+
 	}
-	
-	
-	return float4(vResultColor, 1.0f);
+
+	float fAlpha = (1.0f - fAccum_Transmittance);
+
+	return float4(vResultColor, fAlpha);
+
+	//return float4(fTotalDensity, fTotalDensity, fTotalDensity, fTotalDensity);
 }
 
 
@@ -398,9 +304,26 @@ PS_OUT PS_MAIN_PERLINWORLEYTEST(PS_IN In)
 	float3		vWorldPos = vClipPos.xyz;
 	float3		vRayDir = normalize(vWorldPos - g_vCamPosition.xyz);
 	vWorldPos = g_vCamPosition.xyz;
-	vWorldPos += vRayDir * Blue_Noise(In.vTexcoord, g_fStepLength);
 
-	Out.vColor = RayMarch(vWorldPos, vRayDir);
+	float3		vStart = Ray_Sphere_Intersection(vWorldPos, vRayDir, g_vEarthCenter, g_fEarthRadius + g_fMinHeight);
+	float3		vEnd = Ray_Sphere_Intersection(vWorldPos, vRayDir, g_vEarthCenter, g_fEarthRadius + g_fMaxHeight);
+
+	float		fLength = distance(vStart, vEnd);
+	float		fStepLength = fLength / (float)g_iMaxStep;
+
+
+	vStart += vRayDir * Blue_Noise(In.vTexcoord, fStepLength);
+
+	if (distance(vStart, g_vCamPosition) < 20000.0f)
+	{
+		Out.vColor = RayMarch(vStart, vRayDir, fStepLength);
+	}
+	else
+	{
+		discard;
+	}
+
+	
 
 	return Out;
 }
