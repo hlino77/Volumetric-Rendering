@@ -27,9 +27,9 @@ float			g_fEarthRadius = 6300e3;
 
 
 float			g_fOffset = 0.0f;
-int				g_iMaxStep = 100;
+int				g_iMaxStep = 64;
 
-int				g_iSunStep = 10;
+int				g_iSunStep = 8;
 float			g_fSunStepLength = 30.0f;
 
 float			g_fEccentricity = 0.6f;
@@ -84,29 +84,10 @@ struct PS_OUT
 	float4	vColor : SV_TARGET0;
 };
 
-
-struct OBB 
-{
-	float3 vCenter;
-	float3 vExtents;
-	float3x3 vOrientation;
-};
-
 float remap(float fValue, float fIn1, float fIn2, float fOut1, float fOut2)
 {
     return fOut1 + (fValue - fIn1) * (fOut2 - fOut1) / (fIn2 - fIn1);
 }
-
-
-PS_OUT PS_MAIN_VOLUMERENDERTEST(PS_IN In)
-{
-	PS_OUT		Out = (PS_OUT)0;
-
-	vector		vClipPos;
-
-	return Out;
-}
-
 
 float Blue_Noise(float2 vTexcoord, float fStepLength)
 {
@@ -160,7 +141,6 @@ float Beer_Law(float fDensity)
 {
 	float fD = fDensity * -g_fAbsorption;
 	return max(exp(fD), exp(fD * 0.25f) * 0.7f);
-	//return fD;
 }
 
 float Beer_Lambert_Law(float fDensity)
@@ -183,7 +163,6 @@ float Powder_Effect(float fDensity, float fCos)
 float Calculate_Light_Energy(float fDensity, float fCos, float fPowderDensity) 
 { 
 	float fBeerPowder = 2.0f * Beer_Law(fDensity);
-	//float fHG = max(Henyey_Greenstein_Phase(fCos, g_fEccentricity), g_fSilverIntencity * Henyey_Greenstein_Phase(fCos, 0.99f - g_fSilverSpread));
 	float fHG = lerp(Henyey_Greenstein_Phase(fCos, 0.8f), Henyey_Greenstein_Phase(fCos, -0.5f), 0.5f);
 	return fBeerPowder * fHG;
 }
@@ -280,12 +259,10 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir, float fStepLength)
 	float fAlpha = (1.0f - fAccum_Transmittance);
 
 	return float4(vResultColor, fAlpha);
-
-	//return float4(fTotalDensity, fTotalDensity, fTotalDensity, fTotalDensity);
 }
 
 
-PS_OUT PS_MAIN_PERLINWORLEYTEST(PS_IN In)
+PS_OUT PS_MAIN_CLOUD(PS_IN In)
 {
 	PS_OUT		Out = (PS_OUT)0;
 
@@ -349,19 +326,6 @@ PS_OUT PS_MAIN_PERLINWORLEY2D(PS_IN In)
 
 technique11 DefaultTechnique
 {
-	pass VolumeRender
-	{
-		SetRasterizerState(RS_Default);
-		SetDepthStencilState(DSS_None, 0);
-		SetBlendState(BS_AlphaBlend, float4(0.f, 0.f, 0.f, 1.f), 0xffffffff);
-
-		VertexShader = compile vs_5_0 VS_MAIN();
-		GeometryShader = NULL;
-		HullShader = NULL;
-		DomainShader = NULL;
-		PixelShader = compile ps_5_0 PS_MAIN_VOLUMERENDERTEST();
-	}
-
 	pass CloudRender
 	{
 		SetRasterizerState(RS_Default);
@@ -372,7 +336,7 @@ technique11 DefaultTechnique
 		GeometryShader = NULL;
 		HullShader = NULL;
 		DomainShader = NULL;
-		PixelShader = compile ps_5_0 PS_MAIN_PERLINWORLEYTEST();
+		PixelShader = compile ps_5_0 PS_MAIN_CLOUD();
 	}
 
 	pass PerlinWorley2D
