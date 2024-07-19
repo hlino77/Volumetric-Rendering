@@ -18,27 +18,21 @@ CCloud::CCloud(const CCloud& rhs)
 	, m_WorldMatrix(rhs.m_WorldMatrix)
 	, m_ViewMatrix(rhs.m_ViewMatrix)
 	, m_ProjMatrix(rhs.m_ProjMatrix)
+	, m_iWinSizeX(rhs.m_iWinSizeX)
+	, m_iWinSizeY(rhs.m_iWinSizeY)
 {
 	Safe_AddRef(m_pTarget_Manager);
 }
 
 HRESULT CCloud::Initialize_Prototype()
 {
-	D3D11_VIEWPORT		ViewportDesc;
-
-	_uint				iNumViewports = 1;
-
-	m_pContext->RSGetViewports(&iNumViewports, &ViewportDesc);
-
 	m_WorldMatrix = XMMatrixIdentity();
-	m_WorldMatrix._11 = ViewportDesc.Width;
-	m_WorldMatrix._22 = ViewportDesc.Height;
+	m_WorldMatrix._11 = m_iWinSizeX;
+	m_WorldMatrix._22 = m_iWinSizeY;
 
-	m_iWinSizeX = ViewportDesc.Width;
-	m_iWinSizeY = ViewportDesc.Height;
 
 	m_ViewMatrix = XMMatrixIdentity();
-	m_ProjMatrix = XMMatrixOrthographicLH(ViewportDesc.Width, ViewportDesc.Height, 0.f, 1.f);
+	m_ProjMatrix = XMMatrixOrthographicLH(m_iWinSizeX, m_iWinSizeY, 0.f, 1.f);
 
 	if (FAILED(Ready_RenderTargets()))
 	{
@@ -50,8 +44,6 @@ HRESULT CCloud::Initialize_Prototype()
 
 HRESULT CCloud::Initialize(void* pArg)
 {
-	
-
 
 	if (FAILED(Ready_For_NoiseTexture3D()))
 	{
@@ -106,6 +98,9 @@ HRESULT CCloud::Render()
 		return E_FAIL;
 	if (FAILED(m_pShader->Bind_Matrix("g_ProjMatrixInv", &pPipeLine->Get_Transform_Matrix_Inverse(CPipeLine::D3DTS_PROJ))))
 		return E_FAIL;
+	if (FAILED(m_pShader->Bind_Matrix("g_PrevViewMatrixInv", &m_PrevViewMatrixInv)))
+		return E_FAIL;
+
 	if (FAILED(m_pShader->Bind_RawValue("g_vCamPosition", &pPipeLine->Get_CamPosition(), sizeof(Vec3))))
 		return E_FAIL;
 
@@ -144,7 +139,7 @@ HRESULT CCloud::Render()
 		return E_FAIL;
 	}
 
-	if (FAILED(m_pShader->Bind_RawValue("g_iWinSizeX", &m_iWinSizeX, sizeof(_uint))))
+ 	if (FAILED(m_pShader->Bind_RawValue("g_iWinSizeX", &m_iWinSizeX, sizeof(_uint))))
 	{
 		return E_FAIL;
 	}
@@ -166,6 +161,7 @@ HRESULT CCloud::Render()
 		return E_FAIL;
 
 	m_pRendererCom->Set_SkyTargetName(m_Targets[m_bSwap].szTarget);
+	m_PrevViewMatrixInv = pPipeLine->Get_Transform_Matrix_Inverse(CPipeLine::D3DTS_VIEW);
 
 	return S_OK;
 }

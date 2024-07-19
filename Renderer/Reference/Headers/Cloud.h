@@ -47,6 +47,7 @@ private:
 	class CRenderer* m_pRendererCom = { nullptr };
 
 	Matrix					m_WorldMatrix, m_ViewMatrix, m_ProjMatrix;
+	Matrix					m_PrevViewMatrixInv;
 
 	class CTarget_Manager* m_pTarget_Manager = { nullptr };
 
@@ -54,8 +55,8 @@ private:
 	vector<_uint>	m_UpdatePixel;
 	_uint m_iCurrUpdatePixel = 0;
 	_uint m_iGridSize = 4;
-	_uint m_iWinSizeX;
-	_uint m_iWinSizeY;
+	_uint m_iWinSizeX = 1280;
+	_uint m_iWinSizeY = 720;
 
 	bool m_bSwap = true;
 public:

@@ -4,6 +4,7 @@
 matrix			g_WorldMatrix, g_ViewMatrix, g_ProjMatrix;
 matrix			g_ProjMatrixInv;
 matrix			g_ViewMatrixInv;
+matrix			g_PrevViewMatrixInv;
 
 vector			g_vCamPosition;
 
@@ -36,8 +37,8 @@ float			g_fDetailNoiseModif = 0.5f;
 int				g_iUpdatePixel;
 int				g_iGridSize;
 
-int				g_iWinSizeX;
-int				g_iWinSizeY;
+uint				g_iWinSizeX;
+uint				g_iWinSizeY;
 
 struct VS_IN
 {
@@ -246,6 +247,11 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir, float fStepLength)
 			
 				fAccum_Transmittance *= fStep_Transmittance;
 			}
+
+ 			if (fAccum_Transmittance < 0.0001f)
+ 			{
+ 				break;
+ 			}
 		}
 
 		vStartPos += vRayDir * fStepLength;
@@ -257,12 +263,32 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir, float fStepLength)
 	return float4(vResultColor, fAlpha);
 }
 
+float4 Get_Cloud(float3 vWorldPos, float3 vRayDir, float2 vTexcoord)
+{
+	float3		vStart = Ray_Sphere_Intersection(vWorldPos, vRayDir, g_vEarthCenter, g_fEarthRadius + g_fMinHeight);
+	float3		vEnd = Ray_Sphere_Intersection(vWorldPos, vRayDir, g_vEarthCenter, g_fEarthRadius + g_fMaxHeight);
+
+	float		fLength = distance(vStart, vEnd);
+	float		fStepLength = fLength / (float)g_iMaxStep;
+
+
+	vStart += vRayDir * Blue_Noise(vTexcoord, fStepLength);
+
+	if (distance(vStart, g_vCamPosition) < 20000.0f)
+	{
+		return RayMarch(vStart, vRayDir, fStepLength);
+	}
+
+	return float4(0.0f, 0.0f, 0.0f, 0.0f);
+}
 
 PS_OUT PS_MAIN_CLOUD(PS_IN In)
 {
 	PS_OUT		Out = (PS_OUT)0;
 
-	int iPixelIndex = ((int(In.vTexcoord.y * g_iWinSizeY) % g_iGridSize) * g_iGridSize) + int(In.vTexcoord.x * g_iWinSizeX) % g_iGridSize;
+	int iX = In.vTexcoord.x * g_iWinSizeX;
+	int iY = In.vTexcoord.y * g_iWinSizeY;
+	int iPixelIndex = ((iX % g_iGridSize) * g_iGridSize) + iY % g_iGridSize;
 
 	if (g_iUpdatePixel == iPixelIndex)
 	{
@@ -282,23 +308,7 @@ PS_OUT PS_MAIN_CLOUD(PS_IN In)
 		float3		vRayDir = normalize(vWorldPos - g_vCamPosition.xyz);
 		vWorldPos = g_vCamPosition.xyz;
 
-		float3		vStart = Ray_Sphere_Intersection(vWorldPos, vRayDir, g_vEarthCenter, g_fEarthRadius + g_fMinHeight);
-		float3		vEnd = Ray_Sphere_Intersection(vWorldPos, vRayDir, g_vEarthCenter, g_fEarthRadius + g_fMaxHeight);
-
-		float		fLength = distance(vStart, vEnd);
-		float		fStepLength = fLength / (float)g_iMaxStep;
-
-
-		vStart += vRayDir * Blue_Noise(In.vTexcoord, fStepLength);
-
-		if (distance(vStart, g_vCamPosition) < 20000.0f)
-		{
-			Out.vColor = RayMarch(vStart, vRayDir, fStepLength);
-		}
-		else
-		{
-			discard;
-		}
+		Out.vColor = Get_Cloud(vWorldPos, vRayDir, In.vTexcoord);
 	}
 	else
 	{
