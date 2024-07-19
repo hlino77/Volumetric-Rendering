@@ -15,32 +15,15 @@ CCloud::CCloud(const CCloud& rhs)
 	: CGameObject(rhs)
 	, m_pTarget_Manager(CTarget_Manager::GetInstance())
 	, m_Targets(rhs.m_Targets)
+	, m_WorldMatrix(rhs.m_WorldMatrix)
+	, m_ViewMatrix(rhs.m_ViewMatrix)
+	, m_ProjMatrix(rhs.m_ProjMatrix)
 {
 	Safe_AddRef(m_pTarget_Manager);
 }
 
 HRESULT CCloud::Initialize_Prototype()
 {
-	if (FAILED(Ready_RenderTargets()))
-	{
-		return E_FAIL;
-	}
-
-	return S_OK;
-}
-
-HRESULT CCloud::Initialize(void* pArg)
-{
-	if (FAILED(Ready_For_NoiseTexture3D()))
-	{
-		return E_FAIL;
-	}
-
-	if (FAILED(Ready_Components()))
-	{
-		return E_FAIL;
-	}
-
 	D3D11_VIEWPORT		ViewportDesc;
 
 	_uint				iNumViewports = 1;
@@ -51,8 +34,39 @@ HRESULT CCloud::Initialize(void* pArg)
 	m_WorldMatrix._11 = ViewportDesc.Width;
 	m_WorldMatrix._22 = ViewportDesc.Height;
 
+	m_iWinSizeX = ViewportDesc.Width;
+	m_iWinSizeY = ViewportDesc.Height;
+
 	m_ViewMatrix = XMMatrixIdentity();
 	m_ProjMatrix = XMMatrixOrthographicLH(ViewportDesc.Width, ViewportDesc.Height, 0.f, 1.f);
+
+	if (FAILED(Ready_RenderTargets()))
+	{
+		return E_FAIL;
+	}
+
+	return S_OK;
+}
+
+HRESULT CCloud::Initialize(void* pArg)
+{
+	
+
+
+	if (FAILED(Ready_For_NoiseTexture3D()))
+	{
+		return E_FAIL;
+	}
+
+	if (FAILED(Ready_Components()))
+	{
+		return E_FAIL;
+	}
+
+	if (FAILED(Ready_UpdatePixel()))
+	{
+		return E_FAIL;
+	}
 
 	return S_OK;
 }
@@ -64,6 +78,8 @@ void CCloud::PriorityTick(_float fTimeDelta)
 
 void CCloud::Tick(_float fTimeDelta)
 {
+	m_iCurrUpdatePixel = (m_iCurrUpdatePixel + 1) % (m_iGridSize * m_iGridSize);
+
 	m_bSwap = !m_bSwap;
 }
 
@@ -112,6 +128,31 @@ HRESULT CCloud::Render()
 	{
 		return E_FAIL;
 	}
+
+	if (FAILED(m_pTarget_Manager->Bind_SRV(m_pShader, m_Targets[!m_bSwap].szTarget, "g_PrevFrameTexture")))
+	{
+		return E_FAIL;
+	}
+
+	if (FAILED(m_pShader->Bind_RawValue("g_iGridSize", &m_iGridSize, sizeof(_uint))))
+	{
+		return E_FAIL;
+	}
+
+	if (FAILED(m_pShader->Bind_RawValue("g_iUpdatePixel", &m_UpdatePixel[m_iCurrUpdatePixel], sizeof(_uint))))
+	{
+		return E_FAIL;
+	}
+
+	if (FAILED(m_pShader->Bind_RawValue("g_iWinSizeX", &m_iWinSizeX, sizeof(_uint))))
+	{
+		return E_FAIL;
+	}
+	if (FAILED(m_pShader->Bind_RawValue("g_iWinSizeY", &m_iWinSizeY, sizeof(_uint))))
+	{
+		return E_FAIL;
+	}
+
 
 	RELEASE_INSTANCE(CPipeLine);
 
@@ -180,11 +221,6 @@ HRESULT CCloud::Ready_Components()
 
 HRESULT CCloud::Ready_RenderTargets()
 {
-	D3D11_VIEWPORT		ViewportDesc;
-
-	_uint				iNumViewports = 1;
-
-	m_pContext->RSGetViewports(&iNumViewports, &ViewportDesc);
 
 	CloudTarget Cloud1, Cloud2;
 
@@ -195,11 +231,11 @@ HRESULT CCloud::Ready_RenderTargets()
 	Cloud2.szTarget = L"Target_Cloud2";
 
 	if (FAILED(m_pTarget_Manager->Add_RenderTarget(m_pDevice, m_pContext, Cloud1.szTarget,
-		ViewportDesc.Width, ViewportDesc.Height, DXGI_FORMAT_R32G32B32A32_FLOAT, Vec4(0.0f, 0.0f, 0.0f, 0.f))))
+		m_iWinSizeX, m_iWinSizeY, DXGI_FORMAT_R32G32B32A32_FLOAT, Vec4(0.0f, 0.0f, 0.0f, 0.f))))
 		return E_FAIL;
 
 	if (FAILED(m_pTarget_Manager->Add_RenderTarget(m_pDevice, m_pContext, Cloud2.szTarget,
-		ViewportDesc.Width, ViewportDesc.Height, DXGI_FORMAT_R32G32B32A32_FLOAT, Vec4(0.0f, 0.0f, 0.0f, 0.f))))
+		m_iWinSizeX, m_iWinSizeY, DXGI_FORMAT_R32G32B32A32_FLOAT, Vec4(0.0f, 0.0f, 0.0f, 0.f))))
 		return E_FAIL;
 
 	if (FAILED(m_pTarget_Manager->Add_MRT(Cloud1.szMRT, Cloud1.szTarget)))
@@ -210,6 +246,31 @@ HRESULT CCloud::Ready_RenderTargets()
 
 	m_Targets.push_back(Cloud1);
 	m_Targets.push_back(Cloud2);
+
+	return S_OK;
+}
+
+HRESULT CCloud::Ready_UpdatePixel()
+{
+	m_UpdatePixel.push_back(0);
+	m_UpdatePixel.push_back(10);
+	m_UpdatePixel.push_back(2);
+	m_UpdatePixel.push_back(8);
+
+	m_UpdatePixel.push_back(5);
+	m_UpdatePixel.push_back(15);
+	m_UpdatePixel.push_back(7);
+	m_UpdatePixel.push_back(13);
+
+	m_UpdatePixel.push_back(1);
+	m_UpdatePixel.push_back(11);
+	m_UpdatePixel.push_back(3);
+	m_UpdatePixel.push_back(9);
+
+	m_UpdatePixel.push_back(4);
+	m_UpdatePixel.push_back(14);
+	m_UpdatePixel.push_back(6);
+	m_UpdatePixel.push_back(12);
 
 	return S_OK;
 }

@@ -2,7 +2,6 @@
 #include "Engine_Shader_Defines.hpp"
 
 matrix			g_WorldMatrix, g_ViewMatrix, g_ProjMatrix;
-matrix			g_LightViewMatrix, g_LightProjMatrix;
 matrix			g_ProjMatrixInv;
 matrix			g_ViewMatrixInv;
 
@@ -14,9 +13,7 @@ texture3D		g_DetailTexture;
 texture2D		g_BlueNoiseTexture;
 texture2D		g_CurlNoiseTexture;
 
-
-
-//Test
+texture2D		g_PrevFrameTexture;
 
 float3			g_vLightPos = float3(-1.0f, 1.0f, -1.0f) * 6300e5;
 
@@ -25,23 +22,22 @@ float			g_fMinHeight = 600.0f;
 float3			g_vEarthCenter = float3(0.0f, -6300e3 + 600.0f, 0.0f);
 float			g_fEarthRadius = 6300e3;
 
-
-float			g_fOffset = 0.0f;
 int				g_iMaxStep = 64;
 
 int				g_iSunStep = 8;
 float			g_fSunStepLength = 30.0f;
-
-float			g_fEccentricity = 0.6f;
-float			g_fSilverIntencity = 0.2f;
-float			g_fSilverSpread = 0.7f;
 
 
 float			g_fAbsorption = 1.0f;
 float			g_fCurlNoiseScale = 7.44f;
 float			g_fDetailNoiseScale = 0.15f;
 float			g_fDetailNoiseModif = 0.5f;
-bool			g_bUseLight = true;
+
+int				g_iUpdatePixel;
+int				g_iGridSize;
+
+int				g_iWinSizeX;
+int				g_iWinSizeY;
 
 struct VS_IN
 {
@@ -266,42 +262,49 @@ PS_OUT PS_MAIN_CLOUD(PS_IN In)
 {
 	PS_OUT		Out = (PS_OUT)0;
 
-	vector		vClipPos;
+	int iPixelIndex = ((int(In.vTexcoord.y * g_iWinSizeY) % g_iGridSize) * g_iGridSize) + int(In.vTexcoord.x * g_iWinSizeX) % g_iGridSize;
 
-	vClipPos.x = In.vTexcoord.x * 2.f - 1.f;
-	vClipPos.y = In.vTexcoord.y * -2.f + 1.f;
-	vClipPos.z = 1.f;
-	vClipPos.w = 1.f;
-
-	vClipPos = vClipPos * 1000.0f;
-	vClipPos = mul(vClipPos, g_ProjMatrixInv);
-
-	vClipPos = mul(vClipPos, g_ViewMatrixInv);
-	
-	float3		vWorldPos = vClipPos.xyz;
-	float3		vRayDir = normalize(vWorldPos - g_vCamPosition.xyz);
-	vWorldPos = g_vCamPosition.xyz;
-
-	float3		vStart = Ray_Sphere_Intersection(vWorldPos, vRayDir, g_vEarthCenter, g_fEarthRadius + g_fMinHeight);
-	float3		vEnd = Ray_Sphere_Intersection(vWorldPos, vRayDir, g_vEarthCenter, g_fEarthRadius + g_fMaxHeight);
-
-	float		fLength = distance(vStart, vEnd);
-	float		fStepLength = fLength / (float)g_iMaxStep;
-
-
-	vStart += vRayDir * Blue_Noise(In.vTexcoord, fStepLength);
-
-	if (distance(vStart, g_vCamPosition) < 20000.0f)
+	if (g_iUpdatePixel == iPixelIndex)
 	{
-		Out.vColor = RayMarch(vStart, vRayDir, fStepLength);
+		vector		vClipPos;
+
+		vClipPos.x = In.vTexcoord.x * 2.f - 1.f;
+		vClipPos.y = In.vTexcoord.y * -2.f + 1.f;
+		vClipPos.z = 1.0f;
+		vClipPos.w = 1.f;
+
+		vClipPos = vClipPos * 1000.0f;
+		vClipPos = mul(vClipPos, g_ProjMatrixInv);
+
+		vClipPos = mul(vClipPos, g_ViewMatrixInv);
+		
+		float3		vWorldPos = vClipPos.xyz;
+		float3		vRayDir = normalize(vWorldPos - g_vCamPosition.xyz);
+		vWorldPos = g_vCamPosition.xyz;
+
+		float3		vStart = Ray_Sphere_Intersection(vWorldPos, vRayDir, g_vEarthCenter, g_fEarthRadius + g_fMinHeight);
+		float3		vEnd = Ray_Sphere_Intersection(vWorldPos, vRayDir, g_vEarthCenter, g_fEarthRadius + g_fMaxHeight);
+
+		float		fLength = distance(vStart, vEnd);
+		float		fStepLength = fLength / (float)g_iMaxStep;
+
+
+		vStart += vRayDir * Blue_Noise(In.vTexcoord, fStepLength);
+
+		if (distance(vStart, g_vCamPosition) < 20000.0f)
+		{
+			Out.vColor = RayMarch(vStart, vRayDir, fStepLength);
+		}
+		else
+		{
+			discard;
+		}
 	}
 	else
 	{
-		discard;
+		Out.vColor = g_PrevFrameTexture.Sample(PointSampler, In.vTexcoord);
 	}
-
 	
-
 	return Out;
 }
 
@@ -310,7 +313,7 @@ PS_OUT PS_MAIN_PERLINWORLEY2D(PS_IN In)
 {
 	PS_OUT		Out = (PS_OUT)0;
 
-	float4 vSample = g_ShapeTexture.Sample(CloudSampler, float3(In.vTexcoord.x * 2.0f, In.vTexcoord.y * 2.0f, g_fOffset));
+	float4 vSample = g_ShapeTexture.Sample(CloudSampler, float3(In.vTexcoord.x * 2.0f, In.vTexcoord.y * 2.0f, 0.0f));
 
 	float fWfbm = vSample.y * 0.625f + vSample.z * 0.25f + vSample.w * 0.125f;
 
@@ -330,7 +333,7 @@ technique11 DefaultTechnique
 	{
 		SetRasterizerState(RS_Default);
 		SetDepthStencilState(DSS_None, 0);
-		SetBlendState(BS_AlphaBlend, float4(0.f, 0.f, 0.f, 1.f), 0xffffffff);
+		SetBlendState(BS_Default, float4(0.f, 0.f, 0.f, 1.f), 0xffffffff);
 
 		VertexShader = compile vs_5_0 VS_MAIN();
 		GeometryShader = NULL;

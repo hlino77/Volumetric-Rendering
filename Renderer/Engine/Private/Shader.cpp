@@ -87,7 +87,7 @@ HRESULT CShader::Begin(_uint iPassIndex)
 	/* iPassIndex번째 패스로 그리기를 시작합니다. */
 	pTechnique->GetPassByIndex(iPassIndex)->Apply(0, m_pContext);	
 
-	return S_OK;
+ 	return S_OK;
 }
 
 HRESULT CShader::Bind_RawValue(const char * pConstantName, const void * pData, _uint iLength)

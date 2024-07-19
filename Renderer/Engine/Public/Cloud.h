@@ -32,6 +32,7 @@ private:
 	HRESULT Ready_For_NoiseTexture3D();
 	HRESULT Ready_Components();
 	HRESULT Ready_RenderTargets();
+	HRESULT Ready_UpdatePixel();
 private:
 
 	BoundingBox					m_tBoundingBox;
@@ -50,6 +51,11 @@ private:
 	class CTarget_Manager* m_pTarget_Manager = { nullptr };
 
 	vector<CloudTarget> m_Targets;
+	vector<_uint>	m_UpdatePixel;
+	_uint m_iCurrUpdatePixel = 0;
+	_uint m_iGridSize = 4;
+	_uint m_iWinSizeX;
+	_uint m_iWinSizeY;
 
 	bool m_bSwap = true;
 public:
