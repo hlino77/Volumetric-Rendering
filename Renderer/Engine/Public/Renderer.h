@@ -26,6 +26,11 @@ public:
 	HRESULT Add_RenderGroup(RENDERGROUP eRenderGroup, class CGameObject* pGameObject);
 	HRESULT Draw_RenderObjects();
 
+	void	Set_SkyTargetName(const wstring szTargetName)
+	{
+		m_szSkyTargetName = szTargetName;
+	}
+
 #ifdef _DEBUG
 public:
 	HRESULT Add_Debug(class CComponent* pDebug) {
@@ -48,11 +53,7 @@ private:
 	class CShader*				m_pShader = { nullptr };
 
 
-	//Volumetric Cloud Test
-	class CShader*				m_pVolumeRenderShader = { nullptr };
-	class CCloud*				m_pCloud = { nullptr };
-	class CTexture*				m_pBlueNoiseTexture = { nullptr };
-	class CTexture*				m_pCurlNoiseTexture = { nullptr };
+	wstring				m_szSkyTargetName;
 
 	Matrix					m_WorldMatrix, m_ViewMatrix, m_ProjMatrix;
 
@@ -66,12 +67,12 @@ private:
 #endif
 
 private:
+	HRESULT Render_Sky();
 	HRESULT Render_Priority();
 	HRESULT Render_NonLight();
 	HRESULT Render_LightDepth(); 
 	HRESULT Render_NonBlend();
 	HRESULT Render_LightAcc();
-	HRESULT Render_Volume();
 	HRESULT Render_Deferred();
 	HRESULT Render_Blend();
 	HRESULT Render_UI();

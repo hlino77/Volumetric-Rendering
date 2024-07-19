@@ -57,9 +57,9 @@ HRESULT CRenderer::Initialize_Prototype()
 		return E_FAIL;
 
 	/* For.Target_VolumeRender */
-	if (FAILED(m_pTarget_Manager->Add_RenderTarget(m_pDevice, m_pContext, TEXT("Target_VolumeRender"),
-		ViewportDesc.Width, ViewportDesc.Height, DXGI_FORMAT_R32G32B32A32_FLOAT, Vec4(0.0f, 0.0f, 0.0f, 0.f))))
-		return E_FAIL;
+// 	if (FAILED(m_pTarget_Manager->Add_RenderTarget(m_pDevice, m_pContext, TEXT("Target_VolumeRender"),
+// 		ViewportDesc.Width, ViewportDesc.Height, DXGI_FORMAT_R32G32B32A32_FLOAT, Vec4(0.0f, 0.0f, 0.0f, 0.f))))
+// 		return E_FAIL;
 
 #ifdef _DEBUG
 	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_Diffuse"), 100.0f, 100.f, 200.0f, 200.0f)))
@@ -73,8 +73,8 @@ HRESULT CRenderer::Initialize_Prototype()
 	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_Specular"), 300.0f, 300.0f, 200.0f, 200.0f)))
 		return E_FAIL;
 
-	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_VolumeRender"), ViewportDesc.Width - 250.0f, 250.0f, 500.0f, 500.0f)))
-		return E_FAIL;
+// 	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_VolumeRender"), ViewportDesc.Width - 250.0f, 250.0f, 500.0f, 500.0f)))
+// 		return E_FAIL;
 		/*if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_VolumeRender"), ViewportDesc.Width * 0.5f, ViewportDesc.Height * 0.5f, ViewportDesc.Width, ViewportDesc.Height)))
 			return E_FAIL;*/
 
@@ -93,9 +93,6 @@ HRESULT CRenderer::Initialize_Prototype()
 	/* 이 렌더타겟들은 게임내에 존재하는 빛으로부터 연산한 결과를 저장받는다. */
 	/* For.MRT_Lights */
 
-	if (FAILED(m_pTarget_Manager->Add_MRT(TEXT("MRT_VolumeRender"), TEXT("Target_VolumeRender"))))
-		return E_FAIL;
-
 	if (FAILED(m_pTarget_Manager->Add_MRT(TEXT("MRT_Lights"), TEXT("Target_Shade"))))
 		return E_FAIL;
 	if (FAILED(m_pTarget_Manager->Add_MRT(TEXT("MRT_Lights"), TEXT("Target_Specular"))))
@@ -112,23 +109,6 @@ HRESULT CRenderer::Initialize_Prototype()
 	m_pShader = CShader::Create(m_pDevice, m_pContext, TEXT("../Bin/ShaderFiles/Shader_Deferred.hlsl"), VTXPOSTEX::Elements, VTXPOSTEX::iNumElements);
 	if (nullptr == m_pShader)
 		return E_FAIL;
-
-	m_pVolumeRenderShader = CShader::Create(m_pDevice, m_pContext, TEXT("../Bin/ShaderFiles/Shader_VolumeRender.hlsl"), VTXPOSTEX::Elements, VTXPOSTEX::iNumElements);
-	if (nullptr == m_pShader)
-		return E_FAIL;
-
-	m_pBlueNoiseTexture = CTexture::Create(m_pDevice, m_pContext, TEXT("../Bin/Resources/Textures/BlueNoise470.png"));
-	if (nullptr == m_pBlueNoiseTexture)
-		return E_FAIL;
-
-	m_pCurlNoiseTexture = CTexture::Create(m_pDevice, m_pContext, TEXT("../Bin/Resources/Textures/CurlNoise.png"));
-	if (nullptr == m_pCurlNoiseTexture)
-		return E_FAIL;
-
-	m_pCloud = CCloud::Create(m_pDevice, m_pContext);
-	if (nullptr == m_pCloud)
-		return E_FAIL;
-	Safe_AddRef(m_pCloud);
 
 	m_WorldMatrix = XMMatrixIdentity();
 	m_WorldMatrix._11 = ViewportDesc.Width;
@@ -159,6 +139,8 @@ HRESULT CRenderer::Add_RenderGroup(RENDERGROUP eRenderGroup, CGameObject * pGame
 
 HRESULT CRenderer::Draw_RenderObjects()
 {
+	if (FAILED(Render_Sky()))
+		return E_FAIL;
 	if (FAILED(Render_Priority()))
 		return E_FAIL;
 	if (FAILED(Render_NonLight()))
@@ -168,8 +150,6 @@ HRESULT CRenderer::Draw_RenderObjects()
 	if (FAILED(Render_NonBlend()))
 		return E_FAIL;
 	if (FAILED(Render_LightAcc()))
-		return E_FAIL;
-	if (FAILED(Render_Volume()))
 		return E_FAIL;
 	if (FAILED(Render_Deferred()))
 		return E_FAIL;
@@ -182,6 +162,20 @@ HRESULT CRenderer::Draw_RenderObjects()
 	if (FAILED(Render_Debug()))
 		return E_FAIL;
 #endif
+
+	return S_OK;
+}
+
+HRESULT CRenderer::Render_Sky()
+{
+	for (auto& pGameObject : m_RenderObjects[RG_SKY])
+	{
+		if (nullptr != pGameObject)
+			pGameObject->Render();
+
+		Safe_Release(pGameObject);
+	}
+	m_RenderObjects[RG_SKY].clear();
 
 	return S_OK;
 }
@@ -291,93 +285,6 @@ HRESULT CRenderer::Render_LightAcc()
 	return S_OK;
 }
 
-HRESULT CRenderer::Render_Volume()
-{
-	if (FAILED(m_pTarget_Manager->Begin_MRT(m_pContext, TEXT("MRT_VolumeRender"))))
-		return E_FAIL;
-
-	if (FAILED(m_pVolumeRenderShader->Bind_Matrix("g_WorldMatrix", &m_WorldMatrix)))
-		return E_FAIL;
-	if (FAILED(m_pVolumeRenderShader->Bind_Matrix("g_ViewMatrix", &m_ViewMatrix)))
-		return E_FAIL;
-	if (FAILED(m_pVolumeRenderShader->Bind_Matrix("g_ProjMatrix", &m_ProjMatrix)))
-		return E_FAIL;
-
-	CPipeLine* pPipeLine = GET_INSTANCE(CPipeLine);
-
-	if (FAILED(m_pVolumeRenderShader->Bind_Matrix("g_ViewMatrixInv", &pPipeLine->Get_Transform_Matrix_Inverse(CPipeLine::D3DTS_VIEW))))
-		return E_FAIL;
-	if (FAILED(m_pVolumeRenderShader->Bind_Matrix("g_ProjMatrixInv", &pPipeLine->Get_Transform_Matrix_Inverse(CPipeLine::D3DTS_PROJ))))
-		return E_FAIL;
-	if (FAILED(m_pVolumeRenderShader->Bind_RawValue("g_vCamPosition", &pPipeLine->Get_CamPosition(), sizeof(Vec3))))
-		return E_FAIL;
-
-	if (FAILED(m_pVolumeRenderShader->Bind_Texture("g_ShapeTexture", m_pCloud->Get_ShapeSRV())))
-	{
-		return E_FAIL;
-	}
-
-	if (FAILED(m_pVolumeRenderShader->Bind_Texture("g_DetailTexture", m_pCloud->Get_DetailSRV())))
-	{
-		return E_FAIL;
-	}
-
-	if (FAILED(m_pBlueNoiseTexture->Bind_ShaderResource(m_pVolumeRenderShader, "g_BlueNoiseTexture", 0)))
-	{
-		return E_FAIL;
-	}
-
-	if (FAILED(m_pCurlNoiseTexture->Bind_ShaderResource(m_pVolumeRenderShader, "g_CurlNoiseTexture", 0)))
-	{
-		return E_FAIL;
-	}
-
-	//m_fTest += 0.0001f;
-
-	CGameInstance* pGameInstance = GET_INSTANCE(CGameInstance);
-	if (pGameInstance->Get_DIKeyState(DIK_Y) & 0x80)
-	{
-		m_fTest += 0.0001f;
-	}
-	if (pGameInstance->Get_DIKeyState(DIK_H) & 0x80)
-	{
-		m_fTest -= 0.0001f;
-	}
-
-	if (pGameInstance->Get_DIKeyState(DIK_L) & 0x80)
-	{
-		m_bUseLight = !m_bUseLight;
-	}
-
-	/*if (m_fTest > 1.0f)
-	{
-		m_fTest -= 1.0f;
-	}*/
-
-	if (FAILED(m_pVolumeRenderShader->Bind_RawValue("g_fOffset", &m_fTest, sizeof(float))))
-	{
-		return E_FAIL;
-	}
-
-	if (FAILED(m_pVolumeRenderShader->Bind_RawValue("g_bUseLight", &m_bUseLight, sizeof(bool))))
-	{
-		return E_FAIL;
-	}
-
-	RELEASE_INSTANCE(CPipeLine);
-
-	if (FAILED(m_pVolumeRenderShader->Begin(0)))
-		return E_FAIL;
-
-	if (FAILED(m_pVIBuffer->Render()))
-		return E_FAIL;
-
-	if (FAILED(m_pTarget_Manager->End_MRT(m_pContext)))
-		return E_FAIL;
-
-	return S_OK;
-}
-
 HRESULT CRenderer::Render_Deferred()
 {
 	D3D11_VIEWPORT		ViewportDesc;
@@ -435,16 +342,20 @@ HRESULT CRenderer::Render_Deferred()
 	if (FAILED(m_pVIBuffer->Render()))
 		return E_FAIL;
 
+	if (m_szSkyTargetName.empty() == false)
+	{
+		if (FAILED(m_pTarget_Manager->Bind_SRV(m_pShader, m_szSkyTargetName, "g_SkyTexture")))
+			return E_FAIL;
 
+		if (FAILED(m_pShader->Begin(4)))
+			return E_FAIL;
 
-	if (FAILED(m_pTarget_Manager->Bind_SRV(m_pShader, TEXT("Target_VolumeRender"), "g_VolumeTexture")))
-		return E_FAIL;
+		if (FAILED(m_pVIBuffer->Render()))
+			return E_FAIL;
 
-	if (FAILED(m_pShader->Begin(4)))
-		return E_FAIL;
+		m_szSkyTargetName.clear();
+	}
 
-	if (FAILED(m_pVIBuffer->Render()))
-		return E_FAIL;
 
 	return S_OK;
 }
@@ -532,7 +443,7 @@ void CRenderer::Free()
 {
 	__super::Free();
 	
-	Safe_Release(m_pCloud);
+
 	Safe_Release(m_pShader);
 	Safe_Release(m_pVIBuffer);
 

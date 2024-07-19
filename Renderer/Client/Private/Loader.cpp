@@ -6,7 +6,7 @@
 #include "Camera_Debug.h"
 #include "BackGround.h"
 #include "Terrain.h"
-
+#include "Cloud.h"
 
 
 
@@ -232,6 +232,10 @@ HRESULT CLoader::Loading_For_Level_GamePlay()
 	/* For.Prototype_GameObject_Terrain*/
 	if (FAILED(pGameInstance->Add_Prototype(TEXT("Prototype_GameObject_Terrain"), 
 		CTerrain::Create(m_pDevice, m_pContext))))
+		return E_FAIL;
+
+	if (FAILED(pGameInstance->Add_Prototype(TEXT("Prototype_GameObject_Cloud"),
+		CCloud::Create(m_pDevice, m_pContext))))
 		return E_FAIL;
 
 	/* For.Prototype_GameObject_Camera_Debug */

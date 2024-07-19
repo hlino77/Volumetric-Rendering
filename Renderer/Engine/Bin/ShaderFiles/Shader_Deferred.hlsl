@@ -22,7 +22,7 @@ vector			g_vMtrlSpecular = vector(1.f, 1.f, 1.f, 1.f);
 texture2D		g_NormalTexture;
 texture2D		g_DiffuseTexture;
 texture2D		g_DepthTexture;
-texture2D		g_VolumeTexture;
+texture2D		g_SkyTexture;
 
 texture2D		g_ShadeTexture;
 texture2D		g_SpecularTexture;
@@ -218,7 +218,7 @@ PS_OUT PS_MAIN_DEFERRED_VOLUMERENDER(PS_IN In)
 {
 	PS_OUT		Out = (PS_OUT)0;
 	
-	Out.vColor = g_VolumeTexture.Sample(LinearSampler, In.vTexcoord);
+	Out.vColor = g_SkyTexture.Sample(LinearSampler, In.vTexcoord);
 
 	return Out;
 }

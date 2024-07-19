@@ -180,9 +180,6 @@
     <ClInclude Include="..\public\Component.h">
       <Filter>01.Utiltiy\04.Component</Filter>
     </ClInclude>
-    <ClInclude Include="..\public\Renderer.h">
-      <Filter>01.Utiltiy\04.Component\Renderer</Filter>
-    </ClInclude>
     <ClInclude Include="..\public\Component_Manager.h">
       <Filter>01.Utiltiy\04.Component\Manager</Filter>
     </ClInclude>
@@ -260,6 +257,9 @@
     </ClInclude>
     <ClInclude Include="..\Public\NoiseGenerator.h">
       <Filter>01.Utiltiy\04.Component\Renderer\Cloud</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\Renderer.h">
+      <Filter>01.Utiltiy\04.Component\Renderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
