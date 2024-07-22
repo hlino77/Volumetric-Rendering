@@ -4,7 +4,7 @@
 matrix			g_WorldMatrix, g_ViewMatrix, g_ProjMatrix;
 matrix			g_ProjMatrixInv;
 matrix			g_ViewMatrixInv;
-matrix			g_PrevViewMatrixInv;
+matrix			g_PrevViewProj;
 
 vector			g_vCamPosition;
 
@@ -290,21 +290,22 @@ PS_OUT PS_MAIN_CLOUD(PS_IN In)
 	int iY = In.vTexcoord.y * g_iWinSizeY;
 	int iPixelIndex = ((iX % g_iGridSize) * g_iGridSize) + iY % g_iGridSize;
 
+	vector		vClipPos;
+
+	vClipPos.x = In.vTexcoord.x * 2.f - 1.f;
+	vClipPos.y = In.vTexcoord.y * -2.f + 1.f;
+	vClipPos.z = 1.0f;
+	vClipPos.w = 1.f;
+
+	vClipPos = vClipPos * 1000.0f;
+	vClipPos = mul(vClipPos, g_ProjMatrixInv);
+
+	vClipPos = mul(vClipPos, g_ViewMatrixInv);
+
+	float3		vWorldPos = vClipPos.xyz;
+
 	if (g_iUpdatePixel == iPixelIndex)
 	{
-		vector		vClipPos;
-
-		vClipPos.x = In.vTexcoord.x * 2.f - 1.f;
-		vClipPos.y = In.vTexcoord.y * -2.f + 1.f;
-		vClipPos.z = 1.0f;
-		vClipPos.w = 1.f;
-
-		vClipPos = vClipPos * 1000.0f;
-		vClipPos = mul(vClipPos, g_ProjMatrixInv);
-
-		vClipPos = mul(vClipPos, g_ViewMatrixInv);
-		
-		float3		vWorldPos = vClipPos.xyz;
 		float3		vRayDir = normalize(vWorldPos - g_vCamPosition.xyz);
 		vWorldPos = g_vCamPosition.xyz;
 
@@ -312,7 +313,23 @@ PS_OUT PS_MAIN_CLOUD(PS_IN In)
 	}
 	else
 	{
-		Out.vColor = g_PrevFrameTexture.Sample(PointSampler, In.vTexcoord);
+		float4 vPrevWorldPos = mul(vClipPos, g_PrevViewProj);
+		float3 vProjCoord = vPrevWorldPos.xyz / vPrevWorldPos.w;
+
+		vProjCoord.x = vProjCoord.x * 0.5f + 0.5f;
+		vProjCoord.y = vProjCoord.y * -0.5f + 0.5f;
+
+		if (vProjCoord.x < 0.0f || vProjCoord.x > 1.0f || vProjCoord.y < 0.0f || vProjCoord.y > 1.0f)
+		{
+			float3		vRayDir = normalize(vWorldPos - g_vCamPosition.xyz);
+			vWorldPos = g_vCamPosition.xyz;
+
+			Out.vColor = Get_Cloud(vWorldPos, vRayDir, In.vTexcoord);
+		}
+		else
+		{
+			Out.vColor = g_PrevFrameTexture.Sample(PointSampler, float2(vProjCoord.xy));
+		}	
 	}
 	
 	return Out;

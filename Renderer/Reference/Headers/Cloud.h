@@ -47,7 +47,7 @@ private:
 	class CRenderer* m_pRendererCom = { nullptr };
 
 	Matrix					m_WorldMatrix, m_ViewMatrix, m_ProjMatrix;
-	Matrix					m_PrevViewMatrixInv;
+	Matrix					m_PrevViewProj;
 
 	class CTarget_Manager* m_pTarget_Manager = { nullptr };
 

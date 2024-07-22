@@ -98,7 +98,8 @@ HRESULT CCloud::Render()
 		return E_FAIL;
 	if (FAILED(m_pShader->Bind_Matrix("g_ProjMatrixInv", &pPipeLine->Get_Transform_Matrix_Inverse(CPipeLine::D3DTS_PROJ))))
 		return E_FAIL;
-	if (FAILED(m_pShader->Bind_Matrix("g_PrevViewMatrixInv", &m_PrevViewMatrixInv)))
+
+	if (FAILED(m_pShader->Bind_Matrix("g_PrevViewProj", &m_PrevViewProj)))
 		return E_FAIL;
 
 	if (FAILED(m_pShader->Bind_RawValue("g_vCamPosition", &pPipeLine->Get_CamPosition(), sizeof(Vec3))))
@@ -161,7 +162,7 @@ HRESULT CCloud::Render()
 		return E_FAIL;
 
 	m_pRendererCom->Set_SkyTargetName(m_Targets[m_bSwap].szTarget);
-	m_PrevViewMatrixInv = pPipeLine->Get_Transform_Matrix_Inverse(CPipeLine::D3DTS_VIEW);
+	m_PrevViewProj = pPipeLine->Get_Transform_Matrix(CPipeLine::D3DTS_VIEW) * pPipeLine->Get_Transform_Matrix(CPipeLine::D3DTS_PROJ);
 
 	return S_OK;
 }
