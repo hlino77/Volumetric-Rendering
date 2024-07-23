@@ -328,8 +328,8 @@ PS_OUT PS_MAIN_CLOUD(PS_IN In)
 		}
 		else
 		{
-			Out.vColor = g_PrevFrameTexture.Sample(PointSampler, float2(vProjCoord.xy));
-		}	
+			Out.vColor = g_PrevFrameTexture.Sample(ReProjectionSampler, float2(vProjCoord.xy));
+		}
 	}
 	
 	return Out;

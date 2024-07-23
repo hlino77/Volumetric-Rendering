@@ -20,6 +20,13 @@ sampler CloudSampler = sampler_state{
 	AddressW = wrap;
 };
 
+sampler ReProjectionSampler = sampler_state{
+	Filter = MIN_MAG_MIP_LINEAR;
+	AddressU = clamp;
+	AddressV = clamp;
+	AddressW = clamp;
+};
+
 RasterizerState RS_Wireframe
 {
 	FillMode = wireframe;
