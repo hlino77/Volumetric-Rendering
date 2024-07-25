@@ -18,9 +18,9 @@ texture2D		g_PrevFrameTexture;
 
 float3			g_vLightPos = float3(-1.0f, 1.0f, -1.0f) * 6300e5;
 
-float			g_fMaxHeight = 1000.0f;
-float			g_fMinHeight = 600.0f;
-float3			g_vEarthCenter = float3(0.0f, -6300e3 + 600.0f, 0.0f);
+float			g_fMaxHeight = 1400.0f;
+float			g_fMinHeight = 1000.0f;
+float3			g_vEarthCenter = float3(0.0f, -6300e3, 0.0f);
 float			g_fEarthRadius = 6300e3;
 
 int				g_iMaxStep = 64;

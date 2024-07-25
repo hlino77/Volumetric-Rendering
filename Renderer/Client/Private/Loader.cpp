@@ -7,7 +7,7 @@
 #include "BackGround.h"
 #include "Terrain.h"
 #include "Cloud.h"
-
+#include "Sky.h"
 
 
 
@@ -236,6 +236,10 @@ HRESULT CLoader::Loading_For_Level_GamePlay()
 
 	if (FAILED(pGameInstance->Add_Prototype(TEXT("Prototype_GameObject_Cloud"),
 		CCloud::Create(m_pDevice, m_pContext))))
+		return E_FAIL;
+
+	if (FAILED(pGameInstance->Add_Prototype(TEXT("Prototype_GameObject_Sky"),
+		CSky::Create(m_pDevice, m_pContext))))
 		return E_FAIL;
 
 	/* For.Prototype_GameObject_Camera_Debug */

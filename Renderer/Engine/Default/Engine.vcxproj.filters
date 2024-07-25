@@ -127,8 +127,14 @@
     <Filter Include="01.Utiltiy\10.Frustum">
       <UniqueIdentifier>{2d3307e6-489e-48b3-8e57-533edc6550d3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="01.Utiltiy\04.Component\Renderer\Cloud">
+    <Filter Include="01.Utiltiy\03.GameObjects\Sky">
+      <UniqueIdentifier>{30e67b68-b961-4217-a2e9-3ab5092e2e4b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="01.Utiltiy\03.GameObjects\Sky\Cloud">
       <UniqueIdentifier>{7374dce8-8737-4240-880f-311cbcf2b064}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="01.Utiltiy\03.GameObjects\Sky\Atmosphere">
+      <UniqueIdentifier>{a91ea817-7ee8-41b0-8c6e-f9c2a79abf2e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -253,13 +259,19 @@
       <Filter>01.Utiltiy\10.Frustum</Filter>
     </ClInclude>
     <ClInclude Include="..\Public\Cloud.h">
-      <Filter>01.Utiltiy\04.Component\Renderer\Cloud</Filter>
+      <Filter>01.Utiltiy\03.GameObjects\Sky\Cloud</Filter>
     </ClInclude>
     <ClInclude Include="..\Public\NoiseGenerator.h">
-      <Filter>01.Utiltiy\04.Component\Renderer\Cloud</Filter>
+      <Filter>01.Utiltiy\03.GameObjects\Sky\Cloud</Filter>
     </ClInclude>
     <ClInclude Include="..\public\Renderer.h">
       <Filter>01.Utiltiy\04.Component\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\TransmittanceLUT.h">
+      <Filter>01.Utiltiy\03.GameObjects\Sky\Atmosphere</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\Sky.h">
+      <Filter>01.Utiltiy\03.GameObjects\Sky\Atmosphere</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -372,10 +384,16 @@
       <Filter>01.Utiltiy\10.Frustum</Filter>
     </ClCompile>
     <ClCompile Include="..\Private\Cloud.cpp">
-      <Filter>01.Utiltiy\04.Component\Renderer\Cloud</Filter>
+      <Filter>01.Utiltiy\03.GameObjects\Sky\Cloud</Filter>
     </ClCompile>
     <ClCompile Include="..\Private\NoiseGenerator.cpp">
-      <Filter>01.Utiltiy\04.Component\Renderer\Cloud</Filter>
+      <Filter>01.Utiltiy\03.GameObjects\Sky\Cloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\TransmittanceLUT.cpp">
+      <Filter>01.Utiltiy\03.GameObjects\Sky\Atmosphere</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\Sky.cpp">
+      <Filter>01.Utiltiy\03.GameObjects\Sky\Atmosphere</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -392,6 +410,12 @@
       <Filter>01.Utiltiy\07.ShaderFiles</Filter>
     </FxCompile>
     <FxCompile Include="..\Bin\ShaderFiles\CShader_Detail.hlsl">
+      <Filter>01.Utiltiy\07.ShaderFiles</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Bin\ShaderFiles\CShader_TransmittanceLUT.hlsl">
+      <Filter>01.Utiltiy\07.ShaderFiles</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Bin\ShaderFiles\Shader_AtmosphereRender.hlsl">
       <Filter>01.Utiltiy\07.ShaderFiles</Filter>
     </FxCompile>
   </ItemGroup>

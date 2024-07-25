@@ -357,6 +357,15 @@ HRESULT CRenderer::Render_Deferred()
 	}
 
 
+	if (FAILED(m_pTarget_Manager->Bind_SRV(m_pShader, L"Target_TransLUT", "g_SkyTexture")))
+		return E_FAIL;
+
+	if (FAILED(m_pShader->Begin(4)))
+		return E_FAIL;
+
+	if (FAILED(m_pVIBuffer->Render()))
+		return E_FAIL;
+
 	return S_OK;
 }
 
