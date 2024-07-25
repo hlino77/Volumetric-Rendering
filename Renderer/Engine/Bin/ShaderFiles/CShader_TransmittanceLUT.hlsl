@@ -60,8 +60,7 @@ void CSTransLUT(int3 iThreadIdx : SV_DispatchThreadID)
 		return;
 
 	float fTheta = asin(lerp(-1.0, 1.0, float(iThreadIdx.y) / iHeight));
-	float fHeight = lerp(
-		0.0, fAtmosphereRadius - fEarthRadius, (iThreadIdx.x + 0.5) / iWidth);
+	float fHeight = lerp(0.0, fAtmosphereRadius - fEarthRadius, (iThreadIdx.x + 0.5) / iWidth);
 
 	float2 vOrigin = float2(0, fEarthRadius + fHeight);
 	float2 vDir = float2(cos(fTheta), sin(fTheta));
