@@ -4,43 +4,28 @@
 
 #define STEP_COUNT 1000
 
-
-
-float			g_fATest = 5.0f;
-
 RWTexture2D<float4> Transmittance;
 
 cbuffer AtmosphereParams : register(b0)
 {
-	float3	ScatterRayleigh;
-	float	HDensityRayleigh;
+	float3	fScatterRayleigh;
+	float	fHDensityRayleigh;
 
-	float	ScatterMie;
-	float	AsymmetryMie;
-	float	AbsorbMie;
-	float	HDensityMie;
+	float	fScatterMie;
+	float	fAsymmetryMie;
+	float	fAbsorbMie;
+	float	fHDensityMie;
 
-	float3	AbsorbOzone;
-	float	OzoneCenterHeight;
+	float3	fAbsorbOzone;
+	float	fOzoneCenterHeight;
 
-	float	OzoneThickness;
+	float	fOzoneThickness;
 
 	float	fEarthRadius;
 	float	fAtmosphereRadius;
 	float	fPadding;
 }
 
-
-
-
-float3 getSigmaT(float h)
-{
-	float3 rayleigh = ScatterRayleigh * exp(-h / HDensityRayleigh);
-	float mie = (ScatterMie + AbsorbMie) * exp(-h / HDensityMie);
-	float3 ozone = AbsorbOzone * max(
-		0.0f, 1 - 0.5 * abs(h - OzoneCenterHeight) / OzoneThickness);
-	return rayleigh + mie + ozone;
-}
 
 bool findClosestIntersectionWithCircle(
 	float2 o, float2 d, float R, out float t)
@@ -56,36 +41,46 @@ bool findClosestIntersectionWithCircle(
 }
 
 
-[numthreads(THREAD_GROUP_SIZE_X, THREAD_GROUP_SIZE_Y, 1)]
-void CSTransLUT(int3 threadIdx : SV_DispatchThreadID)
+float3 GetTransmittance(float fHeight)
 {
-	int width, height;
-	Transmittance.GetDimensions(width, height);
-	if (threadIdx.x >= width || threadIdx.y >= height)
+	float3 fRayleigh = fScatterRayleigh * exp(-fHeight / fHDensityRayleigh);
+	float fMie = (fScatterMie + fAbsorbMie) * exp(-fHeight / fHDensityMie);
+	float3 fOzone = fAbsorbOzone * max(0.0f, 1 - 0.5 * abs(fHeight - fOzoneCenterHeight) / fOzoneThickness);
+	return fRayleigh + fMie + fOzone;
+}
+
+
+
+[numthreads(THREAD_GROUP_SIZE_X, THREAD_GROUP_SIZE_Y, 1)]
+void CSTransLUT(int3 iThreadIdx : SV_DispatchThreadID)
+{
+	int iWidth, iHeight;
+	Transmittance.GetDimensions(iWidth, iHeight);
+	if (iThreadIdx.x >= iWidth || iThreadIdx.y >= iHeight)
 		return;
 
-	float theta = asin(lerp(-1.0, 1.0, (threadIdx.y + 0.5) / height));
-	float h = lerp(
-		0.0, fAtmosphereRadius - fEarthRadius, (threadIdx.x + 0.5) / width);
+	float fTheta = asin(lerp(-1.0, 1.0, float(iThreadIdx.y) / iHeight));
+	float fHeight = lerp(
+		0.0, fAtmosphereRadius - fEarthRadius, (iThreadIdx.x + 0.5) / iWidth);
 
-	float2 o = float2(0, fEarthRadius + h);
-	float2 d = float2(cos(theta), sin(theta));
+	float2 vOrigin = float2(0, fEarthRadius + fHeight);
+	float2 vDir = float2(cos(fTheta), sin(fTheta));
 
-	float t = 0;
-	if (!findClosestIntersectionWithCircle(o, d, fEarthRadius, t))
-		findClosestIntersectionWithCircle(o, d, fAtmosphereRadius, t);
+	float fLength = 0;
+	if (!findClosestIntersectionWithCircle(vOrigin, vDir, fEarthRadius, fLength))
+		findClosestIntersectionWithCircle(vOrigin, vDir, fAtmosphereRadius, fLength);
 
-	float2 end = o + t * d;
+	float2 vEnd = vOrigin + fLength * vDir;
 
-	float3 sum;
+	float3 vSum;
 	for (int i = 0; i < STEP_COUNT; ++i)
 	{
-		float2 pi = lerp(o, end, (i + 0.5) / STEP_COUNT);
-		float hi = length(pi) - fEarthRadius;
-		float3 sigma = getSigmaT(hi);
-		sum += sigma;
+		float2 vCurr = lerp(vOrigin, vEnd, (i + 0.5) / STEP_COUNT);
+		float fCurrHeight = length(vCurr) - fEarthRadius;
+		float3 vResult = GetTransmittance(fCurrHeight);
+		vSum += vResult;
 	}
 
-	float3 result = exp(-sum * (t / STEP_COUNT));
-	Transmittance[threadIdx.xy] = float4(result, 1);
+	float3 vResult = exp(-vSum * (fLength / STEP_COUNT));
+	Transmittance[iThreadIdx.xy] = float4(vResult, 1);
 }
