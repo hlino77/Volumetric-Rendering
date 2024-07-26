@@ -38,7 +38,7 @@ ID3D11ShaderResourceView* CTransmittanceLUT::Generate_TransmittanceLUT(const Atm
 
 	{
 		D3D11_BUFFER_DESC tBufferDesc;
- 		ZeroMemory(&tBufferDesc, sizeof(D3D11_BUFFER_DESC));
+  		ZeroMemory(&tBufferDesc, sizeof(D3D11_BUFFER_DESC));
 		tBufferDesc.ByteWidth = sizeof(AtmosphereProperties);
 		tBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 		tBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
@@ -57,8 +57,8 @@ ID3D11ShaderResourceView* CTransmittanceLUT::Generate_TransmittanceLUT(const Atm
 	m_pContext->CSSetShader(m_pLUTShader, nullptr, 0);
 
 
-	const int iThreadGroupCountX = (256 + 16 - 1) / 16;
-	const int iThreadGroupCountY = (256 + 16 - 1) / 16;
+	const int iThreadGroupCountX = m_iLUTSizeX / 16;
+	const int iThreadGroupCountY = m_iLUTSizeY / 16;
 
 	m_pContext->Dispatch(iThreadGroupCountX, iThreadGroupCountY, 1);
 
@@ -130,8 +130,8 @@ HRESULT CTransmittanceLUT::Ready_2DTexture()
 {
 	{
 		D3D11_TEXTURE2D_DESC tDesc = {};
-		tDesc.Width = 256;
-		tDesc.Height = 256;
+		tDesc.Width = m_iLUTSizeX;
+		tDesc.Height = m_iLUTSizeY;
 		tDesc.MipLevels = 1;
 		tDesc.ArraySize = 1;
 		tDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;

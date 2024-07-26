@@ -2,13 +2,13 @@
 #define THREAD_GROUP_SIZE_X 16
 #define THREAD_GROUP_SIZE_Y 16
 
-#define STEP_COUNT 1000
+#define STEP_COUNT 40
 
 RWTexture2D<float4> Transmittance;
 
 cbuffer AtmosphereParams : register(b0)
 {
-	float3	fScatterRayleigh;
+	float4	vScatterRayleigh;
 	float	fHDensityRayleigh;
 
 	float	fScatterMie;
@@ -16,37 +16,73 @@ cbuffer AtmosphereParams : register(b0)
 	float	fAbsorbMie;
 	float	fHDensityMie;
 
-	float3	fAbsorbOzone;
-	float	fOzoneCenterHeight;
-
-	float	fOzoneThickness;
-
 	float	fEarthRadius;
 	float	fAtmosphereRadius;
+
 	float	fPadding;
+
+	float4	vAbsorbOzone;
+ 	float4	vAbsorptionDensity1;
+ 	float4	vAbsorptionDensity2;
 }
 
-
-bool findClosestIntersectionWithCircle(
-	float2 o, float2 d, float R, out float t)
+float raySphereIntersectNearest(float3 r0, float3 rd, float3 s0, float sR)
 {
-	float A = dot(d, d);
-	float B = 2 * dot(o, d);
-	float C = dot(o, o) - R * R;
-	float delta = B * B - 4 * A * C;
-	if (delta < 0)
-		return false;
-	t = (-B + (C <= 0 ? sqrt(delta) : -sqrt(delta))) / (2 * A);
-	return (C <= 0) | (B <= 0);
+	float a = dot(rd, rd);
+	float3 s0_r0 = r0 - s0;
+	float b = 2.0 * dot(rd, s0_r0);
+	float c = dot(s0_r0, s0_r0) - (sR * sR);
+	float delta = b * b - 4.0*a*c;
+	if (delta < 0.0 || a == 0.0)
+	{
+		return -1.0;
+	}
+	float sol0 = (-b - sqrt(delta)) / (2.0*a);
+	float sol1 = (-b + sqrt(delta)) / (2.0*a);
+	if (sol0 < 0.0 && sol1 < 0.0)
+	{
+		return -1.0;
+	}
+	if (sol0 < 0.0)
+	{
+		return max(0.0, sol1);
+	}
+	else if (sol1 < 0.0)
+	{
+		return max(0.0, sol0);
+	}
+	return max(0.0, min(sol0, sol1));
 }
 
+
+
+void UvToLutTransmittanceParams(out float fViewHeight, out float fViewZenithCosAngle, in float2 vUV)
+{
+	float fX = vUV.x;
+	float fY = vUV.y;
+
+	float fH = sqrt(fAtmosphereRadius * fAtmosphereRadius - fEarthRadius * fEarthRadius);
+	float fRho = fH * fY;
+	fViewHeight = sqrt(fRho * fRho + fEarthRadius * fEarthRadius);
+
+	float fMin = fAtmosphereRadius - fViewHeight;
+	float fMax = fRho + fH;
+	float fD = fMin + fX * (fMax - fMin);
+	fViewZenithCosAngle = fD == 0.0 ? 1.0f : (fH * fH - fRho * fRho - fD * fD) / (2.0 * fViewHeight * fD);
+	fViewZenithCosAngle = clamp(fViewZenithCosAngle, -1.0, 1.0);
+}
 
 float3 GetTransmittance(float fHeight)
 {
-	float3 fRayleigh = fScatterRayleigh * exp(-fHeight / fHDensityRayleigh);
+	float3 vRayleigh = vScatterRayleigh.xyz * exp(-fHeight / fHDensityRayleigh);
 	float fMie = (fScatterMie + fAbsorbMie) * exp(-fHeight / fHDensityMie);
-	float3 fOzone = fAbsorbOzone * max(0.0f, 1 - 0.5 * abs(fHeight - fOzoneCenterHeight) / fOzoneThickness);
-	return fRayleigh + fMie + fOzone;
+	float fDensityOzo = saturate(fHeight < vAbsorptionDensity1.x ?
+		vAbsorptionDensity1.z * fHeight + vAbsorptionDensity1.y :
+		vAbsorptionDensity2.y * fHeight + vAbsorptionDensity2.x);
+
+	float3 vOzo = vAbsorbOzone * fDensityOzo;
+
+	return vRayleigh + fMie + vOzo;
 }
 
 
@@ -59,27 +95,59 @@ void CSTransLUT(int3 iThreadIdx : SV_DispatchThreadID)
 	if (iThreadIdx.x >= iWidth || iThreadIdx.y >= iHeight)
 		return;
 
-	float fTheta = asin(lerp(-1.0, 1.0, float(iThreadIdx.y) / iHeight));
-	float fHeight = lerp(0.0, fAtmosphereRadius - fEarthRadius, (iThreadIdx.x + 0.5) / iWidth);
+	float2 vUV = float2(iThreadIdx.x + 0.5f, iThreadIdx.y + 0.5f) / float2(iWidth, iHeight);
+	float fViewHeight;
+	float fViewZenithCosAngle;
+	UvToLutTransmittanceParams(fViewHeight, fViewZenithCosAngle, vUV);
 
-	float2 vOrigin = float2(0, fEarthRadius + fHeight);
-	float2 vDir = float2(cos(fTheta), sin(fTheta));
+	float3 vWorldPos = float3(0.0f, 0.0f, fViewHeight);
+	float3 vWorldDir = float3(0.0f, sqrt(1.0 - fViewZenithCosAngle * fViewZenithCosAngle), fViewZenithCosAngle);
 
-	float fLength = 0;
-	if (!findClosestIntersectionWithCircle(vOrigin, vDir, fEarthRadius, fLength))
-		findClosestIntersectionWithCircle(vOrigin, vDir, fAtmosphereRadius, fLength);
+	float3 fEarthOrigin = float3(0.0f, 0.0f, 0.0f);
+	float fBottom = raySphereIntersectNearest(vWorldPos, vWorldDir, fEarthOrigin, fEarthRadius);
+	float fTop = raySphereIntersectNearest(vWorldPos, vWorldDir, fEarthOrigin, fAtmosphereRadius);
+	float fMax = 0.0f;
 
-	float2 vEnd = vOrigin + fLength * vDir;
-
-	float3 vSum;
-	for (int i = 0; i < STEP_COUNT; ++i)
+	if (fBottom < 0.0f)
 	{
-		float2 vCurr = lerp(vOrigin, vEnd, (i + 0.5) / STEP_COUNT);
-		float fCurrHeight = length(vCurr) - fEarthRadius;
-		float3 vResult = GetTransmittance(fCurrHeight);
-		vSum += vResult;
+		if (fTop < 0.0f)
+		{
+			fMax = 0.0f;
+			Transmittance[iThreadIdx.xy] = float4(0.0f, 0.0f, 0.0f, 1);
+			return;
+		}
+		else
+		{
+			fMax = fTop;
+		}
 	}
+	else
+	{
+		if (fTop > 0.0f)
+		{
+			fMax = min(fTop, fBottom);
+		}
+	}
+	fMax = min(fMax, 90000000.f);
 
-	float3 vResult = exp(-vSum * (fLength / STEP_COUNT));
+	float fDt = fMax / STEP_COUNT;
+	float fT = 0.0f;
+	const float fSampleSegmentT = 0.3f;
+
+ 	float3 vSum = 0.0f;
+ 	for (int i = 0; i < STEP_COUNT; ++i)
+ 	{
+		float fNewT = fMax * (i + fSampleSegmentT) / STEP_COUNT;
+		fDt = fNewT - fT;
+		fT = fNewT;
+
+		float3 vPos = vWorldPos + fT * vWorldDir;
+
+ 		float fCurrHeight = length(vPos) - fEarthRadius;
+ 		float3 vResult = GetTransmittance(fCurrHeight) * fDt;
+ 		vSum += vResult;
+ 	}
+
+	float3 vResult = exp(-vSum);
 	Transmittance[iThreadIdx.xy] = float4(vResult, 1);
 }

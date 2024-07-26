@@ -56,7 +56,13 @@ PS_OUT PS_MAIN(PS_IN In)
 {
 	PS_OUT		Out = (PS_OUT)0;
 
-	Out.vColor = g_TransLUTTexture.Sample(LinearSampler, In.vTexcoord);
+ 	In.vTexcoord.y *= 2.0f;
+ 
+ 	if (In.vTexcoord.y > 1.0f)
+ 	{
+ 		discard;
+ 	}
+	Out.vColor = g_TransLUTTexture.Sample(PointSampler, In.vTexcoord);
 	return Out;
 }
 

@@ -29,6 +29,8 @@ private:
 	ID3D11Texture2D* m_pTransLUTTexture = { nullptr };
 	ID3D11ComputeShader* m_pLUTShader = { nullptr };
 
+	int m_iLUTSizeX = 256;
+	int m_iLUTSizeY = 64;
 public:
 	static CTransmittanceLUT* Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 	virtual void Free() override;

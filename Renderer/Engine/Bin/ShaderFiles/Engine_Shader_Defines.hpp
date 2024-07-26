@@ -92,7 +92,6 @@ BlendState BS_OneBlend
 	SrcBlend = One;
 	DestBlend = One;
 	BlendOp = Add;
-
 };
 
 
