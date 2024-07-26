@@ -173,8 +173,7 @@ namespace Engine
 		float	fPadding = 0.0f;
 
  		Vec4	absorbOzone = { 0.65f, 1.881f, 0.085f, 0.0f };
-		Vec4	absorptionDensity1 = { 25.0f, -2.0f / 3.0f, 1.0f / 15.0f, 0.0f };
- 		Vec4	absorptionDensity2 = { 8.0f / 3.0f, -1.0f / 15.0f, 0.0f, 0.0f };
+		Vec4	vOzone = { 25.0f, 8.0f, 0.0f, 0.0f };
 		
 		AtmosphereProperties toStdUnit() const;
 	};

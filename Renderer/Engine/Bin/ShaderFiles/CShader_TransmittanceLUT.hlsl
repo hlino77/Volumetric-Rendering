@@ -22,8 +22,7 @@ cbuffer AtmosphereParams : register(b0)
 	float	fPadding;
 
 	float4	vAbsorbOzone;
- 	float4	vAbsorptionDensity1;
- 	float4	vAbsorptionDensity2;
+ 	float4	vOzone;
 }
 
 float raySphereIntersectNearest(float3 r0, float3 rd, float3 s0, float sR)
@@ -76,10 +75,7 @@ float3 GetTransmittance(float fHeight)
 {
 	float3 vRayleigh = vScatterRayleigh.xyz * exp(-fHeight / fHDensityRayleigh);
 	float fMie = (fScatterMie + fAbsorbMie) * exp(-fHeight / fHDensityMie);
-	float fDensityOzo = saturate(fHeight < vAbsorptionDensity1.x ?
-		vAbsorptionDensity1.z * fHeight + vAbsorptionDensity1.y :
-		vAbsorptionDensity2.y * fHeight + vAbsorptionDensity2.x);
-
+	float3 fDensityOzo = max(0.0f, 1 - 0.5 * abs(fHeight - vOzone.x) / vOzone.y);
 	float3 vOzo = vAbsorbOzone * fDensityOzo;
 
 	return vRayleigh + fMie + vOzo;

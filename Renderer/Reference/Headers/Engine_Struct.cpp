@@ -92,8 +92,7 @@ namespace Engine
 		ret.hDensityMie = 1e3f * ret.hDensityMie;
 
 		ret.absorbOzone = 1e-6f * ret.absorbOzone;
-		ret.absorptionDensity1 = 1e3f * ret.absorptionDensity1;
- 		ret.absorptionDensity2 = 1e3f * ret.absorptionDensity2;
+		ret.vOzone = 1e3f * ret.vOzone;
 
 		ret.fAtmosphereRadius = 1e3f * ret.fAtmosphereRadius;
 		ret.fPlanetRadius = 1e3f * ret.fPlanetRadius;
