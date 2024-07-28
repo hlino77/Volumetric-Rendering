@@ -55,20 +55,20 @@ float raySphereIntersectNearest(float3 r0, float3 rd, float3 s0, float sR)
 
 
 
-void UvToLutTransmittanceParams(out float fViewHeight, out float fViewZenithCosAngle, in float2 vUV)
+void UvToHeightAngle(out float fHeight, out float fAngle, in float2 vUV)
 {
-	float fX = vUV.x;
-	float fY = vUV.y;
+	float fX = vUV.x; //각도
+	float fY = vUV.y; //높이
 
 	float fH = sqrt(fAtmosphereRadius * fAtmosphereRadius - fEarthRadius * fEarthRadius);
 	float fRho = fH * fY;
-	fViewHeight = sqrt(fRho * fRho + fEarthRadius * fEarthRadius);
+	fHeight = sqrt(fRho * fRho + fEarthRadius * fEarthRadius);
 
-	float fMin = fAtmosphereRadius - fViewHeight;
+	float fMin = fAtmosphereRadius - fHeight;
 	float fMax = fRho + fH;
 	float fD = fMin + fX * (fMax - fMin);
-	fViewZenithCosAngle = fD == 0.0 ? 1.0f : (fH * fH - fRho * fRho - fD * fD) / (2.0 * fViewHeight * fD);
-	fViewZenithCosAngle = clamp(fViewZenithCosAngle, -1.0, 1.0);
+	fAngle = fD == 0.0 ? 1.0f : (fH * fH - fRho * fRho - fD * fD) / (2.0 * fHeight * fD);
+	fAngle = clamp(fAngle, -1.0, 1.0);
 }
 
 float3 GetTransmittance(float fHeight)
@@ -94,7 +94,7 @@ void CSTransLUT(int3 iThreadIdx : SV_DispatchThreadID)
 	float2 vUV = float2(iThreadIdx.x + 0.5f, iThreadIdx.y + 0.5f) / float2(iWidth, iHeight);
 	float fViewHeight;
 	float fViewZenithCosAngle;
-	UvToLutTransmittanceParams(fViewHeight, fViewZenithCosAngle, vUV);
+	UvToHeightAngle(fViewHeight, fViewZenithCosAngle, vUV);
 
  	float3 vWorldPos = float3(0.0f, fViewHeight, 0.0f);
  	float3 vWorldDir = float3(0.0f,  fViewZenithCosAngle, sqrt(1.0 - fViewZenithCosAngle * fViewZenithCosAngle));

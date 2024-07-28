@@ -81,17 +81,17 @@ namespace Engine
 
 
 	
-	AtmosphereProperties AtmosphereProperties::toStdUnit() const
+	AtmosphereProperties AtmosphereProperties::ToStdUnit() const
 	{
 		AtmosphereProperties ret = *this;
-		ret.scatterRayleigh = 1e-6f * ret.scatterRayleigh;
-		ret.hDensityRayleigh = 1e3f * ret.hDensityRayleigh;
+		ret.fScatterRayleigh = 1e-6f * ret.fScatterRayleigh;
+		ret.fHDensityRayleigh = 1e3f * ret.fHDensityRayleigh;
 
-		ret.scatterMie = 1e-6f * ret.scatterMie;
-		ret.absorbMie = 1e-6f * ret.absorbMie;
-		ret.hDensityMie = 1e3f * ret.hDensityMie;
+		ret.fScatterMie = 1e-6f * ret.fScatterMie;
+		ret.fAbsorbMie = 1e-6f * ret.fAbsorbMie;
+		ret.fHDensityMie = 1e3f * ret.fHDensityMie;
 
-		ret.absorbOzone = 1e-6f * ret.absorbOzone;
+		ret.fAbsorbOzone = 1e-6f * ret.fAbsorbOzone;
 		ret.vOzone = 1e3f * ret.vOzone;
 
 		ret.fAtmosphereRadius = 1e3f * ret.fAtmosphereRadius;
