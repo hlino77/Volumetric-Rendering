@@ -14,8 +14,8 @@ vector			g_vCamPosition;
 texture2D		g_TransLUTTexture;
 
 float3			g_vLightDir = float3(0.0f, 0.9f, 0.4f);
-float			gSunIlluminance = 1.0f;
-float2			RayMarchMinMaxSPP = float2(4.0f, 14.0f);
+float			g_fSunIlluminance = 1.0f;
+float2			g_vRayMarchMinMaxSPP = float2(4.0f, 14.0f);
 
 uint				g_iWinSizeX;
 uint				g_iWinSizeY;
@@ -83,13 +83,13 @@ struct PS_OUT
 
 struct SingleScatteringResult
 {
-	float3 L;						// Scattered light (luminance)
-	float3 OpticalDepth;			// Optical depth (1/m)
-	float3 Transmittance;			// Transmittance in [0,1] (unitless)
-	float3 MultiScatAs1;
+	float3 vL;						
+	float3 vOpticalDepth;			
+	float3 vTransmittance;			
+	float3 vMultiScatAs1;
 
-	float3 NewMultiScatStep0Out;
-	float3 NewMultiScatStep1Out;
+	float3 vNewMultiScatStep0Out;
+	float3 vNewMultiScatStep1Out;
 };
 
 float raySphereIntersectNearest(float3 r0, float3 rd, float3 s0, float sR)
@@ -120,48 +120,46 @@ float raySphereIntersectNearest(float3 r0, float3 rd, float3 s0, float sR)
 	return max(0.0, min(sol0, sol1));
 }
 
-void UvToSkyViewLutParams(out float viewZenithCosAngle, out float lightViewCosAngle, in float viewHeight, in float2 uv)
+void UvToSkyViewLutParams(out float fViewZenithCosAngle, out float fLightViewCosAngle, in float fViewHeight, in float2 vUV)
 {
-	//uv = float2(fromSubUvsToUnit(uv.x, 192.0f), fromSubUvsToUnit(uv.y, 108.0f));
+	float fVhorizon = sqrt(fViewHeight * fViewHeight - fEarthRadius * fEarthRadius);
+	float fCosBeta = fVhorizon / fViewHeight;				
+	float fBeta = acos(fCosBeta);
+	float fZenithHorizonAngle = PI - fBeta;
 
-	float Vhorizon = sqrt(viewHeight * viewHeight - fEarthRadius * fEarthRadius);
-	float CosBeta = Vhorizon / viewHeight;				
-	float Beta = acos(CosBeta);
-	float ZenithHorizonAngle = PI - Beta;
-
-	if (uv.y < 0.5f)
+	if (vUV.y < 0.5f)
 	{
-		float coord = 2.0*uv.y;
-		coord = 1.0 - coord;
-		coord *= coord;
+		float fCoord = 2.0* vUV.y;
+		fCoord = 1.0 - fCoord;
+		fCoord *= fCoord;
 
-		coord = 1.0 - coord;
-		viewZenithCosAngle = cos(ZenithHorizonAngle * coord);
+		fCoord = 1.0 - fCoord;
+		fViewZenithCosAngle = cos(fZenithHorizonAngle * fCoord);
 	}
 	else
 	{
-		float coord = uv.y*2.0 - 1.0;
-		coord *= coord;
+		float fCoord = vUV.y * 2.0f - 1.0f;
+		fCoord *= fCoord;
 
-		viewZenithCosAngle = cos(ZenithHorizonAngle + Beta * coord);
+		fViewZenithCosAngle = cos(fZenithHorizonAngle + fBeta * fCoord);
 	}
 
-	float coord = uv.x;
-	coord *= coord;
-	lightViewCosAngle = -(coord*2.0 - 1.0);
+	float fCoord = vUV.x;
+	fCoord *= fCoord;
+	fLightViewCosAngle = -(fCoord * 2.0f - 1.0f);
 }
 
-bool MoveToTopAtmosphere(inout float3 WorldPos, in float3 WorldDir, in float AtmosphereTopRadius)
+bool MoveToTopAtmosphere(inout float3 vWorldPos, in float3 vWorldDir, in float fAtmosphereTopRadius)
 {
-	float viewHeight = length(WorldPos);
-	if (viewHeight > AtmosphereTopRadius)
+	float fViewHeight = length(vWorldPos);
+	if (fViewHeight > fAtmosphereTopRadius)
 	{
-		float tTop = raySphereIntersectNearest(WorldPos, WorldDir, float3(0.0f, 0.0f, 0.0f), AtmosphereTopRadius);
-		if (tTop >= 0.0f)
+		float fTop = raySphereIntersectNearest(vWorldPos, vWorldDir, float3(0.0f, 0.0f, 0.0f), fAtmosphereTopRadius);
+		if (fTop >= 0.0f)
 		{
-			float3 UpVector = WorldPos / viewHeight;
-			float3 UpOffset = UpVector * -PLANET_RADIUS_OFFSET;
-			WorldPos = WorldPos + WorldDir * tTop + UpOffset;
+			float3 vUpVector = vWorldPos / fViewHeight;
+			float3 vUpOffset = vUpVector * -PLANET_RADIUS_OFFSET;
+			vWorldPos = vWorldPos + vWorldDir * fTop + vUpOffset;
 		}
 		else
 		{
@@ -173,223 +171,194 @@ bool MoveToTopAtmosphere(inout float3 WorldPos, in float3 WorldDir, in float Atm
 
 struct MediumSampleRGB
 {
-	float3 scattering;
-	float3 absorption;
-	float3 extinction;
+	float3 vScattering;
+	float3 vAbsorption;
+	float3 vExtinction;
 
-	float3 scatteringMie;
-	float3 absorptionMie;
-	float3 extinctionMie;
+	float3 vScatteringMie;
+	float3 vAbsorptionMie;
+	float3 vExtinctionMie;
 
-	float3 scatteringRay;
-	float3 absorptionRay;
-	float3 extinctionRay;
+	float3 vScatteringRay;
+	float3 vAbsorptionRay;
+	float3 vExtinctionRay;
 
-	float3 scatteringOzo;
-	float3 absorptionOzo;
-	float3 extinctionOzo;
+	float3 vScatteringOzo;
+	float3 vAbsorptionOzo;
+	float3 vExtinctionOzo;
 
-	float3 albedo;
+	float3 vAlbedo;
 };
 
-MediumSampleRGB sampleMediumRGB(in float3 WorldPos)
+MediumSampleRGB SampleMediumRGB(in float3 vWorldPos)
 {
-	const float viewHeight = length(WorldPos) - fEarthRadius;
+	const float fViewHeight = length(vWorldPos) - fEarthRadius;
 
-	const float densityMie = exp(-viewHeight / fHDensityMie);
-	const float densityRay = exp(-viewHeight / fHDensityRayleigh);
-	const float densityOzo = max(0.0f, 1 - 0.5 * abs(viewHeight - vOzone.x) / vOzone.y);
+	const float fDensityMie = exp(-fViewHeight / fHDensityMie);
+	const float fDensityRay = exp(-fViewHeight / fHDensityRayleigh);
+	const float fDensityOzo = max(0.0f, 1 - 0.5 * abs(fViewHeight - vOzone.x) / vOzone.y);
 
-	MediumSampleRGB s;
+	MediumSampleRGB tResult;
 
-	s.scatteringMie = densityMie * fScatterMie;
-	s.absorptionMie = densityMie * (fExtinctionMie - fScatterMie);
-	s.extinctionMie = densityMie * fExtinctionMie;
+	tResult.vScatteringMie = fDensityMie * fScatterMie;
+	tResult.vAbsorptionMie = fDensityMie * (fExtinctionMie - fScatterMie);
+	tResult.vExtinctionMie = fDensityMie * fExtinctionMie;
 
-	s.scatteringRay = densityRay * vScatterRayleigh.xyz;
-	s.absorptionRay = 0.0f;
-	s.extinctionRay = s.scatteringRay + s.absorptionRay;
+	tResult.vScatteringRay = fDensityRay * vScatterRayleigh.xyz;
+	tResult.vAbsorptionRay = 0.0f;
+	tResult.vExtinctionRay = tResult.vScatteringRay + tResult.vAbsorptionRay;
 
-	s.scatteringOzo = 0.0;
-	s.absorptionOzo = densityOzo * vAbsorbOzone;
-	s.extinctionOzo = s.scatteringOzo + s.absorptionOzo;
+	tResult.vScatteringOzo = 0.0;
+	tResult.vAbsorptionOzo = fDensityOzo * vAbsorbOzone;
+	tResult.vExtinctionOzo = tResult.vScatteringOzo + tResult.vAbsorptionOzo;
 
-	s.scattering = s.scatteringMie + s.scatteringRay + s.scatteringOzo;
-	s.absorption = s.absorptionMie + s.absorptionRay + s.absorptionOzo;
-	s.extinction = s.extinctionMie + s.extinctionRay + s.extinctionOzo;
+	tResult.vScattering = tResult.vScatteringMie + tResult.vScatteringRay + tResult.vScatteringOzo;
+	tResult.vAbsorption = tResult.vAbsorptionMie + tResult.vAbsorptionRay + tResult.vAbsorptionOzo;
+	tResult.vExtinction = tResult.vExtinctionMie + tResult.vExtinctionRay + tResult.vExtinctionOzo;
 
-	return s;
+	return tResult;
 }
 
-void LutTransmittanceParamsToUv(in float viewHeight, in float viewZenithCosAngle, out float2 uv)
+void LutTransmittanceParamsToUv(in float fViewHeight, in float fViewZenithCosAngle, out float2 vUV)
 {
-	float H = sqrt(max(0.0f, fAtmosphereRadius * fAtmosphereRadius - fEarthRadius * fEarthRadius));
-	float rho = sqrt(max(0.0f, viewHeight * viewHeight - fEarthRadius * fEarthRadius));
+	float fH = sqrt(max(0.0f, fAtmosphereRadius * fAtmosphereRadius - fEarthRadius * fEarthRadius));
+	float fRho = sqrt(max(0.0f, fViewHeight * fViewHeight - fEarthRadius * fEarthRadius));
 
-	float discriminant = viewHeight * viewHeight * (viewZenithCosAngle * viewZenithCosAngle - 1.0) + fAtmosphereRadius * fAtmosphereRadius;
-	float d = max(0.0, (-viewHeight * viewZenithCosAngle + sqrt(discriminant))); // Distance to atmosphere boundary
+	float fDiscriminant = fViewHeight * fViewHeight * (fViewZenithCosAngle * fViewZenithCosAngle - 1.0) + fAtmosphereRadius * fAtmosphereRadius;
+	float fD = max(0.0, (-fViewHeight * fViewZenithCosAngle + sqrt(fDiscriminant)));
 
-	float d_min = fAtmosphereRadius - viewHeight;
-	float d_max = rho + H;
-	float x_mu = (d - d_min) / (d_max - d_min);
-	float x_r = rho / H;
+	float fMin = fAtmosphereRadius - fViewHeight;
+	float fMax = fRho + fH;
+	float fX = (fD - fMin) / (fMax - fMin);
+	float fY = fRho / fH;
 
-	uv = float2(x_mu, x_r);
-	//uv = float2(fromUnitToSubUvs(uv.x, TRANSMITTANCE_TEXTURE_WIDTH), fromUnitToSubUvs(uv.y, TRANSMITTANCE_TEXTURE_HEIGHT)); // No real impact so off
+	vUV = float2(fX, fY);
 }
 
-float hgPhase(float g, float cosTheta)
+float HgPhase(float fG, float fCosTheta)
 {
-	float numer = 1.0f - g * g;
-	float denom = 1.0f + g * g + 2.0f * g * cosTheta;
-	return numer / (4.0f * PI * denom * sqrt(denom));
+	float fNumer = 1.0f - fG * fG;
+	float fDenom = 1.0f + fG * fG + 2.0f * fG * fCosTheta;
+	return fNumer / (4.0f * PI * fDenom * sqrt(fDenom));
 }
 
-float RayleighPhase(float cosTheta)
+float RayleighPhase(float fCosTheta)
 {
-	float factor = 3.0f / (16.0f * PI);
-	return factor * (1.0f + cosTheta * cosTheta);
+	float fFactor = 3.0f / (16.0f * PI);
+	return fFactor * (1.0f + fCosTheta * fCosTheta);
 }
 
 SingleScatteringResult IntegrateScatteredLuminance(
-	in float2 pixPos, in float3 WorldPos, in float3 WorldDir, in float3 SunDir,
-	in bool ground, in float SampleCountIni, in float DepthBufferValue, in bool VariableSampleCount,
-	in bool MieRayPhase, in float tMaxMax = 9000000.0f)
+	in float2 vPixPos, in float3 vWorldPos, in float3 vWorldDir, in float3 vSunDir,
+	in bool bGground, in float fSampleCountIni, in float fDepthBufferValue,
+	in float fMaxMax = 9000000.0f)
 {
-	SingleScatteringResult result = (SingleScatteringResult)0;
+	SingleScatteringResult tResult = (SingleScatteringResult)0;
 
-	// Compute next intersection with atmosphere or ground 
-	float3 earthO = float3(0.0f, 0.0f, 0.0f);
-	float tBottom = raySphereIntersectNearest(WorldPos, WorldDir, earthO, fEarthRadius);
-	float tTop = raySphereIntersectNearest(WorldPos, WorldDir, earthO, fAtmosphereRadius);
-	float tMax = 0.0f;
-	if (tBottom < 0.0f)
+	float3 vEarthOrigin = float3(0.0f, 0.0f, 0.0f);
+	float fBottom = raySphereIntersectNearest(vWorldPos, vWorldDir, vEarthOrigin, fEarthRadius);
+	float fTop = raySphereIntersectNearest(vWorldPos, vWorldDir, vEarthOrigin, fAtmosphereRadius);
+	float fMax = 0.0f;
+	if (fBottom < 0.0f)
 	{
-		if (tTop < 0.0f)
+		if (fTop < 0.0f)
 		{
-			tMax = 0.0f; // No intersection with earth nor atmosphere: stop right away  
-			return result;
+			fMax = 0.0f; 
+			return tResult;
 		}
 		else
 		{
-			tMax = tTop;
+			fMax = fTop;
 		}
 	}
 	else
 	{
-		if (tTop > 0.0f)
+		if (fTop > 0.0f)
 		{
-			tMax = min(tTop, tBottom);
+			fMax = min(fTop, fBottom);
 		}
 	}
 
-	tMax = min(tMax, tMaxMax);
+	fMax = min(fMax, fMaxMax);
 
-	// Sample count 
-	float SampleCount = SampleCountIni;
-	float SampleCountFloor = SampleCountIni;
-	float tMaxFloor = tMax;
-	if (VariableSampleCount)
+	float fSampleCount = fSampleCountIni;
+	float fSampleCountFloor = fSampleCountIni;
+	float fMaxFloor = fMax;
+
+	fSampleCount = lerp(g_vRayMarchMinMaxSPP.x, g_vRayMarchMinMaxSPP.y, saturate(fMax * 0.01f));
+	fSampleCountFloor = floor(fSampleCount);
+	fMaxFloor = fMax * fSampleCountFloor / fSampleCount;
+
+	float fDt = fMax / fSampleCount;
+
+	const float3 fWi = vSunDir;
+	const float3 fWo = vWorldDir;
+	float fCosTheta = dot(fWi, fWo);
+	float fMiePhaseValue = HgPhase(fPhaseMieG, -fCosTheta);
+	float fRayleighPhaseValue = RayleighPhase(fCosTheta);
+
+	float3 vGlobalL = g_fSunIlluminance;
+
+	float3 vL = 0.0f;
+	float3 vThroughput = 1.0;
+	float3 vOpticalDepth = 0.0;
+	float fT = 0.0f;
+	float fPrev = 0.0;
+	const float fSampleSegmentT = 0.3f;
+	for (float i = 0.0f; i < fSampleCount; i += 1.0f)
 	{
-		SampleCount = lerp(RayMarchMinMaxSPP.x, RayMarchMinMaxSPP.y, saturate(tMax*0.01));
-		SampleCountFloor = floor(SampleCount);
-		tMaxFloor = tMax * SampleCountFloor / SampleCount;	// rescale tMax to map to the last entire step segment.
-	}
-	float dt = tMax / SampleCount;
-
-	// Phase functions
-	const float uniformPhase = 1.0 / (4.0 * PI);
-	const float3 wi = SunDir;
-	const float3 wo = WorldDir;
-	float cosTheta = dot(wi, wo);
-	float MiePhaseValue = hgPhase(fPhaseMieG, -cosTheta);	// mnegate cosTheta because due to WorldDir being a "in" direction. 
-	float RayleighPhaseValue = RayleighPhase(cosTheta);
-
-	float3 globalL = gSunIlluminance;
-
-	// Ray march the atmosphere to integrate optical depth
-	float3 L = 0.0f;
-	float3 throughput = 1.0;
-	float3 OpticalDepth = 0.0;
-	float t = 0.0f;
-	float tPrev = 0.0;
-	const float SampleSegmentT = 0.3f;
-	for (float s = 0.0f; s < SampleCount; s += 1.0f)
-	{
-		if (VariableSampleCount)
 		{
-			// More expenssive but artefact free
-			float t0 = (s) / SampleCountFloor;
-			float t1 = (s + 1.0f) / SampleCountFloor;
-			// Non linear distribution of sample within the range.
-			t0 = t0 * t0;
-			t1 = t1 * t1;
-			// Make t0 and t1 world space distances.
-			t0 = tMaxFloor * t0;
-			if (t1 > 1.0)
+			float fT0 = (i) / fSampleCountFloor;
+			float fT1 = (i + 1.0f) / fSampleCountFloor;
+			fT0 = fT0 * fT0;
+			fT1 = fT1 * fT1;
+			fT0 = fMaxFloor * fT0;
+			if (fT1 > 1.0)
 			{
-				t1 = tMax;
-				//	t1 = tMaxFloor;	// this reveal depth slices
+				fT1 = fMax;
 			}
 			else
 			{
-				t1 = tMaxFloor * t1;
+				fT1 = fMaxFloor * fT1;
 			}
-			//t = t0 + (t1 - t0) * (whangHashNoise(pixPos.x, pixPos.y, gFrameId * 1920 * 1080)); // With dithering required to hide some sampling artefact relying on TAA later? This may even allow volumetric shadow?
-			t = t0 + (t1 - t0)*SampleSegmentT;
-			dt = t1 - t0;
-		}
-		else
-		{
-			//t = tMax * (s + SampleSegmentT) / SampleCount;
-			// Exact difference, important for accuracy of multiple scattering
-			float NewT = tMax * (s + SampleSegmentT) / SampleCount;
-			dt = NewT - t;
-			t = NewT;
-		}
-		float3 P = WorldPos + t * WorldDir;
-
-		MediumSampleRGB medium = sampleMediumRGB(P);
-		const float3 SampleOpticalDepth = medium.extinction * dt;
-		const float3 SampleTransmittance = exp(-SampleOpticalDepth);
-		OpticalDepth += SampleOpticalDepth;
-
-		float pHeight = length(P);
-		const float3 UpVector = P / pHeight;
-		float SunZenithCosAngle = dot(SunDir, UpVector);
-		float2 uv;
-		LutTransmittanceParamsToUv(pHeight, SunZenithCosAngle, uv);
-		float3 TransmittanceToSun = g_TransLUTTexture.SampleLevel(LinearClampSampler, uv, 0).rgb;
-
-		float3 PhaseTimesScattering;
-		if (MieRayPhase)
-		{
-			PhaseTimesScattering = medium.scatteringMie * MiePhaseValue + medium.scatteringRay * RayleighPhaseValue;
-		}
-		else
-		{
-			PhaseTimesScattering = medium.scattering * uniformPhase;
+			fT = fT0 + (fT1 - fT0) * fSampleSegmentT;
+			fDt = fT1 - fT0;
 		}
 
-		// Earth shadow 
-		float tEarth = raySphereIntersectNearest(P, SunDir, earthO + PLANET_RADIUS_OFFSET * UpVector, fEarthRadius);
-		float earthShadow = tEarth >= 0.0f ? 0.0f : 1.0f;
+		float3 vPos = vWorldPos + fT * vWorldDir;
 
-		float shadow = 1.0f;
+		MediumSampleRGB tMedium = SampleMediumRGB(vPos);
+		const float3 vSampleOpticalDepth = tMedium.vExtinction * fDt;
+		const float3 vSampleTransmittance = exp(-vSampleOpticalDepth);
+		vOpticalDepth += vSampleOpticalDepth;
 
-		float3 S = globalL * (earthShadow * shadow * TransmittanceToSun * PhaseTimesScattering);
+		float fHeight = length(vPos);
+		const float3 vUpVector = vPos / fHeight;
+		float fSunZenithCosAngle = dot(vSunDir, vUpVector);
+		float2 vUV;
+		LutTransmittanceParamsToUv(fHeight, fSunZenithCosAngle, vUV);
+		float3 vTransmittanceToSun = g_TransLUTTexture.SampleLevel(LinearClampSampler, vUV, 0).rgb;
 
-		float3 Sint = (S - S * SampleTransmittance) / medium.extinction;	
-		L += throughput * Sint;					
-		throughput *= SampleTransmittance;
+		float3 vPhaseTimesScattering = tMedium.vScatteringMie * fMiePhaseValue + tMedium.vScatteringRay * fRayleighPhaseValue;
 
-		tPrev = t;
+		float tEarth = raySphereIntersectNearest(vPos, vSunDir, vEarthOrigin + PLANET_RADIUS_OFFSET * vUpVector, fEarthRadius);
+		float fEarthShadow = tEarth >= 0.0f ? 0.0f : 1.0f;
+
+		float fShadow = 1.0f;
+
+		float3 vS = vGlobalL * (fEarthShadow * fShadow * vTransmittanceToSun * vPhaseTimesScattering);
+
+		float3 vSint = (vS - vS * vSampleTransmittance) / tMedium.vExtinction;	
+		vL += vThroughput * vSint;					
+		vThroughput *= vSampleTransmittance;
+
+		fPrev = fT;
 	}
 
-	result.L = L;
-	result.OpticalDepth = OpticalDepth;
-	result.Transmittance = throughput;
-	return result;
+	tResult.vL = vL;
+	tResult.vOpticalDepth = vOpticalDepth;
+	tResult.vTransmittance = vThroughput;
+	return tResult;
 }
 
 
@@ -411,55 +380,53 @@ PS_OUT PS_MAIN(PS_IN In)
 	vClipPos = mul(vClipPos, g_ProjMatrixInv);
 	vClipPos = mul(vClipPos, g_ViewMatrixInv);
 
-	float3 WorldPos = vClipPos.xyz;
-	float3 WorldDir = normalize(WorldPos - g_vCamPosition.xyz);
-	WorldPos = g_vCamPosition.xyz + float3(0, fEarthRadius, 0);
+	float3 vWorldPos = vClipPos.xyz;
+	float3 vWorldDir = normalize(vWorldPos - g_vCamPosition.xyz);
+	vWorldPos = g_vCamPosition.xyz + float3(0, fEarthRadius, 0);
 
-	WorldPos = WorldPos.xzy;
-	WorldDir = WorldDir.xzy;
+	vWorldPos = vWorldPos.xzy;
+	vWorldDir = vWorldDir.xzy;
 	 
-	float2 uv = In.vTexcoord;
+	float2 vUV = In.vTexcoord;
 
-	float viewHeight = length(WorldPos);
+	float fViewHeight = length(vWorldPos);
 
-	float viewZenithCosAngle;
-	float lightViewCosAngle;
-	UvToSkyViewLutParams(viewZenithCosAngle, lightViewCosAngle, viewHeight, uv);
+	float fViewZenithCosAngle;
+	float fLightViewCosAngle;
+	UvToSkyViewLutParams(fViewZenithCosAngle, fLightViewCosAngle, fViewHeight, vUV);
 
-	float3 sun_direction = normalize(g_vLightDir);
+	float3 vSunDirection = normalize(g_vLightDir);
 
-	float3 SunDir;
+	float3 vSunDir;
 	{
-		float3 UpVector = WorldPos / viewHeight;
-		float sunZenithCosAngle = dot(UpVector, sun_direction);
-		SunDir = normalize(float3(sqrt(1.0 - sunZenithCosAngle * sunZenithCosAngle), 0.0, sunZenithCosAngle));
+		float3 vUpVector = vWorldPos / fViewHeight;
+		float fSunZenithCosAngle = dot(vUpVector, vSunDirection);
+		vSunDir = normalize(float3(sqrt(1.0 - fSunZenithCosAngle * fSunZenithCosAngle), 0.0, fSunZenithCosAngle));
 	}
 
-	WorldPos = float3(0.0f, 0.0f, viewHeight);
+	vWorldPos = float3(0.0f, 0.0f, fViewHeight);
 
-	float viewZenithSinAngle = sqrt(1 - viewZenithCosAngle * viewZenithCosAngle);
-	WorldDir = float3(
-		viewZenithSinAngle * lightViewCosAngle,
-		viewZenithSinAngle * sqrt(1.0 - lightViewCosAngle * lightViewCosAngle),
-		viewZenithCosAngle);
+	float fViewZenithSinAngle = sqrt(1 - fViewZenithCosAngle * fViewZenithCosAngle);
+	vWorldDir = float3(
+		fViewZenithSinAngle * fLightViewCosAngle,
+		fViewZenithSinAngle * sqrt(1.0 - fLightViewCosAngle * fLightViewCosAngle),
+		fViewZenithCosAngle);
 
-	if (!MoveToTopAtmosphere(WorldPos, WorldDir, fAtmosphereRadius))
+	if (!MoveToTopAtmosphere(vWorldPos, vWorldDir, fAtmosphereRadius))
 	{
 		Out.vColor = float4(0.0f, 0.0f, 0.0f, 1);
 		return Out;
 	}
 
-	float2 pixPos = In.vTexcoord * float2(1280.0f, 720.0f);
-	const bool ground = false;
-	const float SampleCountIni = 30;
-	const float DepthBufferValue = -1.0;
-	const bool VariableSampleCount = true;
-	const bool MieRayPhase = true;
-	SingleScatteringResult ss = IntegrateScatteredLuminance(pixPos, WorldPos, WorldDir, SunDir, ground, SampleCountIni, DepthBufferValue, VariableSampleCount, MieRayPhase);
+	float2 vPixPos = In.vTexcoord * float2(g_iWinSizeX, g_iWinSizeY);
+	const bool bGround = false;
+	const float fSampleCountIni = 30;
+	const float fDepthBufferValue = -1.0;
+	SingleScatteringResult tResult = IntegrateScatteredLuminance(vPixPos, vWorldPos, vWorldDir, vSunDir, bGround, fSampleCountIni, fDepthBufferValue);
 
-	float3 L = ss.L;
+	float3 vL = tResult.vL;
 
-	Out.vColor =  float4(L, 1) * 5.0f;
+	Out.vColor =  float4(vL, 1) * 5.0f;
 	return Out;
 }
 
