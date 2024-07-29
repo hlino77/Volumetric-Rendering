@@ -24,6 +24,7 @@ private:
 	HRESULT Ready_For_LUT();
 	HRESULT Ready_Components();
 	HRESULT Ready_RenderTargets();
+	HRESULT Ready_AtmosphereBuffer();
 private:
 	ID3D11ShaderResourceView*	m_pTransLUTSRV = { nullptr };
 
@@ -40,6 +41,8 @@ private:
 
 	AtmosphereProperties m_tAtmo;
 	AtmosphereProperties m_tUnitAtmo;
+
+	ID3D11Buffer* m_pAtmosphereBuffer = { nullptr };
 public:
 	virtual CGameObject* Clone(void* pArg) override;
 	static CSky* Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);

@@ -41,8 +41,13 @@ HRESULT CSky::Initialize_Prototype()
 
 HRESULT CSky::Initialize(void* pArg)
 {
-	m_tUnitAtmo = m_tUnitAtmo.toStdUnit();
+	m_tUnitAtmo = m_tUnitAtmo.ToStdUnit();
 	
+	if (FAILED(Ready_AtmosphereBuffer()))
+	{
+		return E_FAIL;
+	}
+
 	if (FAILED(Ready_For_LUT()))
 	{
 		return E_FAIL;
@@ -97,6 +102,19 @@ HRESULT CSky::Render()
 		return E_FAIL;
 	}
 
+	if (FAILED(m_pShader->Bind_RawValue("g_iWinSizeX", &m_iWinSizeX, sizeof(_uint))))
+	{
+		return E_FAIL;
+	}
+	if (FAILED(m_pShader->Bind_RawValue("g_iWinSizeY", &m_iWinSizeY, sizeof(_uint))))
+	{
+		return E_FAIL;
+	}
+
+	if (FAILED(m_pShader->Bind_ConstantBuffer("AtmosphereParams", m_pAtmosphereBuffer)))
+	{
+		return E_FAIL;
+	}
 
 	RELEASE_INSTANCE(CPipeLine);
 
@@ -155,6 +173,29 @@ HRESULT CSky::Ready_RenderTargets()
 
 	if (FAILED(m_pTarget_Manager->Add_MRT(L"MRT_LUT", L"Target_TransLUT")))
 		return E_FAIL;
+
+	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_TransLUT"), m_iWinSizeX * 0.25f, m_iWinSizeY * 0.25f, m_iWinSizeX * 0.5f, m_iWinSizeY * 0.5f)))
+		return E_FAIL;
+
+	return S_OK;
+}
+
+HRESULT CSky::Ready_AtmosphereBuffer()
+{
+	D3D11_BUFFER_DESC tBufferDesc;
+	ZeroMemory(&tBufferDesc, sizeof(D3D11_BUFFER_DESC));
+	tBufferDesc.ByteWidth = sizeof(AtmosphereProperties);
+	tBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	tBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+
+	D3D11_SUBRESOURCE_DATA tData;
+	ZeroMemory(&tData, sizeof(D3D11_SUBRESOURCE_DATA));
+	tData.pSysMem = &m_tUnitAtmo;
+
+	if (FAILED(m_pDevice->CreateBuffer(&tBufferDesc, &tData, &m_pAtmosphereBuffer)))
+	{
+		return E_FAIL;
+	}
 
 	return S_OK;
 }

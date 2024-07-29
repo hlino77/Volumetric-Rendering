@@ -88,7 +88,7 @@ namespace Engine
 		ret.fHDensityRayleigh = 1e3f * ret.fHDensityRayleigh;
 
 		ret.fScatterMie = 1e-6f * ret.fScatterMie;
-		ret.fAbsorbMie = 1e-6f * ret.fAbsorbMie;
+		ret.fExtinctionMie = 1e-6f * ret.fExtinctionMie;
 		ret.fHDensityMie = 1e3f * ret.fHDensityMie;
 
 		ret.fAbsorbOzone = 1e-6f * ret.fAbsorbOzone;

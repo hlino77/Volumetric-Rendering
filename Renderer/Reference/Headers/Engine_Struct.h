@@ -159,23 +159,23 @@ namespace Engine
 
 	struct alignas(16) AtmosphereProperties
 	{
-		Vec4	scatterRayleigh = { 5.802f, 13.558f, 33.1f, 0.0f };
-		float	hDensityRayleigh = 8;
+		Vec4	fScatterRayleigh = { 5.802f, 13.558f, 33.1f, 0.0f };
+		float	fHDensityRayleigh = 8;
 
-		float	scatterMie = 3.996f;
-		float	asymmetryMie = 0.8f;
-		float	absorbMie = 4.4f;
-		float	hDensityMie = 1.2f;
+		float	fScatterMie = 3.996f;
+		float	fPhaseMieG = 0.8f;
+		float	fExtinctionMie = 4.4f;
+		float	fHDensityMie = 1.2f;
 
 		float	fPlanetRadius = 6360;
 		float	fAtmosphereRadius = 6460;
 
 		float	fPadding = 0.0f;
 
- 		Vec4	absorbOzone = { 0.65f, 1.881f, 0.085f, 0.0f };
+ 		Vec4	fAbsorbOzone = { 0.65f, 1.881f, 0.085f, 0.0f };
 		Vec4	vOzone = { 25.0f, 8.0f, 0.0f, 0.0f };
-		
-		AtmosphereProperties toStdUnit() const;
+
+		AtmosphereProperties ToStdUnit() const;
 	};
 
 	

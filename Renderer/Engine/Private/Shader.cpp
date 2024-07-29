@@ -152,6 +152,15 @@ HRESULT CShader::Bind_Textures(const char * pConstantName, ID3D11ShaderResourceV
 	return pSRVariable->SetResourceArray(ppSRVs, 0, iNumTextures);	
 }
 
+HRESULT CShader::Bind_ConstantBuffer(const char* pConstantName, ID3D11Buffer* pBuffer) const
+{
+	ID3DX11EffectConstantBuffer* pConstantBuffer = m_pEffect->GetConstantBufferByName(pConstantName);
+	if (nullptr == pConstantBuffer)
+		return E_FAIL;
+
+	return pConstantBuffer->SetConstantBuffer(pBuffer);
+}
+
 CShader * CShader::Create(ID3D11Device * pDevice, ID3D11DeviceContext * pContext, const wstring & strShaderFilePath, const D3D11_INPUT_ELEMENT_DESC* pElements, _uint iNumElements)
 {
 	CShader*	pInstance = new CShader(pDevice, pContext);
