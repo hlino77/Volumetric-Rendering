@@ -13,7 +13,7 @@ vector			g_vCamPosition;
 
 texture2D		g_TransLUTTexture;
 
-float3			g_vLightDir = float3(1.0f, -1.0f, 1.0f);
+float3			g_vLightDir = float3(0.0f, 0.9f, 0.4f);
 float			gSunIlluminance = 1.0f;
 float2			RayMarchMinMaxSPP = float2(4.0f, 14.0f);
 
@@ -375,29 +375,9 @@ SingleScatteringResult IntegrateScatteredLuminance(
 		float tEarth = raySphereIntersectNearest(P, SunDir, earthO + PLANET_RADIUS_OFFSET * UpVector, fEarthRadius);
 		float earthShadow = tEarth >= 0.0f ? 0.0f : 1.0f;
 
-		// Dual scattering for multi scattering 
-
-		float3 multiScatteredLuminance = 0.0f;
-
 		float shadow = 1.0f;
 
-		float3 S = globalL * (earthShadow * shadow * TransmittanceToSun * PhaseTimesScattering + multiScatteredLuminance * medium.scattering);
-
-		float3 MS = medium.scattering * 1;
-		float3 MSint = (MS - MS * SampleTransmittance) / medium.extinction;
-		result.MultiScatAs1 += throughput * MSint;
-
-		{
-			float3 newMS;
-
-			newMS = earthShadow * TransmittanceToSun * medium.scattering * uniformPhase * 1;
-			result.NewMultiScatStep0Out += throughput * (newMS - newMS * SampleTransmittance) / medium.extinction;
-			//	result.NewMultiScatStep0Out += SampleTransmittance * throughput * newMS * dt;
-
-			newMS = medium.scattering * uniformPhase * multiScatteredLuminance;
-			result.NewMultiScatStep1Out += throughput * (newMS - newMS * SampleTransmittance) / medium.extinction;
-			//	result.NewMultiScatStep1Out += SampleTransmittance * throughput * newMS * dt;
-		}
+		float3 S = globalL * (earthShadow * shadow * TransmittanceToSun * PhaseTimesScattering);
 
 		float3 Sint = (S - S * SampleTransmittance) / medium.extinction;	
 		L += throughput * Sint;					
@@ -435,6 +415,9 @@ PS_OUT PS_MAIN(PS_IN In)
 	float3 WorldDir = normalize(WorldPos - g_vCamPosition.xyz);
 	WorldPos = g_vCamPosition.xyz + float3(0, fEarthRadius, 0);
 
+	WorldPos = WorldPos.xzy;
+	WorldDir = WorldDir.xzy;
+	 
 	float2 uv = In.vTexcoord;
 
 	float viewHeight = length(WorldPos);
@@ -443,9 +426,7 @@ PS_OUT PS_MAIN(PS_IN In)
 	float lightViewCosAngle;
 	UvToSkyViewLutParams(viewZenithCosAngle, lightViewCosAngle, viewHeight, uv);
 
-	//float3 sun_direction = normalize(g_vLightDir);
-
-	float3 sun_direction = normalize(float3(1.0f, -1.0f, 1.0f));
+	float3 sun_direction = normalize(g_vLightDir);
 
 	float3 SunDir;
 	{
@@ -453,8 +434,6 @@ PS_OUT PS_MAIN(PS_IN In)
 		float sunZenithCosAngle = dot(UpVector, sun_direction);
 		SunDir = normalize(float3(sqrt(1.0 - sunZenithCosAngle * sunZenithCosAngle), 0.0, sunZenithCosAngle));
 	}
-
-
 
 	WorldPos = float3(0.0f, 0.0f, viewHeight);
 
@@ -464,11 +443,8 @@ PS_OUT PS_MAIN(PS_IN In)
 		viewZenithSinAngle * sqrt(1.0 - lightViewCosAngle * lightViewCosAngle),
 		viewZenithCosAngle);
 
-
-	// Move to top atmospehre
 	if (!MoveToTopAtmosphere(WorldPos, WorldDir, fAtmosphereRadius))
 	{
-		// Ray is not intersecting the atmosphere
 		Out.vColor = float4(0.0f, 0.0f, 0.0f, 1);
 		return Out;
 	}
@@ -483,7 +459,7 @@ PS_OUT PS_MAIN(PS_IN In)
 
 	float3 L = ss.L;
 
-	Out.vColor =  float4(L, 1);
+	Out.vColor =  float4(L, 1) * 5.0f;
 	return Out;
 }
 
