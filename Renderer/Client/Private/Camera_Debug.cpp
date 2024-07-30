@@ -57,15 +57,20 @@ void CCamera_Debug::Tick(_float fTimeDelta)
 
 	_long	MouseMove = 0l;
 
-	if (MouseMove = pGameInstance->Get_DIMouseMove(CInput_Device::MMS_X))
+	if (pGameInstance->Get_DIKeyState(DIK_LSHIFT) & 0x80)
 	{
-		m_pTransform->Turn(XMVectorSet(0.f, 1.f, 0.f, 0.f), MouseMove * m_fMouseSensitive * 0.005f);
+		if (MouseMove = pGameInstance->Get_DIMouseMove(CInput_Device::MMS_X))
+		{
+			m_pTransform->Turn(XMVectorSet(0.f, 1.f, 0.f, 0.f), MouseMove * m_fMouseSensitive * 0.005f);
+		}
+
+		if (MouseMove = pGameInstance->Get_DIMouseMove(CInput_Device::MMS_Y))
+		{
+			m_pTransform->Turn(m_pTransform->Get_State(CTransform::STATE_RIGHT), MouseMove * m_fMouseSensitive * 0.005f);
+		}
 	}
 
-	if (MouseMove = pGameInstance->Get_DIMouseMove(CInput_Device::MMS_Y))
-	{
-		m_pTransform->Turn(m_pTransform->Get_State(CTransform::STATE_RIGHT), MouseMove * m_fMouseSensitive * 0.005f);
-	}	
+	
 
 	RELEASE_INSTANCE(CGameInstance);
 

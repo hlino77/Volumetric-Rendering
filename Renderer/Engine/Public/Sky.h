@@ -25,6 +25,10 @@ private:
 	HRESULT Ready_Components();
 	HRESULT Ready_RenderTargets();
 	HRESULT Ready_AtmosphereBuffer();
+	HRESULT	Ready_Sun();
+
+
+	void	Update_Sun(_float fTimeDelta);
 private:
 	ID3D11ShaderResourceView*	m_pTransLUTSRV = { nullptr };
 
@@ -43,6 +47,10 @@ private:
 	AtmosphereProperties m_tUnitAtmo;
 
 	ID3D11Buffer* m_pAtmosphereBuffer = { nullptr };
+
+
+	Vec3					m_vSunPos;
+	Vec3					m_vLightDir;
 public:
 	virtual CGameObject* Clone(void* pArg) override;
 	static CSky* Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);

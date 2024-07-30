@@ -58,6 +58,11 @@ HRESULT CSky::Initialize(void* pArg)
 		return E_FAIL;
 	}
 
+	if (FAILED(Ready_Sun()))
+	{
+		return E_FAIL;
+	}
+
 	return S_OK;
 }
 
@@ -68,6 +73,7 @@ void CSky::PriorityTick(_float fTimeDelta)
 
 void CSky::Tick(_float fTimeDelta)
 {
+	Update_Sun(fTimeDelta);
 }
 
 void CSky::LateTick(_float fTimeDelta)
@@ -77,7 +83,7 @@ void CSky::LateTick(_float fTimeDelta)
 
 HRESULT CSky::Render()
 {
-	if (FAILED(m_pTarget_Manager->Begin_MRT(m_pContext, L"MRT_LUT")))
+	if (FAILED(m_pTarget_Manager->Begin_MRT(m_pContext, L"MRT_SkyViewLUT")))
 		return E_FAIL;
 
 	if (FAILED(m_pShader->Bind_Matrix("g_WorldMatrix", &m_WorldMatrix)))
@@ -95,6 +101,12 @@ HRESULT CSky::Render()
 		return E_FAIL;
 
 	if (FAILED(m_pShader->Bind_RawValue("g_vCamPosition", &pPipeLine->Get_CamPosition(), sizeof(Vec3))))
+		return E_FAIL;
+
+	if (FAILED(m_pShader->Bind_RawValue("g_vLightDir", &m_vLightDir, sizeof(Vec3))))
+		return E_FAIL;
+
+	if (FAILED(m_pShader->Bind_RawValue("g_vSunPos", &m_vSunPos, sizeof(Vec3))))
 		return E_FAIL;
 
 	if (FAILED(m_pShader->Bind_Texture("g_TransLUTTexture", m_pTransLUTSRV)))
@@ -118,13 +130,23 @@ HRESULT CSky::Render()
 
 	RELEASE_INSTANCE(CPipeLine);
 
-	if (FAILED(m_pShader->Begin(0)))
+	if (FAILED(m_pShader->Begin(1)))
 		return E_FAIL;
 
 	if (FAILED(m_pVIBuffer->Render()))
 		return E_FAIL;
 
 	if (FAILED(m_pTarget_Manager->End_MRT(m_pContext)))
+		return E_FAIL;
+
+
+
+	//Atmosphere
+
+	if (FAILED(m_pShader->Begin(0)))
+		return E_FAIL;
+
+	if (FAILED(m_pVIBuffer->Render()))
 		return E_FAIL;
 
 
@@ -167,15 +189,23 @@ HRESULT CSky::Ready_Components()
 
 HRESULT CSky::Ready_RenderTargets()
 {
-	if (FAILED(m_pTarget_Manager->Add_RenderTarget(m_pDevice, m_pContext, L"Target_TransLUT",
+	if (FAILED(m_pTarget_Manager->Add_RenderTarget(m_pDevice, m_pContext, L"Target_SkyViewLUT",
 		m_iWinSizeX, m_iWinSizeY, DXGI_FORMAT_R32G32B32A32_FLOAT, Vec4(0.0f, 0.0f, 0.0f, 0.f))))
 		return E_FAIL;
 
-	if (FAILED(m_pTarget_Manager->Add_MRT(L"MRT_LUT", L"Target_TransLUT")))
+	if (FAILED(m_pTarget_Manager->Add_MRT(L"MRT_SkyViewLUT", L"Target_SkyViewLUT")))
 		return E_FAIL;
 
-	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_TransLUT"), m_iWinSizeX * 0.25f, m_iWinSizeY * 0.25f, m_iWinSizeX * 0.5f, m_iWinSizeY * 0.5f)))
+	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_SkyViewLUT"), m_iWinSizeX * 0.25f, m_iWinSizeY * 0.25f, m_iWinSizeX * 0.5f, m_iWinSizeY * 0.5f)))
 		return E_FAIL;
+
+	if (FAILED(m_pTarget_Manager->Add_RenderTarget(m_pDevice, m_pContext, L"Target_Atmosphere",
+		m_iWinSizeX, m_iWinSizeY, DXGI_FORMAT_R32G32B32A32_FLOAT, Vec4(0.0f, 0.0f, 0.0f, 0.f))))
+		return E_FAIL;
+
+	if (FAILED(m_pTarget_Manager->Add_MRT(L"MRT_Atmosphere", L"Target_Atmosphere")))
+		return E_FAIL;
+
 
 	return S_OK;
 }
@@ -198,6 +228,52 @@ HRESULT CSky::Ready_AtmosphereBuffer()
 	}
 
 	return S_OK;
+}
+
+HRESULT CSky::Ready_Sun()
+{
+	m_vSunPos = Vec3(-1.0f, 1.0f, -1.0f) * 6300e5;
+
+	
+	
+	return S_OK;
+}
+
+void CSky::Update_Sun(_float fTimeDelta)
+{
+	CGameInstance* pGameInstance = GET_INSTANCE(CGameInstance);
+
+	_long	MouseMove = 0l;
+
+	if (pGameInstance->Get_DIKeyState(DIK_LCONTROL) & 0x80)
+	{
+		if (MouseMove = pGameInstance->Get_DIMouseMove(CInput_Device::MMS_X))
+		{
+			Vec3 vUp(0.0f, 1.0f, 0.0f);
+
+			Matrix RotateMatrix = Matrix::CreateFromQuaternion(Quaternion::CreateFromAxisAngle(vUp, MouseMove * 0.5f * fTimeDelta));
+
+			m_vSunPos = XMVector3Transform(m_vSunPos, RotateMatrix);
+		}
+
+		if (MouseMove = pGameInstance->Get_DIMouseMove(CInput_Device::MMS_Y))
+		{
+			Vec3 vUp(0.0f, 1.0f, 0.0f);
+			Vec3 vLook = m_vSunPos;
+			vLook.Normalize();
+			Vec3 vRight = XMVector3Cross(vUp, vLook);
+
+			Matrix RotateMatrix = Matrix::CreateFromQuaternion(Quaternion::CreateFromAxisAngle(vRight, MouseMove * 0.5f * fTimeDelta));
+
+			m_vSunPos = XMVector3Transform(m_vSunPos, RotateMatrix);
+		}
+	}
+
+	RELEASE_INSTANCE(CGameInstance);
+
+
+	m_vLightDir = m_vSunPos;
+	m_vLightDir.Normalize();
 }
 
 

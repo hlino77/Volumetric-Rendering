@@ -46,6 +46,7 @@ HRESULT CCamera::Initialize(void * pArg)
 	/* 내가 원하는 카메라의 상태를 CTransform 에게 동기화한다. */
 	m_pTransform->Set_State(CTransform::STATE_POSITION, XMLoadFloat4(&m_vEye));
 	m_pTransform->LookAt(XMLoadFloat4(&m_vAt));
+	
 
 	return S_OK;
 }

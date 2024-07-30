@@ -13,7 +13,8 @@ vector			g_vCamPosition;
 
 texture2D		g_TransLUTTexture;
 
-float3			g_vLightDir = float3(0.0f, 0.9f, 0.4f);
+float3			g_vLightDir;
+float3			g_vSunPos;
 float			g_fSunIlluminance = 1.0f;
 float2			g_vRayMarchMinMaxSPP = float2(4.0f, 14.0f);
 
@@ -362,7 +363,7 @@ SingleScatteringResult IntegrateScatteredLuminance(
 }
 
 
-PS_OUT PS_MAIN(PS_IN In)
+PS_OUT PS_SKY_VEIW_LUT(PS_IN In)
 {
 	PS_OUT		Out = (PS_OUT)0;
 
@@ -395,7 +396,7 @@ PS_OUT PS_MAIN(PS_IN In)
 	float fLightViewCosAngle;
 	UvToSkyViewLutParams(fViewZenithCosAngle, fLightViewCosAngle, fViewHeight, vUV);
 
-	float3 vSunDirection = normalize(g_vLightDir);
+	float3 vSunDirection = g_vLightDir.xzy;
 
 	float3 vSunDir;
 	{
@@ -427,11 +428,58 @@ PS_OUT PS_MAIN(PS_IN In)
 	float3 vL = tResult.vL;
 
 	Out.vColor =  float4(vL, 1) * 5.0f;
+
 	return Out;
 }
 
+float3 GetSunLuminance(float3 vWorldPos, float3 vWorldDir, float3 vLightDir)
+{
+	if (dot(vWorldDir, vLightDir) > 0.9997f)
+	{
+		float fT = raySphereIntersectNearest(vWorldPos, vWorldDir, float3(0.0f, 0.0f, 0.0f), fEarthRadius);
+		if (fT < 0.0f)
+		{
+			const float3 vSunLuminance = 1000000.0;
+			return vSunLuminance;
+		}
+	}
+	return 0;
+}
 
 
+PS_OUT PS_ATMOSPHERE(PS_IN In)
+{
+	PS_OUT		Out = (PS_OUT)0;
+
+	int iX = In.vTexcoord.x * g_iWinSizeX;
+	int iY = In.vTexcoord.y * g_iWinSizeY;
+
+	vector		vClipPos;
+
+	vClipPos.x = In.vTexcoord.x * 2.f - 1.f;
+	vClipPos.y = In.vTexcoord.y * -2.f + 1.f;
+	vClipPos.z = 1.0f;
+	vClipPos.w = 1.f;
+
+	vClipPos = vClipPos * 1000.0f;
+	vClipPos = mul(vClipPos, g_ProjMatrixInv);
+	vClipPos = mul(vClipPos, g_ViewMatrixInv);
+
+	float3 vWorldPos = vClipPos.xyz;
+	float3 vWorldDir = normalize(vWorldPos - g_vCamPosition.xyz);
+	vWorldPos = g_vCamPosition.xyz + float3(0, fEarthRadius, 0);
+
+	float3 vLightDir = normalize(g_vSunPos - vWorldPos);
+
+	Out.vColor = float4(GetSunLuminance(vWorldPos, vWorldDir, vLightDir), 1.0f);
+
+	if (Out.vColor.a == 0.0f)
+	{
+		discard;
+	}
+
+	return Out;
+}
 
 PS_OUT PS_LUTTEST(PS_IN In)
 {
@@ -460,7 +508,20 @@ technique11 DefaultTechnique
 		GeometryShader = NULL;
 		HullShader = NULL;
 		DomainShader = NULL;
-		PixelShader = compile ps_5_0 PS_MAIN();
+		PixelShader = compile ps_5_0 PS_ATMOSPHERE();
+	}
+	
+	pass SkyViewLUT
+	{
+		SetRasterizerState(RS_Default);
+		SetDepthStencilState(DSS_None, 0);
+		SetBlendState(BS_Default, float4(0.f, 0.f, 0.f, 1.f), 0xffffffff);
+
+		VertexShader = compile vs_5_0 VS_MAIN();
+		GeometryShader = NULL;
+		HullShader = NULL;
+		DomainShader = NULL;
+		PixelShader = compile ps_5_0 PS_SKY_VEIW_LUT();
 	}
 
 

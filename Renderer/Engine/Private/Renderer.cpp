@@ -342,7 +342,7 @@ HRESULT CRenderer::Render_Deferred()
 	if (FAILED(m_pVIBuffer->Render()))
 		return E_FAIL;
 
-	if (m_szSkyTargetName.empty() == false)
+	/*if (m_szSkyTargetName.empty() == false)
 	{
 		if (FAILED(m_pTarget_Manager->Bind_SRV(m_pShader, m_szSkyTargetName, "g_SkyTexture")))
 			return E_FAIL;
@@ -354,7 +354,7 @@ HRESULT CRenderer::Render_Deferred()
 			return E_FAIL;
 
 		m_szSkyTargetName.clear();
-	}
+	}*/
 
 
 	//if (FAILED(m_pTarget_Manager->Bind_SRV(m_pShader, L"Target_TransLUT", "g_SkyTexture")))
@@ -420,7 +420,7 @@ HRESULT CRenderer::Render_Debug()
 		return E_FAIL;*/
 		/*if (FAILED(m_pTarget_Manager->Render(TEXT("MRT_VolumeRender"), m_pShader, m_pVIBuffer)))
 			return E_FAIL;*/
-	if (FAILED(m_pTarget_Manager->Render(TEXT("MRT_LUT"), m_pShader, m_pVIBuffer)))
+	if (FAILED(m_pTarget_Manager->Render(TEXT("MRT_SkyViewLUT"), m_pShader, m_pVIBuffer)))
 		return E_FAIL;
 	
 
