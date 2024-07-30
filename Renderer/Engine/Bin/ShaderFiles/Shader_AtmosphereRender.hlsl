@@ -235,7 +235,7 @@ void LutTransmittanceParamsToUv(in float fViewHeight, in float fViewZenithCosAng
 	vUV = float2(fX, fY);
 }
 
-float HgPhase(float fG, float fCosTheta)
+float Cornette_Shanks_Phase(float fG, float fCosTheta)
 {
 	float fNumer = 1.0f - fG * fG;
 	float fDenom = 1.0f + fG * fG + 2.0f * fG * fCosTheta;
@@ -294,7 +294,7 @@ SingleScatteringResult IntegrateScatteredLuminance(
 	const float3 fWi = vSunDir;
 	const float3 fWo = vWorldDir;
 	float fCosTheta = dot(fWi, fWo);
-	float fMiePhaseValue = HgPhase(fPhaseMieG, -fCosTheta);
+	float fMiePhaseValue = Cornette_Shanks_Phase(fPhaseMieG, -fCosTheta);
 	float fRayleighPhaseValue = RayleighPhase(fCosTheta);
 
 	float3 vGlobalL = g_fSunIlluminance;
