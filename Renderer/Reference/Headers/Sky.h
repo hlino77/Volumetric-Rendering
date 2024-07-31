@@ -41,6 +41,10 @@ private:
 	_uint m_iWinSizeX = 1280;
 	_uint m_iWinSizeY = 720;
 
+	_uint m_iSkyLUTX = 192;
+	_uint m_iSkyLUTY = 108;
+	D3D11_VIEWPORT		m_SkyLUTViewPortDesc;
+
 	class CTarget_Manager* m_pTarget_Manager = { nullptr };
 
 	AtmosphereProperties m_tAtmo;

@@ -31,6 +31,7 @@ HRESULT CSky::Initialize_Prototype()
 	m_ViewMatrix = XMMatrixIdentity();
 	m_ProjMatrix = XMMatrixOrthographicLH(m_iWinSizeX, m_iWinSizeY, 0.f, 1.f);
 
+
 	
 
 	return S_OK;
@@ -65,6 +66,14 @@ HRESULT CSky::Initialize(void* pArg)
 		return E_FAIL;
 	}
 
+	ZeroMemory(&m_SkyLUTViewPortDesc, sizeof(D3D11_VIEWPORT));
+	m_SkyLUTViewPortDesc.TopLeftX = 0;
+	m_SkyLUTViewPortDesc.TopLeftY = 0;
+	m_SkyLUTViewPortDesc.Width = (_float)m_iSkyLUTX;
+	m_SkyLUTViewPortDesc.Height = (_float)m_iSkyLUTY;
+	m_SkyLUTViewPortDesc.MinDepth = 0.f;
+	m_SkyLUTViewPortDesc.MaxDepth = 1.f;
+
 	return S_OK;
 }
 
@@ -85,6 +94,11 @@ void CSky::LateTick(_float fTimeDelta)
 
 HRESULT CSky::Render()
 {
+	D3D11_VIEWPORT		PrevVeiwPort;
+	_uint				iNumViewports = 1;
+	m_pContext->RSGetViewports(&iNumViewports, &PrevVeiwPort);
+	m_pContext->RSSetViewports(1, &m_SkyLUTViewPortDesc);
+
 	if (FAILED(m_pTarget_Manager->Begin_MRT(m_pContext, L"MRT_SkyViewLUT")))
 		return E_FAIL;
 
@@ -141,7 +155,7 @@ HRESULT CSky::Render()
 	if (FAILED(m_pTarget_Manager->End_MRT(m_pContext)))
 		return E_FAIL;
 
-
+	m_pContext->RSSetViewports(1, &PrevVeiwPort);
 
 	//Atmosphere
 
@@ -197,7 +211,7 @@ HRESULT CSky::Ready_Components()
 HRESULT CSky::Ready_RenderTargets()
 {
 	if (FAILED(m_pTarget_Manager->Add_RenderTarget(m_pDevice, m_pContext, L"Target_SkyViewLUT",
-		m_iWinSizeX, m_iWinSizeY, DXGI_FORMAT_R32G32B32A32_FLOAT, Vec4(0.0f, 0.0f, 0.0f, 0.f))))
+		m_iSkyLUTX, m_iSkyLUTY, DXGI_FORMAT_R32G32B32A32_FLOAT, Vec4(0.0f, 0.0f, 0.0f, 0.f))))
 		return E_FAIL;
 
 	if (FAILED(m_pTarget_Manager->Add_MRT(L"MRT_SkyViewLUT", L"Target_SkyViewLUT")))
@@ -258,7 +272,7 @@ void CSky::Update_Sun(_float fTimeDelta)
 		{
 			Vec3 vUp(0.0f, 1.0f, 0.0f);
 
-			Matrix RotateMatrix = Matrix::CreateFromQuaternion(Quaternion::CreateFromAxisAngle(vUp, MouseMove * 0.5f * fTimeDelta));
+			Matrix RotateMatrix = Matrix::CreateFromQuaternion(Quaternion::CreateFromAxisAngle(vUp, MouseMove * 0.001f));
 
 			m_vSunPos = XMVector3Transform(m_vSunPos, RotateMatrix);
 		}
@@ -270,7 +284,7 @@ void CSky::Update_Sun(_float fTimeDelta)
 			vLook.Normalize();
 			Vec3 vRight = XMVector3Cross(vUp, vLook);
 
-			Matrix RotateMatrix = Matrix::CreateFromQuaternion(Quaternion::CreateFromAxisAngle(vRight, MouseMove * 0.5f * fTimeDelta));
+			Matrix RotateMatrix = Matrix::CreateFromQuaternion(Quaternion::CreateFromAxisAngle(vRight, MouseMove * 0.001f));
 
 			m_vSunPos = XMVector3Transform(m_vSunPos, RotateMatrix);
 		}

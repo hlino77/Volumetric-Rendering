@@ -413,18 +413,18 @@ PS_OUT PS_SKY_VEIW_LUT(PS_IN In)
 
 	if (!MoveToTopAtmosphere(vWorldPos, vWorldDir, fAtmosphereRadius))
 	{
-		Out.vColor = float4(0.0f, 0.0f, 0.0f, 1);
+		Out.vColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
 		return Out;
 	}
 
 	const bool bGround = false;
-	const float fSampleCountIni = 30;
-	const float fDepthBufferValue = -1.0;
+	const float fSampleCountIni = 30.0f;
+	const float fDepthBufferValue = -1.0f;
 	SingleScatteringResult tResult = IntegrateScatteredLuminance(vWorldPos, vWorldDir, vSunDir, bGround, fSampleCountIni, fDepthBufferValue);
 
 	float3 vL = tResult.vL;
 
-	Out.vColor =  float4(vL, 1) * 5.0f;
+	Out.vColor =  float4(vL, 1.0f);
 
 	return Out;
 }
@@ -527,9 +527,11 @@ PS_OUT PS_ATMOSPHERE(PS_IN In)
 		SkyViewLutParamsToUv(bIntersectGround, fViewZenithCosAngle, fLightViewCosAngle, fViewHeight, vUV);
 
 		Out.vColor = float4(g_SkyViewLUTTexture.SampleLevel(LinearClampSampler, vUV, 0).rgb + vSunDisk, 1.0f);
-
-		return Out;
 	}
+
+	float3 vWhitePoint = float3(1.08241f, 0.96756f, 0.95003f);
+	float fExposure = 10.0f;
+	Out.vColor = float4( pow((float3) 1.0f - exp(-Out.vColor.rgb / vWhitePoint * fExposure), (float3)(1.0f / 2.2f)), 1.0f);
 
 	return Out;
 }
