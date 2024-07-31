@@ -436,32 +436,32 @@ PS_OUT PS_SKY_VEIW_LUT(PS_IN In)
 
 ///////////////////////////////////////////Atmosphere
 
-void SkyViewLutParamsToUv(in bool IntersectGround, in float viewZenithCosAngle, in float lightViewCosAngle, in float viewHeight, out float2 uv)
+void SkyViewLutParamsToUv(bool bIntersectGround, float fViewZenithCosAngle, float fLightViewCosAngle, float fViewHeight, out float2 vUV)
 {
-	float Vhorizon = sqrt(viewHeight * viewHeight - fEarthRadius * fEarthRadius);
-	float CosBeta = Vhorizon / viewHeight;
-	float Beta = acos(CosBeta);
-	float ZenithHorizonAngle = PI - Beta;
+	float fVhorizon = sqrt(fViewHeight * fViewHeight - fEarthRadius * fEarthRadius);
+	float fCosBeta = fVhorizon / fViewHeight;
+	float fBeta = acos(fCosBeta);
+	float fZenithHorizonAngle = PI - fBeta;
 
-	if (!IntersectGround)
+	if (!bIntersectGround)
 	{
-		float coord = acos(viewZenithCosAngle) / ZenithHorizonAngle;
-		coord = 1.0 - coord;
-		coord = sqrt(coord);
-		coord = 1.0 - coord;
-		uv.y = coord * 0.5f;
+		float fCoord = acos(fViewZenithCosAngle) / fZenithHorizonAngle;
+		fCoord = 1.0 - fCoord;
+		fCoord = sqrt(fCoord);
+		fCoord = 1.0 - fCoord;
+		vUV.y = fCoord * 0.5f;
 	}
 	else
 	{
-		float coord = (acos(viewZenithCosAngle) - ZenithHorizonAngle) / Beta;
-		coord = sqrt(coord);
-		uv.y = coord * 0.5f + 0.5f;
+		float fCoord = (acos(fViewZenithCosAngle) - fZenithHorizonAngle) / fBeta;
+		fCoord = sqrt(fCoord);
+		vUV.y = fCoord * 0.5f + 0.5f;
 	}
 
 	{
-		float coord = -lightViewCosAngle * 0.5f + 0.5f;
-		coord = sqrt(coord);
-		uv.x = coord;
+		float fCoord = -fLightViewCosAngle * 0.5f + 0.5f;
+		fCoord = sqrt(fCoord);
+		vUV.x = fCoord;
 	}
 }
 
@@ -514,26 +514,26 @@ PS_OUT PS_ATMOSPHERE(PS_IN In)
 	vWorldDir = vWorldDir.xzy;
 	float3 vSunDirection = g_vLightDir.xzy;
 
-	float viewHeight = length(vWorldPos);
-	float3 L = 0;
+	float fViewHeight = length(vWorldPos);
+	float3 vL = 0;
 
-	if (viewHeight < fAtmosphereRadius)
+	if (fViewHeight < fAtmosphereRadius)
 	{
-		float2 uv;
-		float3 UpVector = normalize(vWorldPos);
-		float viewZenithCosAngle = dot(vWorldDir, UpVector);
+		float2 vUV;
+		float3 vUpVector = normalize(vWorldPos);
+		float fViewZenithCosAngle = dot(vWorldDir, vUpVector);
 
-		float3 sideVector = normalize(cross(UpVector, vWorldDir));		
-		float3 forwardVector = normalize(cross(sideVector, UpVector));
-		float2 lightOnPlane = float2(dot(vSunDirection, forwardVector), dot(vSunDirection, sideVector));
-		lightOnPlane = normalize(lightOnPlane);
-		float lightViewCosAngle = lightOnPlane.x;
+		float3 vSideVector = normalize(cross(vUpVector, vWorldDir));		
+		float3 vForwardVector = normalize(cross(vSideVector, vUpVector));
+		float2 vLightOnPlane = float2(dot(vSunDirection, vForwardVector), dot(vSunDirection, vSideVector));
+		vLightOnPlane = normalize(vLightOnPlane);
+		float fLightViewCosAngle = vLightOnPlane.x;
 
-		bool IntersectGround = raySphereIntersectNearest(vWorldPos, vWorldDir, float3(0, 0, 0), fEarthRadius) >= 0.0f;
+		bool bIntersectGround = raySphereIntersectNearest(vWorldPos, vWorldDir, float3(0, 0, 0), fEarthRadius) >= 0.0f;
 
-		SkyViewLutParamsToUv(IntersectGround, viewZenithCosAngle, lightViewCosAngle, viewHeight, uv);
+		SkyViewLutParamsToUv(bIntersectGround, fViewZenithCosAngle, fLightViewCosAngle, fViewHeight, vUV);
 
-		Out.vColor = float4(g_SkyViewLUTTexture.SampleLevel(LinearClampSampler, uv, 0).rgb + vSunDisk, 1.0f);
+		Out.vColor = float4(g_SkyViewLUTTexture.SampleLevel(LinearClampSampler, vUV, 0).rgb + vSunDisk, 1.0f);
 
 		return Out;
 	}
