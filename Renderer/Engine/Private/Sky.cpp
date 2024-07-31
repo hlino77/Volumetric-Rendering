@@ -143,6 +143,11 @@ HRESULT CSky::Render()
 
 	//Atmosphere
 
+	if (FAILED(m_pTarget_Manager->Bind_SRV(m_pShader, L"Target_SkyViewLUT", "g_SkyViewLUTTexture")))
+	{
+		return E_FAIL;
+	}
+
 	if (FAILED(m_pShader->Begin(0)))
 		return E_FAIL;
 

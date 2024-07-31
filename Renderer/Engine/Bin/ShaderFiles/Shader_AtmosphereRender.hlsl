@@ -12,6 +12,7 @@ matrix			g_PrevViewProj;
 vector			g_vCamPosition;
 
 texture2D		g_TransLUTTexture;
+texture2D		g_SkyViewLUTTexture;
 
 float3			g_vLightDir;
 float3			g_vSunPos;
@@ -432,6 +433,39 @@ PS_OUT PS_SKY_VEIW_LUT(PS_IN In)
 	return Out;
 }
 
+
+///////////////////////////////////////////Atmosphere
+
+void SkyViewLutParamsToUv(in bool IntersectGround, in float viewZenithCosAngle, in float lightViewCosAngle, in float viewHeight, out float2 uv)
+{
+	float Vhorizon = sqrt(viewHeight * viewHeight - fEarthRadius * fEarthRadius);
+	float CosBeta = Vhorizon / viewHeight;
+	float Beta = acos(CosBeta);
+	float ZenithHorizonAngle = PI - Beta;
+
+	if (!IntersectGround)
+	{
+		float coord = acos(viewZenithCosAngle) / ZenithHorizonAngle;
+		coord = 1.0 - coord;
+		coord = sqrt(coord);
+		coord = 1.0 - coord;
+		uv.y = coord * 0.5f;
+	}
+	else
+	{
+		float coord = (acos(viewZenithCosAngle) - ZenithHorizonAngle) / Beta;
+		coord = sqrt(coord);
+		uv.y = coord * 0.5f + 0.5f;
+	}
+
+	{
+		float coord = -lightViewCosAngle * 0.5f + 0.5f;
+		coord = sqrt(coord);
+		uv.x = coord;
+	}
+}
+
+
 float3 GetSunLuminance(float3 vWorldPos, float3 vWorldDir, float3 vLightDir)
 {
 	if (dot(vWorldDir, vLightDir) > 0.9997f)
@@ -439,7 +473,7 @@ float3 GetSunLuminance(float3 vWorldPos, float3 vWorldDir, float3 vLightDir)
 		float fT = raySphereIntersectNearest(vWorldPos, vWorldDir, float3(0.0f, 0.0f, 0.0f), fEarthRadius);
 		if (fT < 0.0f)
 		{
-			const float3 vSunLuminance = 1000000.0;
+			const float3 vSunLuminance = 1000000.0f;
 			return vSunLuminance;
 		}
 	}
@@ -471,11 +505,37 @@ PS_OUT PS_ATMOSPHERE(PS_IN In)
 
 	float3 vLightDir = normalize(g_vSunPos - vWorldPos);
 
-	Out.vColor = float4(GetSunLuminance(vWorldPos, vWorldDir, vLightDir), 1.0f);
 
-	if (Out.vColor.a == 0.0f)
+	float3 vSunDisk = GetSunLuminance(vWorldPos, vWorldDir, vLightDir);
+
+	float2 pixPos = In.vTexcoord;
+
+	vWorldPos = vWorldPos.xzy;
+	vWorldDir = vWorldDir.xzy;
+	float3 vSunDirection = g_vLightDir.xzy;
+
+	float viewHeight = length(vWorldPos);
+	float3 L = 0;
+
+	if (viewHeight < fAtmosphereRadius)
 	{
-		discard;
+		float2 uv;
+		float3 UpVector = normalize(vWorldPos);
+		float viewZenithCosAngle = dot(vWorldDir, UpVector);
+
+		float3 sideVector = normalize(cross(UpVector, vWorldDir));		
+		float3 forwardVector = normalize(cross(sideVector, UpVector));
+		float2 lightOnPlane = float2(dot(vSunDirection, forwardVector), dot(vSunDirection, sideVector));
+		lightOnPlane = normalize(lightOnPlane);
+		float lightViewCosAngle = lightOnPlane.x;
+
+		bool IntersectGround = raySphereIntersectNearest(vWorldPos, vWorldDir, float3(0, 0, 0), fEarthRadius) >= 0.0f;
+
+		SkyViewLutParamsToUv(IntersectGround, viewZenithCosAngle, lightViewCosAngle, viewHeight, uv);
+
+		Out.vColor = float4(g_SkyViewLUTTexture.SampleLevel(LinearClampSampler, uv, 0).rgb + vSunDisk, 1.0f);
+
+		return Out;
 	}
 
 	return Out;
