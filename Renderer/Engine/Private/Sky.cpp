@@ -31,10 +31,7 @@ HRESULT CSky::Initialize_Prototype()
 	m_ViewMatrix = XMMatrixIdentity();
 	m_ProjMatrix = XMMatrixOrthographicLH(m_iWinSizeX, m_iWinSizeY, 0.f, 1.f);
 
-	if (FAILED(Ready_RenderTargets()))
-	{
-		return E_FAIL;
-	}
+	
 
 	return S_OK;
 }
@@ -43,6 +40,11 @@ HRESULT CSky::Initialize(void* pArg)
 {
 	m_tUnitAtmo = m_tUnitAtmo.ToStdUnit();
 	
+	if (FAILED(Ready_RenderTargets()))
+	{
+		return E_FAIL;
+	}
+
 	if (FAILED(Ready_AtmosphereBuffer()))
 	{
 		return E_FAIL;

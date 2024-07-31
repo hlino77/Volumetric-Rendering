@@ -251,7 +251,7 @@ float RayleighPhase(float fCosTheta)
 }
 
 SingleScatteringResult IntegrateScatteredLuminance(
-	in float2 vPixPos, in float3 vWorldPos, in float3 vWorldDir, in float3 vSunDir,
+	in float3 vWorldPos, in float3 vWorldDir, in float3 vSunDir,
 	in bool bGground, in float fSampleCountIni, in float fDepthBufferValue,
 	in float fMaxMax = 9000000.0f)
 {
@@ -368,9 +368,6 @@ PS_OUT PS_SKY_VEIW_LUT(PS_IN In)
 {
 	PS_OUT		Out = (PS_OUT)0;
 
-	int iX = In.vTexcoord.x * g_iWinSizeX;
-	int iY = In.vTexcoord.y * g_iWinSizeY;
-
 	vector		vClipPos;
 
 	vClipPos.x = In.vTexcoord.x * 2.f - 1.f;
@@ -420,11 +417,10 @@ PS_OUT PS_SKY_VEIW_LUT(PS_IN In)
 		return Out;
 	}
 
-	float2 vPixPos = In.vTexcoord * float2(g_iWinSizeX, g_iWinSizeY);
 	const bool bGround = false;
 	const float fSampleCountIni = 30;
 	const float fDepthBufferValue = -1.0;
-	SingleScatteringResult tResult = IntegrateScatteredLuminance(vPixPos, vWorldPos, vWorldDir, vSunDir, bGround, fSampleCountIni, fDepthBufferValue);
+	SingleScatteringResult tResult = IntegrateScatteredLuminance(vWorldPos, vWorldDir, vSunDir, bGround, fSampleCountIni, fDepthBufferValue);
 
 	float3 vL = tResult.vL;
 
@@ -484,9 +480,6 @@ float3 GetSunLuminance(float3 vWorldPos, float3 vWorldDir, float3 vLightDir)
 PS_OUT PS_ATMOSPHERE(PS_IN In)
 {
 	PS_OUT		Out = (PS_OUT)0;
-
-	int iX = In.vTexcoord.x * g_iWinSizeX;
-	int iY = In.vTexcoord.y * g_iWinSizeY;
 
 	vector		vClipPos;
 

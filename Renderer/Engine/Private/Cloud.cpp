@@ -34,16 +34,17 @@ HRESULT CCloud::Initialize_Prototype()
 	m_ViewMatrix = XMMatrixIdentity();
 	m_ProjMatrix = XMMatrixOrthographicLH(m_iWinSizeX, m_iWinSizeY, 0.f, 1.f);
 
-	if (FAILED(Ready_RenderTargets()))
-	{
-		return E_FAIL;
-	}
+
 
 	return S_OK;
 }
 
 HRESULT CCloud::Initialize(void* pArg)
 {
+	if (FAILED(Ready_RenderTargets()))
+	{
+		return E_FAIL;
+	}
 
 	if (FAILED(Ready_For_NoiseTexture3D()))
 	{
