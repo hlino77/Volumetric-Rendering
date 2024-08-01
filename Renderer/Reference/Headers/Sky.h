@@ -32,6 +32,8 @@ private:
 private:
 	ID3D11ShaderResourceView*	m_pTransLUTSRV = { nullptr };
 
+	class CMultiScatLUT* m_pMultiScatLUT = { nullptr };
+
 	class CShader* m_pShader = { nullptr };
 	class CVIBuffer_Rect* m_pVIBuffer = { nullptr };
 	class CRenderer* m_pRendererCom = { nullptr };
@@ -44,6 +46,8 @@ private:
 	_uint m_iSkyLUTX = 192;
 	_uint m_iSkyLUTY = 108;
 	D3D11_VIEWPORT		m_SkyLUTViewPortDesc;
+
+	D3D11_VIEWPORT		m_MultiScatLUTViewPortDesc;
 
 	class CTarget_Manager* m_pTarget_Manager = { nullptr };
 

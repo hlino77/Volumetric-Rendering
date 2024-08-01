@@ -7,11 +7,13 @@
 
 #define PLANET_RADIUS_OFFSET 0.01f
 #define SQRTSAMPLECOUNT 8
+#define LUTSIZE 32.0f
 
 #define PI 3.1415926535897932384626433832795f
 
-RWTexture2D<float4> MultiScatTexture;
-texture2D		g_TransLUTTexture;
+RWTexture2D<float4> MultiScatTexture : register(u0);
+Texture2D<float4>	g_TransLUTTexture : register(t0);
+
 
 cbuffer AtmosphereParams : register(b0)
 {
@@ -26,17 +28,13 @@ cbuffer AtmosphereParams : register(b0)
 	float	fEarthRadius;
 	float	fAtmosphereRadius;
 
-	float	fPadding;
+	float	fSunIlluminance;
 
 	float4	vAbsorbOzone;
  	float4	vOzone;
 };
 
-cbuffer Global : register(b0)
-{
-	float g_iLUTSize = 32.0f;
-	float gSunIlluminance = 1.0f;
-};
+
 
 struct SingleScatteringResult
 {
@@ -92,9 +90,9 @@ MediumSampleRGB SampleMediumRGB(float3 vWorldPos)
 	tResult.vAbsorptionOzo = fDensityOzo * vAbsorbOzone;
 	tResult.vExtinctionOzo = tResult.vScatteringOzo + tResult.vAbsorptionOzo;
 
-	tResult.vScattering = tResult.vScatteringMie + tResult.vScatteringRay + tResult.vScatteringOzo;
-	tResult.vAbsorption = tResult.vAbsorptionMie + tResult.vAbsorptionRay + tResult.vAbsorptionOzo;
-	tResult.vExtinction = tResult.vExtinctionMie + tResult.vExtinctionRay + tResult.vExtinctionOzo;
+	tResult.vScattering = tResult.vScatteringMie + tResult.vScatteringRay;// + tResult.vScatteringOzo;
+	tResult.vAbsorption = tResult.vAbsorptionMie + tResult.vAbsorptionRay;// + tResult.vAbsorptionOzo;
+	tResult.vExtinction = tResult.vExtinctionMie + tResult.vExtinctionRay;// + tResult.vExtinctionOzo;
 
 	return tResult;
 }
@@ -189,7 +187,7 @@ SingleScatteringResult IntegrateScatteredLuminance(
 	const float3 wo = WorldDir;
 	float cosTheta = dot(wi, wo);
 
-	float3 globalL = gSunIlluminance;
+	float3 globalL = 1.0f;
 
 	float3 L = 0.0f;
 	float3 throughput = 1.0;
@@ -214,23 +212,23 @@ SingleScatteringResult IntegrateScatteredLuminance(
 		float SunZenithCosAngle = dot(SunDir, UpVector);
 		float2 uv;
 		LutTransmittanceParamsToUv(pHeight, SunZenithCosAngle, uv);
-		float3 TransmittanceToSun = g_TransLUTTexture.SampleLevel(LinearClampSampler, uv, 0).rgb;
+		float3 TransmittanceToSun = 0.5f; //g_TransLUTTexture.SampleLevel(LinearClampSampler, uv, 0).rgb;
 
-		float3 PhaseTimesScattering = medium.vScattering * uniformPhase;
+		float3 PhaseTimesScattering = 1.0f;//medium.vScattering * uniformPhase;
 
 		float tEarth = raySphereIntersectNearest(P, SunDir, earthO + PLANET_RADIUS_OFFSET * UpVector, fEarthRadius);
 		float earthShadow = tEarth >= 0.0f ? 0.0f : 1.0f;
 
 
-		float shadow = 1.0f;
 
-		float3 S = globalL * (earthShadow * shadow * TransmittanceToSun * PhaseTimesScattering);
 
-		float3 MS = medium.vScattering * 1;
+		float3 S = globalL * (earthShadow * TransmittanceToSun * PhaseTimesScattering);
+
+		float3 MS = 0.0002f;//medium.vScattering * 1;
 		float3 MSint = (MS - MS * SampleTransmittance) / medium.vExtinction;
-		result.MultiScatAs1 += throughput * MSint;
+		result.MultiScatAs1 += 0.01f;//throughput * MSint;
 
-		float3 Sint = (S - S * SampleTransmittance) / medium.vExtinction;	
+		float3 Sint = (S - S * SampleTransmittance) / 0.001f;//medium.vExtinction;	
 		L += throughput * Sint;
 		throughput *= SampleTransmittance;
 
@@ -252,7 +250,7 @@ groupshared float3 LSharedMem[64];
 void CSMultiScatLUT(int3 ThreadId : SV_DispatchThreadID)
 {
 	float2 pixPos = float2(ThreadId.xy) + 0.5f;
-	float2 uv = pixPos / g_iLUTSize;
+	float2 uv = pixPos / LUTSIZE;
 
 
 	float cosSunZenithAngle = uv.x * 2.0 - 1.0;
@@ -290,9 +288,16 @@ void CSMultiScatLUT(int3 ThreadId : SV_DispatchThreadID)
 		WorldDir.z = cosPhi;
 		SingleScatteringResult result = IntegrateScatteredLuminance(pixPos, WorldPos, WorldDir, sunDir, ground, SampleCountIni, DepthBufferValue);
 
-		MultiScatAs1SharedMem[ThreadId.z] = result.MultiScatAs1 * SphereSolidAngle / (sqrtSample * sqrtSample);
-		LSharedMem[ThreadId.z] = result.L * SphereSolidAngle / (sqrtSample * sqrtSample);
+ 		MultiScatAs1SharedMem[ThreadId.z] = result.MultiScatAs1 * SphereSolidAngle / (sqrtSample * sqrtSample);
+ 		LSharedMem[ThreadId.z] = result.L * SphereSolidAngle / (sqrtSample * sqrtSample);
+
+// 		if (ThreadId.z != 0)
+// 		return;
+// 		MultiScatTexture[ThreadId.xy] = float4(MultiScatAs1SharedMem[ThreadId.z], 1.0f);
+// 		return;
 	}
+
+	
 
 	GroupMemoryBarrierWithGroupSync();
 
@@ -342,7 +347,7 @@ void CSMultiScatLUT(int3 ThreadId : SV_DispatchThreadID)
 
 	const float3 r = MultiScatAs1;
 	const float3 SumOfAllMultiScatteringEventsContribution = 1.0f / (1.0 - r);
-	float3 L = InScatteredLuminance * SumOfAllMultiScatteringEventsContribution;
+	float3 L = InScatteredLuminance * SumOfAllMultiScatteringEventsContribution * 100.0f;
 
 	MultiScatTexture[ThreadId.xy] = float4(L, 1.0f);
 }

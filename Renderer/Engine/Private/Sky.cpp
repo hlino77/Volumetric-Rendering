@@ -3,6 +3,7 @@
 #include "TransmittanceLUT.h"
 #include "Target_Manager.h"
 #include "Renderer.h"
+#include "MultiScatLUT.h"
 
 CSky::CSky(ID3D11Device * pDevice, ID3D11DeviceContext * pContext)
 	: CGameObject(pDevice, pContext)
@@ -74,6 +75,14 @@ HRESULT CSky::Initialize(void* pArg)
 	m_SkyLUTViewPortDesc.MinDepth = 0.f;
 	m_SkyLUTViewPortDesc.MaxDepth = 1.f;
 
+	ZeroMemory(&m_MultiScatLUTViewPortDesc, sizeof(D3D11_VIEWPORT));
+	m_MultiScatLUTViewPortDesc.TopLeftX = 0;
+	m_MultiScatLUTViewPortDesc.TopLeftY = 0;
+	m_MultiScatLUTViewPortDesc.Width = (_float)32;
+	m_MultiScatLUTViewPortDesc.Height = (_float)32;
+	m_MultiScatLUTViewPortDesc.MinDepth = 0.f;
+	m_MultiScatLUTViewPortDesc.MaxDepth = 1.f;
+
 	return S_OK;
 }
 
@@ -85,6 +94,8 @@ void CSky::PriorityTick(_float fTimeDelta)
 void CSky::Tick(_float fTimeDelta)
 {
 	Update_Sun(fTimeDelta);
+
+	m_pMultiScatLUT->Update_MultiScatteringLUT(&m_pAtmosphereBuffer, &m_pTransLUTSRV);
 }
 
 void CSky::LateTick(_float fTimeDelta)
@@ -97,6 +108,31 @@ HRESULT CSky::Render()
 	D3D11_VIEWPORT		PrevVeiwPort;
 	_uint				iNumViewports = 1;
 	m_pContext->RSGetViewports(&iNumViewports, &PrevVeiwPort);
+
+
+
+	//MultiScatLUT
+
+	if (FAILED(m_pTarget_Manager->Begin_MRT(m_pContext, L"MRT_MultiScatLUT")))
+		return E_FAIL;
+
+	m_pContext->RSSetViewports(1, &m_MultiScatLUTViewPortDesc);
+
+	if (FAILED(m_pShader->Bind_Texture("g_MultiScatLUTTexture", m_pMultiScatLUT->Get_SRV())))
+	{
+		return E_FAIL;
+	}
+
+	if (FAILED(m_pShader->Begin(2)))
+		return E_FAIL;
+
+	if (FAILED(m_pVIBuffer->Render()))
+		return E_FAIL;
+
+	if (FAILED(m_pTarget_Manager->End_MRT(m_pContext)))
+		return E_FAIL;
+
+	//Sky_View LUT
 	m_pContext->RSSetViewports(1, &m_SkyLUTViewPortDesc);
 
 	if (FAILED(m_pTarget_Manager->Begin_MRT(m_pContext, L"MRT_SkyViewLUT")))
@@ -171,6 +207,8 @@ HRESULT CSky::Render()
 		return E_FAIL;
 
 
+	
+
 	return S_OK;
 }
 
@@ -186,6 +224,14 @@ HRESULT CSky::Ready_For_LUT()
 	}
 
 	Safe_Release(pTransLUT);
+
+
+	m_pMultiScatLUT = CMultiScatLUT::Create(m_pDevice, m_pContext);
+
+	if (m_pMultiScatLUT == nullptr)
+	{
+		return E_FAIL;
+	}
 
 	return S_OK;
 }
@@ -227,6 +273,16 @@ HRESULT CSky::Ready_RenderTargets()
 	if (FAILED(m_pTarget_Manager->Add_MRT(L"MRT_Atmosphere", L"Target_Atmosphere")))
 		return E_FAIL;
 
+
+	if (FAILED(m_pTarget_Manager->Add_RenderTarget(m_pDevice, m_pContext, L"Target_MultiScatLUT",
+		32, 32, DXGI_FORMAT_R32G32B32A32_FLOAT, Vec4(0.0f, 0.0f, 0.0f, 0.f))))
+		return E_FAIL;
+
+	if (FAILED(m_pTarget_Manager->Add_MRT(L"MRT_MultiScatLUT", L"Target_MultiScatLUT")))
+		return E_FAIL;
+
+	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_MultiScatLUT"), 100.0f, m_iWinSizeY * 0.5f + 100.0f, 200.0f, 200.0f)))
+		return E_FAIL;
 
 	return S_OK;
 }
@@ -329,6 +385,7 @@ void CSky::Free()
 	__super::Free();
 
 	Safe_Release(m_pShader);
+	Safe_Release(m_pMultiScatLUT);
 
 	Safe_Release(m_pTransLUTSRV);
 

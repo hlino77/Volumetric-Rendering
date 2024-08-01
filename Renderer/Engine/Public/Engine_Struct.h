@@ -170,7 +170,7 @@ namespace Engine
 		float	fPlanetRadius = 6360;
 		float	fAtmosphereRadius = 6460;
 
-		float	fPadding = 0.0f;
+		float	fSunIlluminance = 1.0f;
 
  		Vec4	fAbsorbOzone = { 0.65f, 1.881f, 0.085f, 0.0f };
 		Vec4	vOzone = { 25.0f, 8.0f, 0.0f, 0.0f };

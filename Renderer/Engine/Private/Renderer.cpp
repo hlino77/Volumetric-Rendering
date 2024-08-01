@@ -422,7 +422,8 @@ HRESULT CRenderer::Render_Debug()
 			return E_FAIL;*/
 	if (FAILED(m_pTarget_Manager->Render(TEXT("MRT_SkyViewLUT"), m_pShader, m_pVIBuffer)))
 		return E_FAIL;
-	
+	if (FAILED(m_pTarget_Manager->Render(TEXT("MRT_MultiScatLUT"), m_pShader, m_pVIBuffer)))
+		return E_FAIL;
 
 	return S_OK;
 }

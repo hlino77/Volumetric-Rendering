@@ -19,7 +19,7 @@ cbuffer AtmosphereParams : register(b0)
 	float	fEarthRadius;
 	float	fAtmosphereRadius;
 
-	float	fPadding;
+	float	fSunIlluminance;
 
 	float4	vAbsorbOzone;
  	float4	vOzone;

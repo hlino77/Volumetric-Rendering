@@ -13,6 +13,7 @@ vector			g_vCamPosition;
 
 texture2D		g_TransLUTTexture;
 texture2D		g_SkyViewLUTTexture;
+texture2D		g_MultiScatLUTTexture;
 
 float3			g_vLightDir;
 float3			g_vSunPos;
@@ -36,7 +37,7 @@ cbuffer AtmosphereParams : register(b0)
 	float	fEarthRadius;
 	float	fAtmosphereRadius;
 
-	float	fPadding;
+	float	fSunIlluminance;
 
 	float4	vAbsorbOzone;
  	float4	vOzone;
@@ -540,13 +541,9 @@ PS_OUT PS_LUTTEST(PS_IN In)
 {
 	PS_OUT		Out = (PS_OUT)0;
 
- 	In.vTexcoord.y *= 2.0f;
- 
- 	if (In.vTexcoord.y > 1.0f)
- 	{
- 		discard;
- 	}
-	Out.vColor = g_TransLUTTexture.Sample(PointSampler, In.vTexcoord);
+
+	Out.vColor = g_MultiScatLUTTexture.SampleLevel(PointSampler, In.vTexcoord, 0);
+
 	return Out;
 }
 

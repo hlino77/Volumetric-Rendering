@@ -19,8 +19,9 @@ CMultiScatLUT::CMultiScatLUT(const CMultiScatLUT & rhs)
 	Safe_AddRef(m_pContext);
 }
 
-HRESULT CMultiScatLUT::Update_MultiScatteringLUT(ID3D11Buffer** pAtmosConstant)
+HRESULT CMultiScatLUT::Update_MultiScatteringLUT(ID3D11Buffer** pAtmosConstant, ID3D11ShaderResourceView** pTransLUT)
 {
+	m_pContext->CSSetShaderResources(0, 1, pTransLUT);
 	m_pContext->CSSetUnorderedAccessViews(0, 1, &m_pUAV, nullptr);
 	
 	m_pContext->CSSetConstantBuffers(0, 1, pAtmosConstant);
@@ -55,7 +56,7 @@ HRESULT CMultiScatLUT::Ready_ComputeShader()
 		ID3DBlob* pCSBlob = nullptr;
 		ID3DBlob* pErrorBlob = nullptr;
 
-		if (FAILED(D3DCompileFromFile(L"../Bin/ShaderFiles/CShader_TransmittanceLUT.hlsl", nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, "CSTransLUT", "cs_5_0", 0, 0, &pCSBlob, &pErrorBlob)))
+		if (FAILED(D3DCompileFromFile(L"../Bin/ShaderFiles/CShader_MultiScatLUT.hlsl", nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, "CSMultiScatLUT", "cs_5_0", 0, 0, &pCSBlob, &pErrorBlob)))
 		{
 			if (pErrorBlob)
 			{

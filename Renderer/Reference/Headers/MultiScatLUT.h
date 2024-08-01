@@ -15,8 +15,9 @@ private:
 
 
 public:
-	HRESULT Update_MultiScatteringLUT(ID3D11Buffer** pAtmosConstant);
+	HRESULT Update_MultiScatteringLUT(ID3D11Buffer** pAtmosConstant, ID3D11ShaderResourceView** pTransLUT);
 
+	ID3D11ShaderResourceView* Get_SRV() { return m_pSRV; }
 private:
 	HRESULT Ready_Resources();
 	HRESULT Ready_ComputeShader();
