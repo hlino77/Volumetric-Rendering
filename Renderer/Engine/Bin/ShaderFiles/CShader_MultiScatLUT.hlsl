@@ -38,13 +38,13 @@ cbuffer AtmosphereParams : register(b0)
 
 struct SingleScatteringResult
 {
-	float3 L;						
-	float3 OpticalDepth;			
-	float3 Transmittance;			
-	float3 MultiScatAs1;
+	float3 vL;						
+	float3 vOpticalDepth;			
+	float3 vTransmittance;			
+	float3 vMultiScatAs1;
 
-	float3 NewMultiScatStep0Out;
-	float3 NewMultiScatStep1Out;
+	float3 vNewMultiScatStep0Out;
+	float3 vNewMultiScatStep1Out;
 };
 
 struct MediumSampleRGB
@@ -144,99 +144,99 @@ void LutTransmittanceParamsToUv(float fViewHeight, float fViewZenithCosAngle, ou
 }
 
 SingleScatteringResult IntegrateScatteredLuminance(
-	in float2 pixPos, in float3 WorldPos, in float3 WorldDir, in float3 SunDir,
-	in bool ground, in float SampleCountIni)
+	in float2 vPixPos, in float3 vWorldPos, in float3 vWorldDir, in float3 vSunDir,
+	in float fSampleCountIni)
 {
-	SingleScatteringResult result = (SingleScatteringResult)0;
+	SingleScatteringResult Result = (SingleScatteringResult)0;
 
-	float3 earthO = float3(0.0f, 0.0f, 0.0f);
-	float tBottom = raySphereIntersectNearest(WorldPos, WorldDir, earthO, fEarthRadius);
-	float tTop = raySphereIntersectNearest(WorldPos, WorldDir, earthO, fAtmosphereRadius);
-	float tMax = 0.0f;
+	float3 vEarthOrigin = float3(0.0f, 0.0f, 0.0f);
+	float fBottom = raySphereIntersectNearest(vWorldPos, vWorldDir, vEarthOrigin, fEarthRadius);
+	float fTop = raySphereIntersectNearest(vWorldPos, vWorldDir, vEarthOrigin, fAtmosphereRadius);
+	float fMax = 0.0f;
 
-	if (tBottom < 0.0f)
+	if (fBottom < 0.0f)
 	{
-		if (tTop < 0.0f)
+		if (fTop < 0.0f)
 		{
-			tMax = 0.0f;
-			return result;
+			fMax = 0.0f;
+			return Result;
 		}
 		else
 		{
-			tMax = tTop;
+			fMax = fTop;
 		}
 	}
 	else
 	{
-		if (tTop > 0.0f)
+		if (fTop > 0.0f)
 		{
-			tMax = min(tTop, tBottom);
+			fMax = min(fTop, fBottom);
 		}
 	}
 
-	tMax = min(tMax, 9000000.0f);
+	fMax = min(fMax, 9000000.0f);
 
-	float SampleCount = SampleCountIni;
-	float SampleCountFloor = SampleCountIni;
-	float tMaxFloor = tMax;
-	float dt = tMax / SampleCount;
+	float fSampleCount = fSampleCountIni;
+	float fSampleCountFloor = fSampleCountIni;
+	float fMaxFloor = fMax;
+	float fDt = fMax / fSampleCount;
 
-	const float uniformPhase = 1.0 / (4.0 * PI);
-	const float3 wi = SunDir;
-	const float3 wo = WorldDir;
-	float cosTheta = dot(wi, wo);
+	const float fUniformPhase = 1.0 / (4.0 * PI);
+	const float3 fWi = vSunDir;
+	const float3 fWo = vWorldDir;
+	float fCosTheta = dot(fWi, fWo);
 
-	float3 globalL = 1.0f;
+	float3 vGlobalL = 1.0f;
 
-	float3 L = 0.0f;
-	float3 throughput = 1.0;
-	float3 OpticalDepth = 0.0;
-	float t = 0.0f;
-	float tPrev = 0.0;
-	const float SampleSegmentT = 0.3f;
-	for (float s = 0.0f; s < SampleCount; s += 1.0f)
+	float3 vL = 0.0f;
+	float3 vThroughput = 1.0;
+	float3 vOpticalDepth = 0.0;
+	float fT = 0.0f;
+	float fPrev = 0.0;
+	const float fSampleSegmentT = 0.3f;
+	for (float i = 0.0f; i < fSampleCount; i += 1.0f)
 	{
-		float NewT = tMax * (s + SampleSegmentT) / SampleCount;
-		dt = NewT - t;
-		t = NewT;
+		float fNewT = fMax * (i + fSampleSegmentT) / fSampleCount;
+		fDt = fNewT - fT;
+		fT = fNewT;
 
-		float3 P = WorldPos + t * WorldDir;
+		float3 vPos = vWorldPos + fT * vWorldDir;
 
-		MediumSampleRGB medium = SampleMediumRGB(P);
-		const float3 SampleOpticalDepth = medium.vExtinction * dt;
-		const float3 SampleTransmittance = exp(-SampleOpticalDepth);
-		OpticalDepth += SampleOpticalDepth;
+		MediumSampleRGB Medium = SampleMediumRGB(vPos);
+		const float3 vSampleOpticalDepth = Medium.vExtinction * fDt;
+		const float3 vSampleTransmittance = exp(-vSampleOpticalDepth);
+		vOpticalDepth += vSampleOpticalDepth;
 
-		float pHeight = length(P);
-		const float3 UpVector = P / pHeight;
-		float SunZenithCosAngle = dot(SunDir, UpVector);
-		float2 uv;
-		LutTransmittanceParamsToUv(pHeight, SunZenithCosAngle, uv);
-		float3 TransmittanceToSun = g_TransLUTTexture.SampleLevel(LinearClampSampler, uv, 0).rgb;
+		float fHeight = length(vPos);
+		const float3 vUpVector = vPos / fHeight;
+		float fSunZenithCosAngle = dot(vSunDir, vUpVector);
+		float2 vUV;
+		LutTransmittanceParamsToUv(fHeight, fSunZenithCosAngle, vUV);
+		float3 vTransmittanceToSun = g_TransLUTTexture.SampleLevel(LinearClampSampler, vUV, 0).rgb;
 
-		float3 PhaseTimesScattering = medium.vScattering * uniformPhase;
+		float3 vPhaseTimesScattering = Medium.vScattering * fUniformPhase;
 
-		float tEarth = raySphereIntersectNearest(P, SunDir, earthO + PLANET_RADIUS_OFFSET * UpVector, fEarthRadius);
-		float earthShadow = tEarth >= 0.0f ? 0.0f : 1.0f;
+		float fEarth = raySphereIntersectNearest(vPos, vSunDir, vEarthOrigin + PLANET_RADIUS_OFFSET * vUpVector, fEarthRadius);
+		float fEarthShadow = fEarth >= 0.0f ? 0.0f : 1.0f;
 
-		float3 S = globalL * (earthShadow * TransmittanceToSun * PhaseTimesScattering);
+		float3 vS = vGlobalL * (fEarthShadow * vTransmittanceToSun * vPhaseTimesScattering);
 
-		float3 MS = medium.vScattering * 1;
-		float3 MSint = (MS - MS * SampleTransmittance) / medium.vExtinction;
-		result.MultiScatAs1 += throughput * MSint;
+		float3 vMS = Medium.vScattering * 1.0f;
+		float3 vMSint = (vMS - vMS * vSampleTransmittance) / Medium.vExtinction;
+		Result.vMultiScatAs1 += vThroughput * vMSint;
 
-		float3 Sint = (S - S * SampleTransmittance) / medium.vExtinction;	
-		L += throughput * Sint;
-		throughput *= SampleTransmittance;
+		float3 vSint = (vS - vS * vSampleTransmittance) / Medium.vExtinction;	
+		vL += vThroughput * vSint;
+		vThroughput *= vSampleTransmittance;
 
-		tPrev = t;
+		fPrev = fT;
 	}
 
 
-	result.L = L;
-	result.OpticalDepth = OpticalDepth;
-	result.Transmittance = throughput;
-	return result;
+	Result.vL = vL;
+	Result.vOpticalDepth = vOpticalDepth;
+	Result.vTransmittance = vThroughput;
+	return Result;
 }
 
 
@@ -244,102 +244,98 @@ groupshared float3 MultiScatAs1SharedMem[64];
 groupshared float3 LSharedMem[64];
 
 [numthreads(1, 1, 64)]
-void CSMultiScatLUT(uint3 ThreadId : SV_DispatchThreadID)
+void CSMultiScatLUT(uint3 iThreadId : SV_DispatchThreadID)
 {
-	float2 pixPos = float2(ThreadId.xy) + 0.5f;
-	float2 uv = pixPos / 32.0f;
+	float2 vPixPos = float2(iThreadId.xy) + 0.5f;
+	float2 vUV = vPixPos / 32.0f;
 
 
-	float cosSunZenithAngle = uv.x * 2.0f - 1.0f;
-	float3 sunDir = float3(0.0, sqrt(saturate(1.0 - cosSunZenithAngle * cosSunZenithAngle)), cosSunZenithAngle);
-	float viewHeight = fEarthRadius + saturate(uv.y + PLANET_RADIUS_OFFSET) * (fAtmosphereRadius - fEarthRadius - PLANET_RADIUS_OFFSET);
+	float fCosSunZenithAngle = vUV.x * 2.0f - 1.0f;
+	float3 vSunDir = float3(0.0, sqrt(saturate(1.0 - fCosSunZenithAngle * fCosSunZenithAngle)), fCosSunZenithAngle);
+	float fViewHeight = fEarthRadius + saturate(vUV.y + PLANET_RADIUS_OFFSET) * (fAtmosphereRadius - fEarthRadius - PLANET_RADIUS_OFFSET);
 
-	float3 WorldPos = float3(0.0f, 0.0f, viewHeight);
-	float3 WorldDir = float3(0.0f, 0.0f, 1.0f);
+	float3 vWorldPos = float3(0.0f, 0.0f, fViewHeight);
+	float3 vWorldDir = float3(0.0f, 0.0f, 1.0f);
 
+	const float fSampleCountIni = 20;
+	const float fDepthBufferValue = -1.0;
 
-	const bool ground = true;
-	const float SampleCountIni = 20;
-	const float DepthBufferValue = -1.0;
-	const bool VariableSampleCount = false;
-	const bool MieRayPhase = false;
-
-	const float SphereSolidAngle = 4.0 * PI;
-	const float IsotropicPhase = 1.0 / SphereSolidAngle;
+	const float fSphereSolidAngle = 4.0 * PI;
+	const float fIsotropicPhase = 1.0 / fSphereSolidAngle;
 
 
-	const float sqrtSample = float(SQRTSAMPLECOUNT);
-	float i = 0.5f + float(ThreadId.z / SQRTSAMPLECOUNT);
-	float j = 0.5f + float(ThreadId.z - float((ThreadId.z / SQRTSAMPLECOUNT)*SQRTSAMPLECOUNT));
+	const float fSqrtSample = float(SQRTSAMPLECOUNT);
+	float fI = 0.5f + float(iThreadId.z / SQRTSAMPLECOUNT);
+	float fJ = 0.5f + float(iThreadId.z - float((iThreadId.z / SQRTSAMPLECOUNT) * SQRTSAMPLECOUNT));
 	{
-		float randA = i / sqrtSample;
-		float randB = j / sqrtSample;
-		float theta = 2.0f * PI * randA;
-		float phi = acos(1.0f - 2.0f * randB);	
-		float cosPhi = cos(phi);
-		float sinPhi = sin(phi);
-		float cosTheta = cos(theta);
-		float sinTheta = sin(theta);
-		WorldDir.x = cosTheta * sinPhi;
-		WorldDir.y = sinTheta * sinPhi;
-		WorldDir.z = cosPhi;
-		SingleScatteringResult result = IntegrateScatteredLuminance(pixPos, WorldPos, WorldDir, sunDir, ground, SampleCountIni);
+		float fRandA = fI / fSqrtSample;
+		float fRandB = fJ / fSqrtSample;
+		float fTheta = 2.0f * PI * fRandA;
+		float fPhi = acos(1.0f - 2.0f * fRandB);	
+		float fCosPhi = cos(fPhi);
+		float fSinPhi = sin(fPhi);
+		float fCosTheta = cos(fTheta);
+		float fSinTheta = sin(fTheta);
+		vWorldDir.x = fCosTheta * fSinPhi;
+		vWorldDir.y = fSinTheta * fSinPhi;
+		vWorldDir.z = fCosPhi;
+		SingleScatteringResult Result = IntegrateScatteredLuminance(vPixPos, vWorldPos, vWorldDir, vSunDir, fSampleCountIni);
 
- 		MultiScatAs1SharedMem[ThreadId.z] = result.MultiScatAs1 * SphereSolidAngle / (sqrtSample * sqrtSample);
- 		LSharedMem[ThreadId.z] = result.L * SphereSolidAngle / (sqrtSample * sqrtSample);
+ 		MultiScatAs1SharedMem[iThreadId.z] = Result.vMultiScatAs1 * fSphereSolidAngle / (fSqrtSample * fSqrtSample);
+ 		LSharedMem[iThreadId.z] = Result.vL * fSphereSolidAngle / (fSqrtSample * fSqrtSample);
 	}
 
 	
 
 	GroupMemoryBarrierWithGroupSync();
 
-	if (ThreadId.z < 32)
+	if (iThreadId.z < 32)
 	{
-		MultiScatAs1SharedMem[ThreadId.z] += MultiScatAs1SharedMem[ThreadId.z + 32];
-		LSharedMem[ThreadId.z] += LSharedMem[ThreadId.z + 32];
+		MultiScatAs1SharedMem[iThreadId.z] += MultiScatAs1SharedMem[iThreadId.z + 32];
+		LSharedMem[iThreadId.z] += LSharedMem[iThreadId.z + 32];
 	}
 	GroupMemoryBarrierWithGroupSync();
 
-	if (ThreadId.z < 16)
+	if (iThreadId.z < 16)
 	{
-		MultiScatAs1SharedMem[ThreadId.z] += MultiScatAs1SharedMem[ThreadId.z + 16];
-		LSharedMem[ThreadId.z] += LSharedMem[ThreadId.z + 16];
+		MultiScatAs1SharedMem[iThreadId.z] += MultiScatAs1SharedMem[iThreadId.z + 16];
+		LSharedMem[iThreadId.z] += LSharedMem[iThreadId.z + 16];
 	}
 	GroupMemoryBarrierWithGroupSync();
 
-	if (ThreadId.z < 8)
+	if (iThreadId.z < 8)
 	{
-		MultiScatAs1SharedMem[ThreadId.z] += MultiScatAs1SharedMem[ThreadId.z + 8];
-		LSharedMem[ThreadId.z] += LSharedMem[ThreadId.z + 8];
+		MultiScatAs1SharedMem[iThreadId.z] += MultiScatAs1SharedMem[iThreadId.z + 8];
+		LSharedMem[iThreadId.z] += LSharedMem[iThreadId.z + 8];
 	}
 	GroupMemoryBarrierWithGroupSync();
-	if (ThreadId.z < 4)
+	if (iThreadId.z < 4)
 	{
-		MultiScatAs1SharedMem[ThreadId.z] += MultiScatAs1SharedMem[ThreadId.z + 4];
-		LSharedMem[ThreadId.z] += LSharedMem[ThreadId.z + 4];
+		MultiScatAs1SharedMem[iThreadId.z] += MultiScatAs1SharedMem[iThreadId.z + 4];
+		LSharedMem[iThreadId.z] += LSharedMem[iThreadId.z + 4];
 	}
 	GroupMemoryBarrierWithGroupSync();
-	if (ThreadId.z < 2)
+	if (iThreadId.z < 2)
 	{
-		MultiScatAs1SharedMem[ThreadId.z] += MultiScatAs1SharedMem[ThreadId.z + 2];
-		LSharedMem[ThreadId.z] += LSharedMem[ThreadId.z + 2];
+		MultiScatAs1SharedMem[iThreadId.z] += MultiScatAs1SharedMem[iThreadId.z + 2];
+		LSharedMem[iThreadId.z] += LSharedMem[iThreadId.z + 2];
 	}
 	GroupMemoryBarrierWithGroupSync();
-	if (ThreadId.z < 1)
+	if (iThreadId.z < 1)
 	{
-		MultiScatAs1SharedMem[ThreadId.z] += MultiScatAs1SharedMem[ThreadId.z + 1];
-		LSharedMem[ThreadId.z] += LSharedMem[ThreadId.z + 1];
+		MultiScatAs1SharedMem[iThreadId.z] += MultiScatAs1SharedMem[iThreadId.z + 1];
+		LSharedMem[iThreadId.z] += LSharedMem[iThreadId.z + 1];
 	}
 	GroupMemoryBarrierWithGroupSync();
-	if (ThreadId.z > 0)
+	if (iThreadId.z > 0)
 		return;
 
-	float3 MultiScatAs1			= MultiScatAs1SharedMem[0] * IsotropicPhase;
-	float3 InScatteredLuminance	= LSharedMem[0] * IsotropicPhase;
+	float3 vMultiScatAs1			= MultiScatAs1SharedMem[0] * fIsotropicPhase;
+	float3 vInScatteredLuminance	= LSharedMem[0] * fIsotropicPhase;
 
-	const float3 r = MultiScatAs1;
-	const float3 SumOfAllMultiScatteringEventsContribution = 1.0f / (1.0 - r);
-	float3 L = InScatteredLuminance * SumOfAllMultiScatteringEventsContribution * 100.0f;
+	const float3 vR = vMultiScatAs1;
+	const float3 vSumOfAllMultiScatteringEventsContribution = 1.0f / (1.0 - vR);
+	float3 vL = vInScatteredLuminance * vSumOfAllMultiScatteringEventsContribution * 100.0f;
 
-	MultiScatTexture[ThreadId.xy] = float4(L, 1.0f);
+	MultiScatTexture[iThreadId.xy] = float4(vL, 1.0f);
 }
