@@ -90,9 +90,9 @@ MediumSampleRGB SampleMediumRGB(float3 vWorldPos)
 	tResult.vAbsorptionOzo = fDensityOzo * vAbsorbOzone;
 	tResult.vExtinctionOzo = tResult.vScatteringOzo + tResult.vAbsorptionOzo;
 
-	tResult.vScattering = tResult.vScatteringMie + tResult.vScatteringRay;// + tResult.vScatteringOzo;
-	tResult.vAbsorption = tResult.vAbsorptionMie + tResult.vAbsorptionRay;// + tResult.vAbsorptionOzo;
-	tResult.vExtinction = tResult.vExtinctionMie + tResult.vExtinctionRay;// + tResult.vExtinctionOzo;
+	tResult.vScattering = tResult.vScatteringMie + tResult.vScatteringRay + tResult.vScatteringOzo;
+	tResult.vAbsorption = tResult.vAbsorptionMie + tResult.vAbsorptionRay + tResult.vAbsorptionOzo;
+	tResult.vExtinction = tResult.vExtinctionMie + tResult.vExtinctionRay + tResult.vExtinctionOzo;
 
 	return tResult;
 }
@@ -145,8 +145,7 @@ void LutTransmittanceParamsToUv(float fViewHeight, float fViewZenithCosAngle, ou
 
 SingleScatteringResult IntegrateScatteredLuminance(
 	in float2 pixPos, in float3 WorldPos, in float3 WorldDir, in float3 SunDir,
-	in bool ground, in float SampleCountIni,
-	in float tMaxMax = 9000000.0f)
+	in bool ground, in float SampleCountIni)
 {
 	SingleScatteringResult result = (SingleScatteringResult)0;
 
@@ -154,6 +153,7 @@ SingleScatteringResult IntegrateScatteredLuminance(
 	float tBottom = raySphereIntersectNearest(WorldPos, WorldDir, earthO, fEarthRadius);
 	float tTop = raySphereIntersectNearest(WorldPos, WorldDir, earthO, fAtmosphereRadius);
 	float tMax = 0.0f;
+
 	if (tBottom < 0.0f)
 	{
 		if (tTop < 0.0f)
@@ -174,8 +174,7 @@ SingleScatteringResult IntegrateScatteredLuminance(
 		}
 	}
 
-
-	tMax = min(tMax, tMaxMax);
+	tMax = min(tMax, 9000000.0f);
 
 	float SampleCount = SampleCountIni;
 	float SampleCountFloor = SampleCountIni;
@@ -200,6 +199,7 @@ SingleScatteringResult IntegrateScatteredLuminance(
 		float NewT = tMax * (s + SampleSegmentT) / SampleCount;
 		dt = NewT - t;
 		t = NewT;
+
 		float3 P = WorldPos + t * WorldDir;
 
 		MediumSampleRGB medium = SampleMediumRGB(P);
@@ -212,23 +212,20 @@ SingleScatteringResult IntegrateScatteredLuminance(
 		float SunZenithCosAngle = dot(SunDir, UpVector);
 		float2 uv;
 		LutTransmittanceParamsToUv(pHeight, SunZenithCosAngle, uv);
-		float3 TransmittanceToSun = 0.5f; //g_TransLUTTexture.SampleLevel(LinearClampSampler, uv, 0).rgb;
+		float3 TransmittanceToSun = g_TransLUTTexture.SampleLevel(LinearClampSampler, uv, 0).rgb;
 
-		float3 PhaseTimesScattering = 1.0f;//medium.vScattering * uniformPhase;
+		float3 PhaseTimesScattering = medium.vScattering * uniformPhase;
 
 		float tEarth = raySphereIntersectNearest(P, SunDir, earthO + PLANET_RADIUS_OFFSET * UpVector, fEarthRadius);
 		float earthShadow = tEarth >= 0.0f ? 0.0f : 1.0f;
 
-
-
-
 		float3 S = globalL * (earthShadow * TransmittanceToSun * PhaseTimesScattering);
 
-		float3 MS = 0.0002f;//medium.vScattering * 1;
+		float3 MS = medium.vScattering * 1;
 		float3 MSint = (MS - MS * SampleTransmittance) / medium.vExtinction;
-		result.MultiScatAs1 += 0.01f;//throughput * MSint;
+		result.MultiScatAs1 += throughput * MSint;
 
-		float3 Sint = (S - S * SampleTransmittance) / 0.001f;//medium.vExtinction;	
+		float3 Sint = (S - S * SampleTransmittance) / medium.vExtinction;	
 		L += throughput * Sint;
 		throughput *= SampleTransmittance;
 
@@ -247,13 +244,13 @@ groupshared float3 MultiScatAs1SharedMem[64];
 groupshared float3 LSharedMem[64];
 
 [numthreads(1, 1, 64)]
-void CSMultiScatLUT(int3 ThreadId : SV_DispatchThreadID)
+void CSMultiScatLUT(uint3 ThreadId : SV_DispatchThreadID)
 {
 	float2 pixPos = float2(ThreadId.xy) + 0.5f;
-	float2 uv = pixPos / LUTSIZE;
+	float2 uv = pixPos / 32.0f;
 
 
-	float cosSunZenithAngle = uv.x * 2.0 - 1.0;
+	float cosSunZenithAngle = uv.x * 2.0f - 1.0f;
 	float3 sunDir = float3(0.0, sqrt(saturate(1.0 - cosSunZenithAngle * cosSunZenithAngle)), cosSunZenithAngle);
 	float viewHeight = fEarthRadius + saturate(uv.y + PLANET_RADIUS_OFFSET) * (fAtmosphereRadius - fEarthRadius - PLANET_RADIUS_OFFSET);
 
@@ -286,15 +283,10 @@ void CSMultiScatLUT(int3 ThreadId : SV_DispatchThreadID)
 		WorldDir.x = cosTheta * sinPhi;
 		WorldDir.y = sinTheta * sinPhi;
 		WorldDir.z = cosPhi;
-		SingleScatteringResult result = IntegrateScatteredLuminance(pixPos, WorldPos, WorldDir, sunDir, ground, SampleCountIni, DepthBufferValue);
+		SingleScatteringResult result = IntegrateScatteredLuminance(pixPos, WorldPos, WorldDir, sunDir, ground, SampleCountIni);
 
  		MultiScatAs1SharedMem[ThreadId.z] = result.MultiScatAs1 * SphereSolidAngle / (sqrtSample * sqrtSample);
  		LSharedMem[ThreadId.z] = result.L * SphereSolidAngle / (sqrtSample * sqrtSample);
-
-// 		if (ThreadId.z != 0)
-// 		return;
-// 		MultiScatTexture[ThreadId.xy] = float4(MultiScatAs1SharedMem[ThreadId.z], 1.0f);
-// 		return;
 	}
 
 	

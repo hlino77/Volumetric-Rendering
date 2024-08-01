@@ -27,7 +27,7 @@ HRESULT CMultiScatLUT::Update_MultiScatteringLUT(ID3D11Buffer** pAtmosConstant, 
 	m_pContext->CSSetConstantBuffers(0, 1, pAtmosConstant);
 	m_pContext->CSSetShader(m_pLUTShader, nullptr, 0);
 
-	m_pContext->Dispatch(m_iLUTSize, m_iLUTSize, 1);
+	m_pContext->Dispatch(32, 32, 1);
 
 	ID3D11UnorderedAccessView* pNullUAV = nullptr;
 	m_pContext->CSSetUnorderedAccessViews(0, 1, &pNullUAV, nullptr);
