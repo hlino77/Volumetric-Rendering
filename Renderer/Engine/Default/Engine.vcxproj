@@ -191,6 +191,7 @@
     <ClInclude Include="..\public\Level_Manager.h" />
     <ClInclude Include="..\public\Light.h" />
     <ClInclude Include="..\public\Light_Manager.h" />
+    <ClInclude Include="..\Public\MultiScatLUT.h" />
     <ClInclude Include="..\Public\NoiseGenerator.h" />
     <ClInclude Include="..\public\Object_Manager.h" />
     <ClInclude Include="..\public\PipeLine.h" />
@@ -232,6 +233,7 @@
     <ClCompile Include="..\private\Level_Manager.cpp" />
     <ClCompile Include="..\private\Light.cpp" />
     <ClCompile Include="..\private\Light_Manager.cpp" />
+    <ClCompile Include="..\Private\MultiScatLUT.cpp" />
     <ClCompile Include="..\Private\NoiseGenerator.cpp" />
     <ClCompile Include="..\private\Object_Manager.cpp" />
     <ClCompile Include="..\private\PipeLine.cpp" />
@@ -256,6 +258,7 @@
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\Bin\ShaderFiles\CShader_Detail.hlsl" />
+    <FxCompile Include="..\Bin\ShaderFiles\CShader_MultiScatLUT.hlsl" />
     <FxCompile Include="..\Bin\ShaderFiles\CShader_Shape.hlsl" />
     <FxCompile Include="..\Bin\ShaderFiles\Noise.hlsl" />
     <FxCompile Include="..\Bin\ShaderFiles\Shader_AtmosphereRender.hlsl" />

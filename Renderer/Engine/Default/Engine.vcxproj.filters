@@ -273,6 +273,9 @@
     <ClInclude Include="..\Public\Sky.h">
       <Filter>01.Utiltiy\03.GameObjects\Sky\Atmosphere</Filter>
     </ClInclude>
+    <ClInclude Include="..\Public\MultiScatLUT.h">
+      <Filter>01.Utiltiy\03.GameObjects\Sky\Atmosphere</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\private\Base.cpp">
@@ -395,6 +398,9 @@
     <ClCompile Include="..\Private\Sky.cpp">
       <Filter>01.Utiltiy\03.GameObjects\Sky\Atmosphere</Filter>
     </ClCompile>
+    <ClCompile Include="..\Private\MultiScatLUT.cpp">
+      <Filter>01.Utiltiy\03.GameObjects\Sky\Atmosphere</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\Bin\ShaderFiles\Shader_Deferred.hlsl">
@@ -416,6 +422,9 @@
       <Filter>01.Utiltiy\07.ShaderFiles</Filter>
     </FxCompile>
     <FxCompile Include="..\Bin\ShaderFiles\Shader_AtmosphereRender.hlsl">
+      <Filter>01.Utiltiy\07.ShaderFiles</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Bin\ShaderFiles\CShader_MultiScatLUT.hlsl">
       <Filter>01.Utiltiy\07.ShaderFiles</Filter>
     </FxCompile>
   </ItemGroup>
