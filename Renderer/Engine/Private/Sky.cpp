@@ -166,6 +166,11 @@ HRESULT CSky::Render()
 		return E_FAIL;
 	}
 
+	if (FAILED(m_pShader->Bind_Texture("g_MultiScatLUTTexture", m_pMultiScatLUT->Get_SRV())))
+	{
+		return E_FAIL;
+	}
+
 	if (FAILED(m_pShader->Bind_RawValue("g_iWinSizeX", &m_iWinSizeX, sizeof(_uint))))
 	{
 		return E_FAIL;
@@ -257,7 +262,7 @@ HRESULT CSky::Ready_Components()
 HRESULT CSky::Ready_RenderTargets()
 {
 	if (FAILED(m_pTarget_Manager->Add_RenderTarget(m_pDevice, m_pContext, L"Target_SkyViewLUT",
-		m_iSkyLUTX, m_iSkyLUTY, DXGI_FORMAT_R32G32B32A32_FLOAT, Vec4(0.0f, 0.0f, 0.0f, 0.f))))
+		m_iSkyLUTX, m_iSkyLUTY, DXGI_FORMAT_R11G11B10_FLOAT, Vec4(0.0f, 0.0f, 0.0f, 0.f))))
 		return E_FAIL;
 
 	if (FAILED(m_pTarget_Manager->Add_MRT(L"MRT_SkyViewLUT", L"Target_SkyViewLUT")))
@@ -292,8 +297,9 @@ HRESULT CSky::Ready_AtmosphereBuffer()
 	D3D11_BUFFER_DESC tBufferDesc;
 	ZeroMemory(&tBufferDesc, sizeof(D3D11_BUFFER_DESC));
 	tBufferDesc.ByteWidth = sizeof(AtmosphereProperties);
-	tBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	tBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 	tBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	tBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
 	D3D11_SUBRESOURCE_DATA tData;
 	ZeroMemory(&tData, sizeof(D3D11_SUBRESOURCE_DATA));
@@ -345,6 +351,29 @@ void CSky::Update_Sun(_float fTimeDelta)
 			m_vSunPos = XMVector3Transform(m_vSunPos, RotateMatrix);
 		}
 	}
+
+	if (pGameInstance->Get_DIKeyState(DIK_M) & 0x80)
+	{
+		//Test
+		if (m_bKeyPress == false)
+		{
+			m_tUnitAtmo.fMultiScatFactor = 1.0f - (1.0f * m_tUnitAtmo.fMultiScatFactor);
+			m_tAtmo.fMultiScatFactor = m_tUnitAtmo.fMultiScatFactor;
+
+			D3D11_MAPPED_SUBRESOURCE mappedResource;
+			ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
+			m_pContext->Map(m_pAtmosphereBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+			memcpy(mappedResource.pData, &m_tUnitAtmo, sizeof(AtmosphereProperties));
+			m_pContext->Unmap(m_pAtmosphereBuffer, 0);
+
+			m_bKeyPress = true;
+		}
+	}
+	else
+	{
+		m_bKeyPress = false;
+	}
+	
 
 	RELEASE_INSTANCE(CGameInstance);
 

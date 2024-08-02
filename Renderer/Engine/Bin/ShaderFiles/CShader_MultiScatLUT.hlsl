@@ -32,6 +32,8 @@ cbuffer AtmosphereParams : register(b0)
 
 	float4	vAbsorbOzone;
  	float4	vOzone;
+
+	float	fMultiScatFactor;
 };
 
 
@@ -335,7 +337,7 @@ void CSMultiScatLUT(uint3 iThreadId : SV_DispatchThreadID)
 
 	const float3 vR = vMultiScatAs1;
 	const float3 vSumOfAllMultiScatteringEventsContribution = 1.0f / (1.0 - vR);
-	float3 vL = vInScatteredLuminance * vSumOfAllMultiScatteringEventsContribution * 100.0f;
+	float3 vL = vInScatteredLuminance * vSumOfAllMultiScatteringEventsContribution;
 
-	MultiScatTexture[iThreadId.xy] = float4(vL, 1.0f);
+	MultiScatTexture[iThreadId.xy] = float4(vL * fMultiScatFactor, 1.0f);
 }

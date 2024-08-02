@@ -17,7 +17,6 @@ texture2D		g_MultiScatLUTTexture;
 
 float3			g_vLightDir;
 float3			g_vSunPos;
-float			g_fSunIlluminance = 1.0f;
 float2			g_vRayMarchMinMaxSPP = float2(4.0f, 14.0f);
 
 uint				g_iWinSizeX;
@@ -41,6 +40,8 @@ cbuffer AtmosphereParams : register(b0)
 
 	float4	vAbsorbOzone;
  	float4	vOzone;
+
+	float	fMultiScatFactor;
 }
 
 struct VS_IN
@@ -251,10 +252,18 @@ float RayleighPhase(float fCosTheta)
 	return fFactor * (1.0f + fCosTheta * fCosTheta);
 }
 
+float3 GetMultipleScattering(float3 scattering, float3 extinction, float3 worlPos, float viewZenithCosAngle)
+{
+	float2 uv = saturate(float2(viewZenithCosAngle * 0.5f + 0.5f, (length(worlPos) - fEarthRadius) / (fAtmosphereRadius - fEarthRadius)));
+
+	float3 multiScatteredLuminance = g_MultiScatLUTTexture.SampleLevel(LinearClampSampler, uv, 0).rgb;
+	return multiScatteredLuminance;
+}
+
 SingleScatteringResult IntegrateScatteredLuminance(
 	in float3 vWorldPos, in float3 vWorldDir, in float3 vSunDir,
 	in bool bGground, in float fSampleCountIni, in float fDepthBufferValue,
-	in float fMaxMax = 9000000.0f)
+	in float fMaxMax = 90000000.0f)
 {
 	SingleScatteringResult tResult = (SingleScatteringResult)0;
 
@@ -300,7 +309,7 @@ SingleScatteringResult IntegrateScatteredLuminance(
 	float fMiePhaseValue = Cornette_Shanks_Phase(fPhaseMieG, -fCosTheta);
 	float fRayleighPhaseValue = RayleighPhase(fCosTheta);
 
-	float3 vGlobalL = g_fSunIlluminance;
+	float3 vGlobalL = fSunIlluminance;
 
 	float3 vL = 0.0f;
 	float3 vThroughput = 1.0;
@@ -347,9 +356,12 @@ SingleScatteringResult IntegrateScatteredLuminance(
 		float tEarth = raySphereIntersectNearest(vPos, vSunDir, vEarthOrigin + PLANET_RADIUS_OFFSET * vUpVector, fEarthRadius);
 		float fEarthShadow = tEarth >= 0.0f ? 0.0f : 1.0f;
 
+		float3 multiScatteredLuminance = 0.0f;
+		multiScatteredLuminance = GetMultipleScattering(tMedium.vScattering, tMedium.vExtinction, vPos, fSunZenithCosAngle);
+
 		float fShadow = 1.0f;
 
-		float3 vS = vGlobalL * (fEarthShadow * fShadow * vTransmittanceToSun * vPhaseTimesScattering);
+		float3 vS = vGlobalL * (fEarthShadow * fShadow * vTransmittanceToSun * vPhaseTimesScattering + multiScatteredLuminance * tMedium.vScattering);
 
 		float3 vSint = (vS - vS * vSampleTransmittance) / tMedium.vExtinction;	
 		vL += vThroughput * vSint;					
@@ -465,7 +477,7 @@ void SkyViewLutParamsToUv(bool bIntersectGround, float fViewZenithCosAngle, floa
 
 float3 GetSunLuminance(float3 vWorldPos, float3 vWorldDir, float3 vLightDir)
 {
-	if (dot(vWorldDir, vLightDir) > 0.9997f)
+	if (dot(vWorldDir, vLightDir) > 0.99997f)
 	{
 		float fT = raySphereIntersectNearest(vWorldPos, vWorldDir, float3(0.0f, 0.0f, 0.0f), fEarthRadius);
 		if (fT < 0.0f)

@@ -96,6 +96,8 @@ namespace Engine
 
 		ret.fAtmosphereRadius = 1e3f * ret.fAtmosphereRadius;
 		ret.fPlanetRadius = 1e3f * ret.fPlanetRadius;
+
+
 		return ret;
 	}
 }

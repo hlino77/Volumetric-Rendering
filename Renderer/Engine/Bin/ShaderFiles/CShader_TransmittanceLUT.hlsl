@@ -23,6 +23,8 @@ cbuffer AtmosphereParams : register(b0)
 
 	float4	vAbsorbOzone;
  	float4	vOzone;
+
+	float	fMultiScatFactor;
 }
 
 float raySphereIntersectNearest(float3 r0, float3 rd, float3 s0, float sR)

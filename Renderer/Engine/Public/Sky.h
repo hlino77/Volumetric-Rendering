@@ -59,6 +59,9 @@ private:
 
 	Vec3					m_vSunPos;
 	Vec3					m_vLightDir;
+
+	//Test
+	bool					m_bKeyPress = false;
 public:
 	virtual CGameObject* Clone(void* pArg) override;
 	static CSky* Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
