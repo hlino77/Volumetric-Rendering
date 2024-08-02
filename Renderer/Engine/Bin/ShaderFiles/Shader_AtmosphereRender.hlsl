@@ -212,7 +212,7 @@ MediumSampleRGB SampleMediumRGB(in float3 vWorldPos)
 	tResult.vAbsorptionRay = 0.0f;
 	tResult.vExtinctionRay = tResult.vScatteringRay + tResult.vAbsorptionRay;
 
-	tResult.vScatteringOzo = 0.0;
+	tResult.vScatteringOzo = 0.0f;
 	tResult.vAbsorptionOzo = fDensityOzo * vAbsorbOzone;
 	tResult.vExtinctionOzo = tResult.vScatteringOzo + tResult.vAbsorptionOzo;
 
@@ -228,8 +228,8 @@ void LutTransmittanceParamsToUv(in float fViewHeight, in float fViewZenithCosAng
 	float fH = sqrt(max(0.0f, fAtmosphereRadius * fAtmosphereRadius - fEarthRadius * fEarthRadius));
 	float fRho = sqrt(max(0.0f, fViewHeight * fViewHeight - fEarthRadius * fEarthRadius));
 
-	float fDiscriminant = fViewHeight * fViewHeight * (fViewZenithCosAngle * fViewZenithCosAngle - 1.0) + fAtmosphereRadius * fAtmosphereRadius;
-	float fD = max(0.0, (-fViewHeight * fViewZenithCosAngle + sqrt(fDiscriminant)));
+	float fDiscriminant = fViewHeight * fViewHeight * (fViewZenithCosAngle * fViewZenithCosAngle - 1.0f) + fAtmosphereRadius * fAtmosphereRadius;
+	float fD = max(0.0f, (-fViewHeight * fViewZenithCosAngle + sqrt(fDiscriminant)));
 
 	float fMin = fAtmosphereRadius - fViewHeight;
 	float fMax = fRho + fH;
