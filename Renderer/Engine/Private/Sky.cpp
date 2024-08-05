@@ -4,6 +4,7 @@
 #include "Target_Manager.h"
 #include "Renderer.h"
 #include "MultiScatLUT.h"
+#include "AerialLUT.h"
 
 CSky::CSky(ID3D11Device * pDevice, ID3D11DeviceContext * pContext)
 	: CGameObject(pDevice, pContext)
@@ -105,10 +106,18 @@ void CSky::LateTick(_float fTimeDelta)
 
 HRESULT CSky::Render()
 {
+	//AerialLUT
+
+	if (FAILED(m_pAerialLUT->Update_AerialLUT(&m_pAtmosphereBuffer, &m_pTransLUTSRV, m_vLightDir)))
+	{
+		return E_FAIL;
+	}
+
+
+
 	D3D11_VIEWPORT		PrevVeiwPort;
 	_uint				iNumViewports = 1;
 	m_pContext->RSGetViewports(&iNumViewports, &PrevVeiwPort);
-
 
 
 	//MultiScatLUT
@@ -200,6 +209,12 @@ HRESULT CSky::Render()
 
 	//Atmosphere
 
+
+	if (FAILED(m_pShader->Bind_Texture("g_AerialLUTTexture", m_pAerialLUT->Get_SRV())))
+	{
+		return E_FAIL;
+	}
+
 	if (FAILED(m_pTarget_Manager->Bind_SRV(m_pShader, L"Target_SkyViewLUT", "g_SkyViewLUTTexture")))
 	{
 		return E_FAIL;
@@ -234,6 +249,13 @@ HRESULT CSky::Ready_For_LUT()
 	m_pMultiScatLUT = CMultiScatLUT::Create(m_pDevice, m_pContext);
 
 	if (m_pMultiScatLUT == nullptr)
+	{
+		return E_FAIL;
+	}
+
+	m_pAerialLUT = CAerialLUT::Create(m_pDevice, m_pContext);
+	
+	if (m_pAerialLUT == nullptr)
 	{
 		return E_FAIL;
 	}
@@ -358,7 +380,6 @@ void CSky::Update_Sun(_float fTimeDelta)
 		if (m_bKeyPress == false)
 		{
 			m_tUnitAtmo.fMultiScatFactor = 1.0f - (1.0f * m_tUnitAtmo.fMultiScatFactor);
-			m_tAtmo.fMultiScatFactor = m_tUnitAtmo.fMultiScatFactor;
 
 			D3D11_MAPPED_SUBRESOURCE mappedResource;
 			ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));

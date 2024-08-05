@@ -5,6 +5,11 @@ namespace Engine
 	const D3D11_INPUT_ELEMENT_DESC VTXPOS::Elements[] = {
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }, /* À§Ä¡º¤ÅÍ¿¡ ´ëÇÑ ¹¦»ç. */		
 	};
+
+	const D3D11_INPUT_ELEMENT_DESC VTXVOLUME::Elements[] = {
+		{ "SV_VertexID", 0, DXGI_FORMAT_R32G32B32A32_UINT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }, /* À§Ä¡º¤ÅÍ¿¡ ´ëÇÑ ¹¦»ç. */
+		{ "SV_InstanceID", 1, DXGI_FORMAT_R32G32B32A32_UINT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
+	};
 	
 
 	const D3D11_INPUT_ELEMENT_DESC VTXPOSTEX::Elements[] = {

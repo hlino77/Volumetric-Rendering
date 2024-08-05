@@ -40,6 +40,16 @@ namespace Engine
 		Vec4		vTranslation;
 	}KEYFRAME;
 
+
+	typedef struct ENGINE_DLL tagVertex_Volume
+	{
+		_uint		iVertexID;
+		_uint		iInstanceID;
+
+		static const unsigned int				iNumElements = 2;
+		static const D3D11_INPUT_ELEMENT_DESC	Elements[iNumElements];
+	}VTXVOLUME;
+
 	typedef struct ENGINE_DLL tagVertex_Position
 	{
 		Vec3		vPosition;		

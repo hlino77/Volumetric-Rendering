@@ -33,6 +33,7 @@ private:
 	ID3D11ShaderResourceView*	m_pTransLUTSRV = { nullptr };
 
 	class CMultiScatLUT* m_pMultiScatLUT = { nullptr };
+	class CAerialLUT* m_pAerialLUT = { nullptr };
 
 	class CShader* m_pShader = { nullptr };
 	class CVIBuffer_Rect* m_pVIBuffer = { nullptr };
@@ -51,7 +52,6 @@ private:
 
 	class CTarget_Manager* m_pTarget_Manager = { nullptr };
 
-	AtmosphereProperties m_tAtmo;
 	AtmosphereProperties m_tUnitAtmo;
 
 	ID3D11Buffer* m_pAtmosphereBuffer = { nullptr };

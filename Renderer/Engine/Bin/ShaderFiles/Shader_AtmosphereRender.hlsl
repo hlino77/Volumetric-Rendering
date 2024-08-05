@@ -14,6 +14,7 @@ vector			g_vCamPosition;
 texture2D		g_TransLUTTexture;
 texture2D		g_SkyViewLUTTexture;
 texture2D		g_MultiScatLUTTexture;
+texture3D		g_AerialLUTTexture;
 
 float3			g_vLightDir;
 float3			g_vSunPos;
@@ -493,6 +494,12 @@ float3 GetSunLuminance(float3 vWorldPos, float3 vWorldDir, float3 vLightDir)
 PS_OUT PS_ATMOSPHERE(PS_IN In)
 {
 	PS_OUT		Out = (PS_OUT)0;
+
+	Out.vColor = g_AerialLUTTexture.SampleLevel(LinearClampSampler, float3(In.vTexcoord.x, In.vTexcoord.y, 0.9f), 0);
+	Out.vColor.a = 1.0f;
+	Out.vColor *= 10.0f;
+
+	return Out;
 
 	vector		vClipPos;
 
