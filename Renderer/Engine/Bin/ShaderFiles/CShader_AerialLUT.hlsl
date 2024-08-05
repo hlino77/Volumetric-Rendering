@@ -173,105 +173,103 @@ void LutTransmittanceParamsToUv(in float fViewHeight, in float fViewZenithCosAng
 
 struct SingleScatteringResult
 {
-	float3 L;						
-	float3 OpticalDepth;			
-	float3 Transmittance;			
-	float3 MultiScatAs1;
+	float3 vL;						
+	float3 vOpticalDepth;			
+	float3 vTransmittance;			
+	float3 vMultiScatAs1;
 
-	float3 NewMultiScatStep0Out;
-	float3 NewMultiScatStep1Out;
+	float3 vNewMultiScatStep0Out;
+	float3 vNewMultiScatStep1Out;
 };
 
 SingleScatteringResult IntegrateScatteredLuminance(
-	in float3 WorldPos, in float3 WorldDir, in float3 SunDir,
-	in float SampleCountIni, in float tMaxMax = 9000000.0f)
+	in float3 vWorldPos, in float3 vWorldDir, in float3 vSunDir,
+	in float fSampleCountIni, in float fMaxMax = 9000000.0f)
 {
-	SingleScatteringResult result = (SingleScatteringResult)0;
+	SingleScatteringResult tResult = (SingleScatteringResult)0;
 
-	float3 earthO = float3(0.0f, 0.0f, 0.0f);
-	float tBottom = raySphereIntersectNearest(WorldPos, WorldDir, earthO, fEarthRadius);
-	float tTop = raySphereIntersectNearest(WorldPos, WorldDir, earthO, fAtmosphereRadius);
-	float tMax = 0.0f;
-	if (tBottom < 0.0f)
+	float3 vEarthOrigin = float3(0.0f, 0.0f, 0.0f);
+	float fBottom = raySphereIntersectNearest(vWorldPos, vWorldDir, vEarthOrigin, fEarthRadius);
+	float fTop = raySphereIntersectNearest(vWorldPos, vWorldDir, vEarthOrigin, fAtmosphereRadius);
+	float fMax = 0.0f;
+	if (fBottom < 0.0f)
 	{
-		if (tTop < 0.0f)
+		if (fTop < 0.0f)
 		{
-			tMax = 0.0f; 
-			return result;
+			fMax = 0.0f; 
+			return tResult;
 		}
 		else
 		{
-			tMax = tTop;
+			fMax = fTop;
 		}
 	}
 	else
 	{
-		if (tTop > 0.0f)
+		if (fTop > 0.0f)
 		{
-			tMax = min(tTop, tBottom);
+			fMax = min(fTop, fBottom);
 		}
 	}
 
-	tMax = min(tMax, tMaxMax);
+	fMax = min(fMax, fMaxMax);
 
-	float SampleCount = SampleCountIni;
-	float SampleCountFloor = SampleCountIni;
-	float tMaxFloor = tMax;
-	float dt = tMax / SampleCount;
+	float fSampleCount = fSampleCountIni;
+	float fSampleCountFloor = fSampleCountIni;
+	float fMaxFloor = fMax;
+	float fDt = fMax / fSampleCount;
 
-	const float3 wi = SunDir;
-	const float3 wo = WorldDir;
-	float cosTheta = dot(wi, wo);
-	float MiePhaseValue = Cornette_Shanks_Phase(fPhaseMieG, -cosTheta);
-	float RayleighPhaseValue = RayleighPhase(cosTheta);
+	const float3 vWi = vSunDir;
+	const float3 vWo = vWorldDir;
+	float fCosTheta = dot(vWi, vWo);
+	float fMiePhaseValue = Cornette_Shanks_Phase(fPhaseMieG, -fCosTheta);
+	float fRayleighPhaseValue = RayleighPhase(fCosTheta);
 
-	float3 globalL = fSunIlluminance;
+	float3 vGlobalL = fSunIlluminance;
 
-	float3 L = 0.0f;
-	float3 throughput = 1.0;
-	float3 OpticalDepth = 0.0;
-	float t = 0.0f;
-	float tPrev = 0.0;
-	const float SampleSegmentT = 0.3f;
-	for (float s = 0.0f; s < SampleCount; s += 1.0f)
+	float3 vL = 0.0f;
+	float3 vThroughput = 1.0;
+	float3 vOpticalDepth = 0.0;
+	float fT = 0.0f;
+	float fPrev = 0.0;
+	const float fSampleSegmentT = 0.3f;
+	for (float i = 0.0f; i < fSampleCount; i += 1.0f)
 	{
-		float NewT = tMax * (s + SampleSegmentT) / SampleCount;
-		dt = NewT - t;
-		t = NewT;
-		float3 P = WorldPos + t * WorldDir;
+		float fNewT = fMax * (i + fSampleSegmentT) / fSampleCount;
+		fDt = fNewT - fT;
+		fT = fNewT;
+		float3 vPos = vWorldPos + fT * vWorldDir;
 
-		MediumSampleRGB medium = SampleMediumRGB(P);
-		const float3 SampleOpticalDepth = medium.vExtinction * dt;
-		const float3 SampleTransmittance = exp(-SampleOpticalDepth);
-		OpticalDepth += SampleOpticalDepth;
+		MediumSampleRGB Medium = SampleMediumRGB(vPos);
+		const float3 vSampleOpticalDepth = Medium.vExtinction * fDt;
+		const float3 vSampleTransmittance = exp(-vSampleOpticalDepth);
+		vOpticalDepth += vSampleOpticalDepth;
 
-		float pHeight = length(P);
-		const float3 UpVector = P / pHeight;
-		float SunZenithCosAngle = dot(SunDir, UpVector);
-		float2 uv;
-		LutTransmittanceParamsToUv(pHeight, SunZenithCosAngle, uv);
-		float3 TransmittanceToSun = 0.5f;//g_TransLUTTexture.SampleLevel(LinearClampSampler, uv, 0).rgb;
+		float fHeight = length(vPos);
+		const float3 vUpVector = vPos / fHeight;
+		float fSunZenithCosAngle = dot(vSunDir, vUpVector);
+		float2 vUV;
+		LutTransmittanceParamsToUv(fHeight, fSunZenithCosAngle, vUV);
+		float3 vTransmittanceToSun = g_TransLUTTexture.SampleLevel(LinearClampSampler, vUV, 0).rgb;
 
-		float3 PhaseTimesScattering = medium.vScatteringMie * MiePhaseValue + medium.vScatteringRay * RayleighPhaseValue;
+		float3 vPhaseTimesScattering = Medium.vScatteringMie * fMiePhaseValue + Medium.vScatteringRay * fRayleighPhaseValue;
 
-		float tEarth = raySphereIntersectNearest(P, SunDir, earthO + PLANET_RADIUS_OFFSET * UpVector, fEarthRadius);
-		float earthShadow = tEarth >= 0.0f ? 0.0f : 1.0f;
+		float fEarth = raySphereIntersectNearest(vPos, vSunDir, vEarthOrigin + PLANET_RADIUS_OFFSET * vUpVector, fEarthRadius);
+		float fEarthShadow = fEarth >= 0.0f ? 0.0f : 1.0f;
 
+		float3 vS = vGlobalL * (fEarthShadow * vTransmittanceToSun * vPhaseTimesScattering);
 
-		float3 S = globalL * (TransmittanceToSun * PhaseTimesScattering);
+		float3 vSint = (vS - vS * vSampleTransmittance) / Medium.vExtinction;	
+		vL += vThroughput * vSint;	
+		vThroughput *= vSampleTransmittance;
 
-
-		float3 Sint = (S - S * SampleTransmittance) / medium.vExtinction;	
-		L += throughput * Sint;	
-		throughput *= SampleTransmittance;
-
-		tPrev = t;
+		fPrev = fT;
 	}
 
-	result.L = L;
-	result.OpticalDepth = OpticalDepth;
-	result.Transmittance = throughput;
-	return result;
+	tResult.vL = vL;
+	tResult.vOpticalDepth = vOpticalDepth;
+	tResult.vTransmittance = vThroughput;
+	return tResult;
 }
 
 [numthreads(8, 8, 8)]
@@ -298,55 +296,55 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
 
 
 
-	float earthR = fEarthRadius;
-	float3 camPos = g_vCamPosition.xzy + float3(0, 0, earthR);
-	float3 SunDir = g_vLightDir.xzy;
+	float fEarthR = fEarthRadius;
+	float3 vCamPos = g_vCamPosition.xzy + float3(0, 0, fEarthR);
+	float3 vSunDir = g_vLightDir.xzy;
 
 
-	float Slice = ((float(DTid.z) + 0.5f) / DEPTHCOUNT);
-	Slice *= Slice;
-	Slice *= DEPTHCOUNT;
+	float fSlice = ((float(DTid.z) + 0.5f) / DEPTHCOUNT);
+	fSlice *= fSlice;
+	fSlice *= DEPTHCOUNT;
 
-	float3 WorldPos = camPos;
-	float viewHeight;
+	vWorldPos = vCamPos;
+	float fViewHeight;
 
-	float tMax = Slice * M_PER_SLICE;
-	float3 newWorldPos = WorldPos + tMax * vWorldDir;
+	float fMax = fSlice * M_PER_SLICE;
+	float3 vNewWorldPos = vWorldPos + fMax * vWorldDir;
 
-	viewHeight = length(newWorldPos);
-	if (viewHeight <= (fEarthRadius + PLANET_RADIUS_OFFSET))
+	fViewHeight = length(vNewWorldPos);
+	if (fViewHeight <= (fEarthRadius + PLANET_RADIUS_OFFSET))
 	{
-		newWorldPos = normalize(newWorldPos) * (fEarthRadius + PLANET_RADIUS_OFFSET + 0.001f);
-		vWorldDir = normalize(newWorldPos - camPos);
-		tMax = length(newWorldPos - camPos);
+		vNewWorldPos = normalize(vNewWorldPos) * (fEarthRadius);
+		vWorldDir = normalize(vNewWorldPos - vCamPos);
+		fMax = length(vNewWorldPos - vCamPos);
 	}
 
-	float tMaxMax = tMax;
+	float fMaxMax = fMax;
 
-	viewHeight = length(WorldPos);
-	if (viewHeight >= fAtmosphereRadius)
+	fViewHeight = length(vWorldPos);
+	if (fViewHeight >= fAtmosphereRadius)
 	{
-		float3 prevWorlPos = WorldPos;
-		if (!MoveToTopAtmosphere(WorldPos, vWorldDir, fAtmosphereRadius))
+		float3 vPrevWorlPos = vWorldPos;
+		if (!MoveToTopAtmosphere(vWorldPos, vWorldDir, fAtmosphereRadius))
 		{
-			OutputTexture[DTid] = float4(1.0f, 0.0f, 0.0f, 1.0f);
+			OutputTexture[DTid] = float4(0.0f, 0.0f, 0.0f, 1.0f);
 			return;
 		}
-		float LengthToAtmosphere = length(prevWorlPos - WorldPos);
-		if (tMaxMax < LengthToAtmosphere)
+		float fLengthToAtmosphere = length(vPrevWorlPos - vWorldPos);
+		if (fMaxMax < fLengthToAtmosphere)
 		{
-			OutputTexture[DTid] = float4(1.0f, 0.0f, 0.0f, 1.0f);
+			OutputTexture[DTid] = float4(0.0f, 0.0f, 0.0f, 1.0f);
 			return;
 		}
-		tMaxMax = max(0.0, tMaxMax - LengthToAtmosphere);
+		fMaxMax = max(0.0, fMaxMax - fLengthToAtmosphere);
 	}
 
-	const float SampleCountIni = max(1.0f, float(DTid.z + 1.0f) * 2.0f);
-	SingleScatteringResult ss = IntegrateScatteredLuminance(WorldPos, vWorldDir, SunDir, SampleCountIni, tMaxMax);
+	const float fSampleCountIni = max(1.0f, float(DTid.z + 1.0f) * 2.0f);
+	SingleScatteringResult tResult = IntegrateScatteredLuminance(vWorldPos, vWorldDir, vSunDir, fSampleCountIni, fMaxMax);
 
-	const float Transmittance = dot(ss.Transmittance, float3(1.0f / 3.0f, 1.0f / 3.0f, 1.0f / 3.0f));
+	const float fTransmittance = dot(tResult.vTransmittance, float3(1.0f / 3.0f, 1.0f / 3.0f, 1.0f / 3.0f));
 
-	OutputTexture[DTid] = float4(ss.L, 1.0 - Transmittance);
+	OutputTexture[DTid] = float4(tResult.vL, 1.0 - fTransmittance);
 
 }
 

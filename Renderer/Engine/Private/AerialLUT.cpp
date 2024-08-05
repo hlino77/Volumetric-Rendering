@@ -151,8 +151,8 @@ void CAerialLUT::Update_Params(const Vec3& vLightDir)
 {
 	CPipeLine* pPipeLine = GET_INSTANCE(CPipeLine);
 
-	m_tGlobalParams.matViewInv = pPipeLine->Get_Transform_Matrix_Inverse(CPipeLine::D3DTS_VIEW);
-	m_tGlobalParams.matProjInv = pPipeLine->Get_Transform_Matrix_Inverse(CPipeLine::D3DTS_PROJ);
+	m_tGlobalParams.matViewInv = pPipeLine->Get_Transform_Matrix_Inverse(CPipeLine::D3DTS_VIEW).Transpose();
+	m_tGlobalParams.matProjInv = pPipeLine->Get_Transform_Matrix_Inverse(CPipeLine::D3DTS_PROJ).Transpose();
 	m_tGlobalParams.vCamPosition = pPipeLine->Get_CamPosition();
 
 	RELEASE_INSTANCE(CPipeLine);
