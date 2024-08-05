@@ -210,6 +210,11 @@ HRESULT CSky::Render()
 	//Atmosphere
 
 
+	if (FAILED(m_pShader->Bind_RawValue("g_fTest", &m_fTest, sizeof(_float))))
+	{
+		return E_FAIL;
+	}
+
 	if (FAILED(m_pShader->Bind_Texture("g_AerialLUTTexture", m_pAerialLUT->Get_SRV())))
 	{
 		return E_FAIL;
@@ -395,6 +400,18 @@ void CSky::Update_Sun(_float fTimeDelta)
 		m_bKeyPress = false;
 	}
 	
+
+	//Test
+	if (pGameInstance->Get_DIKeyState(DIK_O) & 0x80)
+	{
+		m_fTest = max(0.0f, m_fTest - 0.0004f);
+	}
+
+	if (pGameInstance->Get_DIKeyState(DIK_P) & 0x80)
+	{
+		m_fTest = min(1.0f, m_fTest + 0.0004f);
+	}
+
 
 	RELEASE_INSTANCE(CGameInstance);
 

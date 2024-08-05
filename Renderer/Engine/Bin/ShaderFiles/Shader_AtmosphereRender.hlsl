@@ -23,6 +23,7 @@ float2			g_vRayMarchMinMaxSPP = float2(4.0f, 14.0f);
 uint				g_iWinSizeX;
 uint				g_iWinSizeY;
 
+float			g_fTest;
 
 cbuffer AtmosphereParams : register(b0)
 {
@@ -495,6 +496,11 @@ PS_OUT PS_ATMOSPHERE(PS_IN In)
 {
 	PS_OUT		Out = (PS_OUT)0;
 
+	Out.vColor = g_AerialLUTTexture.SampleLevel(LinearClampSampler, float3(In.vTexcoord.x, In.vTexcoord.y, g_fTest), 0);
+	Out.vColor *= 10.0f;
+	Out.vColor.a = 1.0f;
+	
+	return Out;
 
 	vector		vClipPos;
 

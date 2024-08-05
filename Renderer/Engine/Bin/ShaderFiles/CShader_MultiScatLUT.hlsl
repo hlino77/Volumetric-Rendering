@@ -223,7 +223,7 @@ SingleScatteringResult IntegrateScatteredLuminance(
 
 		float3 vS = vGlobalL * (fEarthShadow * vTransmittanceToSun * vPhaseTimesScattering);
 
-		float3 vMS = Medium.vScattering * 1.0f;
+		float3 vMS = Medium.vScattering;
 		float3 vMSint = (vMS - vMS * vSampleTransmittance) / Medium.vExtinction;
 		Result.vMultiScatAs1 += vThroughput * vMSint;
 
