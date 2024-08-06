@@ -98,8 +98,8 @@ void CSTransLUT(int3 iThreadIdx : SV_DispatchThreadID)
 	float fViewZenithCosAngle;
 	UvToHeightAngle(fViewHeight, fViewZenithCosAngle, vUV);
 
- 	float3 vWorldPos = float3(0.0f, 0.0f, fViewHeight);
- 	float3 vWorldDir = float3(0.0f,  sqrt(1.0 - fViewZenithCosAngle * fViewZenithCosAngle), fViewZenithCosAngle);
+ 	float3 vWorldPos = float3(0.0f, fViewHeight, 0.0f);
+ 	float3 vWorldDir = float3(0.0f,   fViewZenithCosAngle, sqrt(1.0 - fViewZenithCosAngle * fViewZenithCosAngle));
 
 	float3 fEarthOrigin = float3(0.0f, 0.0f, 0.0f);
 	float fBottom = raySphereIntersectNearest(vWorldPos, vWorldDir, fEarthOrigin, fEarthRadius);

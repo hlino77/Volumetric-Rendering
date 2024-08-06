@@ -291,14 +291,12 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
 	float3 vWorldPos = vClipPos.xyz;
 	float3 vWorldDir = normalize(vWorldPos - g_vCamPosition.xyz);
 	vWorldPos = g_vCamPosition.xyz + float3(0, fEarthRadius, 0);
-	vWorldPos = vWorldPos.xzy;
-	vWorldDir = vWorldDir.xzy;
 
 
 
 	float fEarthR = fEarthRadius;
-	float3 vCamPos = g_vCamPosition.xzy + float3(0, 0, fEarthR);
-	float3 vSunDir = g_vLightDir.xzy;
+	float3 vCamPos = g_vCamPosition.xyz + float3(0, fEarthR, 0);
+	float3 vSunDir = g_vLightDir.xyz;
 
 
 	float fSlice = ((float(DTid.z) + 0.5f) / DEPTHCOUNT);

@@ -253,11 +253,11 @@ void CSMultiScatLUT(uint3 iThreadId : SV_DispatchThreadID)
 
 
 	float fCosSunZenithAngle = vUV.x * 2.0f - 1.0f;
-	float3 vSunDir = float3(0.0, sqrt(saturate(1.0 - fCosSunZenithAngle * fCosSunZenithAngle)), fCosSunZenithAngle);
+	float3 vSunDir = float3(0.0, fCosSunZenithAngle, sqrt(saturate(1.0 - fCosSunZenithAngle * fCosSunZenithAngle)));
 	float fViewHeight = fEarthRadius + saturate(vUV.y + PLANET_RADIUS_OFFSET) * (fAtmosphereRadius - fEarthRadius - PLANET_RADIUS_OFFSET);
 
-	float3 vWorldPos = float3(0.0f, 0.0f, fViewHeight);
-	float3 vWorldDir = float3(0.0f, 0.0f, 1.0f);
+	float3 vWorldPos = float3(0.0f, fViewHeight, 0.0f);
+	float3 vWorldDir = float3(0.0f, 1.0f, 0.0f);
 
 	const float fSampleCountIni = 20;
 	const float fDepthBufferValue = -1.0;

@@ -496,11 +496,11 @@ PS_OUT PS_ATMOSPHERE(PS_IN In)
 {
 	PS_OUT		Out = (PS_OUT)0;
 
-	Out.vColor = g_AerialLUTTexture.SampleLevel(LinearClampSampler, float3(In.vTexcoord.x, In.vTexcoord.y, g_fTest), 0);
-	Out.vColor *= 10.0f;
-	Out.vColor.a = 1.0f;
-	
-	return Out;
+// 	Out.vColor = g_AerialLUTTexture.SampleLevel(LinearClampSampler, float3(In.vTexcoord.x, In.vTexcoord.y, g_fTest), 0);
+// 	Out.vColor *= 10.0f;
+// 	Out.vColor.a = 1.0f;
+// 	
+// 	return Out;
 
 	vector		vClipPos;
 
@@ -524,9 +524,7 @@ PS_OUT PS_ATMOSPHERE(PS_IN In)
 
 	float2 pixPos = In.vTexcoord;
 
-	vWorldPos = vWorldPos.xzy;
-	vWorldDir = vWorldDir.xzy;
-	float3 vSunDirection = g_vLightDir.xzy;
+	float3 vSunDirection = g_vLightDir.xyz;
 
 	float fViewHeight = length(vWorldPos);
 	float3 vL = 0;
