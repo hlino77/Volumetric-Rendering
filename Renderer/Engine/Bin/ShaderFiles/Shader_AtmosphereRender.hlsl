@@ -549,6 +549,7 @@ PS_OUT PS_ATMOSPHERE(PS_IN In)
 	}
 
 	float3 vWhitePoint = float3(1.08241f, 0.96756f, 0.95003f);
+	//float3 vWhitePoint = float3(1.0f, 1.0f, 1.0f);
 	float fExposure = 10.0f;
 	Out.vColor = float4(pow((float3) 1.0f - exp(-Out.vColor.rgb / vWhitePoint * fExposure), (float3)(1.0f / 2.2f)), 1.0f);
 
