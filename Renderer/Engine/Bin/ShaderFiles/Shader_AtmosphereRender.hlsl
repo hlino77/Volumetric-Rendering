@@ -398,8 +398,8 @@ PS_OUT PS_SKY_VEIW_LUT(PS_IN In)
 	float3 vWorldDir = normalize(vWorldPos - g_vCamPosition.xyz);
 	vWorldPos = g_vCamPosition.xyz + float3(0, fEarthRadius, 0);
 
-	vWorldPos = vWorldPos.xzy;
-	vWorldDir = vWorldDir.xzy;
+	//vWorldPos = vWorldPos.xzy;
+	//vWorldDir = vWorldDir.xzy;
 	 
 	float2 vUV = In.vTexcoord;
 
@@ -409,22 +409,22 @@ PS_OUT PS_SKY_VEIW_LUT(PS_IN In)
 	float fLightViewCosAngle;
 	UvToSkyViewLutParams(fViewZenithCosAngle, fLightViewCosAngle, fViewHeight, vUV);
 
-	float3 vSunDirection = g_vLightDir.xzy;
+	float3 vSunDirection = g_vLightDir.xyz;
 
 	float3 vSunDir;
 	{
 		float3 vUpVector = vWorldPos / fViewHeight;
 		float fSunZenithCosAngle = dot(vUpVector, vSunDirection);
-		vSunDir = normalize(float3(sqrt(1.0 - fSunZenithCosAngle * fSunZenithCosAngle), 0.0, fSunZenithCosAngle));
+		vSunDir = normalize(float3(sqrt(1.0 - fSunZenithCosAngle * fSunZenithCosAngle), fSunZenithCosAngle, 0.0));
 	}
 
-	vWorldPos = float3(0.0f, 0.0f, fViewHeight);
+	vWorldPos = float3(0.0f, fViewHeight, 0.0f);
 
 	float fViewZenithSinAngle = sqrt(1 - fViewZenithCosAngle * fViewZenithCosAngle);
 	vWorldDir = float3(
 		fViewZenithSinAngle * fLightViewCosAngle,
-		fViewZenithSinAngle * sqrt(1.0 - fLightViewCosAngle * fLightViewCosAngle),
-		fViewZenithCosAngle);
+		fViewZenithCosAngle,
+		fViewZenithSinAngle * sqrt(1.0 - fLightViewCosAngle * fLightViewCosAngle));
 
 	if (!MoveToTopAtmosphere(vWorldPos, vWorldDir, fAtmosphereRadius))
 	{
