@@ -4,7 +4,7 @@
 #define PI 3.1415926535897932384626433832795f
 #define PLANET_RADIUS_OFFSET 0.01f
 #define DEPTHCOUNT 32.0f
-#define M_PER_SLICE 100.0f
+#define M_PER_SLICE 4000.0f
 
 RWTexture3D<float4> OutputTexture : register (u0);
 Texture2D<float4>	g_TransLUTTexture : register(t0);

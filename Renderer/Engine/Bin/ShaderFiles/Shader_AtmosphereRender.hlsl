@@ -3,7 +3,8 @@
 
 #define PI 3.1415926535897932384626433832795f
 #define PLANET_RADIUS_OFFSET 0.01f
-#define M_PER_SLICE 100.0f
+#define DEPTHCOUNT 32.0f
+#define M_PER_SLICE 4000.0f
 
 matrix			g_WorldMatrix, g_ViewMatrix, g_ProjMatrix;
 matrix			g_ProjMatrixInv;
@@ -566,14 +567,17 @@ PS_OUT PS_ATMOSPHERE(PS_IN In)
 	vDepthBufferWorldPos = mul(vDepthBufferWorldPos, g_ViewMatrixInv);
 
 	float fDepth = length(vDepthBufferWorldPos.xyz - (vWorldPos + float3(0.0f, -fEarthRadius, 0.0f)));
+	fDepth *= 50.0f;
 	float fSlice = fDepth * (1.0f / M_PER_SLICE);
+
+
 	float fWeight = 1.0;
 	if (fSlice < 0.5)
 	{
 		fWeight = saturate(fSlice * 2.0);
 		fSlice = 0.5;
 	}
-	float w = sqrt(fSlice / M_PER_SLICE);
+	float w = sqrt(fSlice / DEPTHCOUNT);
 
 	const float4 vAP = fWeight * g_AerialLUTTexture.SampleLevel(LinearClampSampler, float3(In.vTexcoord, w), 0);
 	vL.rgb += vAP.rgb;
@@ -583,7 +587,7 @@ PS_OUT PS_ATMOSPHERE(PS_IN In)
 
 	float3 vWhitePoint = float3(1.08241f, 0.96756f, 0.95003f);
 	float fExposure = 10.0f;
-	Out.vColor = float4(pow((float3) 1.0f - exp(-Out.vColor.rgb / vWhitePoint * fExposure), (float3)(1.0f / 2.2f)), fOpacity * 1000.0f);
+	Out.vColor = float4(pow((float3) 1.0f - exp(-Out.vColor.rgb / vWhitePoint * fExposure), (float3)(1.0f / 2.2f)), fOpacity);
 
 	return Out;
 }
