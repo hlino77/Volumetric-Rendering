@@ -106,14 +106,6 @@ void CSky::LateTick(_float fTimeDelta)
 
 HRESULT CSky::Render()
 {
-	//AerialLUT
-
-	if (FAILED(m_pAerialLUT->Update_AerialLUT(&m_pAtmosphereBuffer, &m_pTransLUTSRV, m_vLightDir)))
-	{
-		return E_FAIL;
-	}
-
-
 
 	D3D11_VIEWPORT		PrevVeiwPort;
 	_uint				iNumViewports = 1;
@@ -140,6 +132,16 @@ HRESULT CSky::Render()
 
 	if (FAILED(m_pTarget_Manager->End_MRT(m_pContext)))
 		return E_FAIL;
+
+	//AerialLUT
+	m_pContext->RSSetViewports(1, &PrevVeiwPort);
+
+	ID3D11ShaderResourceView* pMultiScatLUT = m_pMultiScatLUT->Get_SRV();
+	if (FAILED(m_pAerialLUT->Update_AerialLUT(&m_pAtmosphereBuffer, &m_pTransLUTSRV, m_vLightDir, &pMultiScatLUT)))
+	{
+		return E_FAIL;
+	}
+
 
 	//Sky_View LUT
 	m_pContext->RSSetViewports(1, &m_SkyLUTViewPortDesc);
@@ -209,6 +211,8 @@ HRESULT CSky::Render()
 
 	//Atmosphere
 
+	if (FAILED(m_pTarget_Manager->Begin_MRT(m_pContext, L"MRT_Atmosphere")))
+		return E_FAIL;
 
 	if (FAILED(m_pShader->Bind_RawValue("g_fTest", &m_fTest, sizeof(_float))))
 	{
@@ -216,6 +220,11 @@ HRESULT CSky::Render()
 	}
 
 	if (FAILED(m_pShader->Bind_Texture("g_AerialLUTTexture", m_pAerialLUT->Get_SRV())))
+	{
+		return E_FAIL;
+	}
+
+	if (FAILED(m_pTarget_Manager->Bind_SRV(m_pShader, TEXT("Target_Depth"), "g_DepthTexture")))
 	{
 		return E_FAIL;
 	}
@@ -231,7 +240,8 @@ HRESULT CSky::Render()
 	if (FAILED(m_pVIBuffer->Render()))
 		return E_FAIL;
 
-
+	if (FAILED(m_pTarget_Manager->End_MRT(m_pContext)))
+		return E_FAIL;
 	
 
 	return S_OK;
@@ -295,8 +305,8 @@ HRESULT CSky::Ready_RenderTargets()
 	if (FAILED(m_pTarget_Manager->Add_MRT(L"MRT_SkyViewLUT", L"Target_SkyViewLUT")))
 		return E_FAIL;
 
-	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_SkyViewLUT"), m_iWinSizeX * 0.25f, m_iWinSizeY * 0.25f, m_iWinSizeX * 0.5f, m_iWinSizeY * 0.5f)))
-		return E_FAIL;
+// 	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_SkyViewLUT"), m_iWinSizeX * 0.25f, m_iWinSizeY * 0.25f, m_iWinSizeX * 0.5f, m_iWinSizeY * 0.5f)))
+// 		return E_FAIL;
 
 	if (FAILED(m_pTarget_Manager->Add_RenderTarget(m_pDevice, m_pContext, L"Target_Atmosphere",
 		m_iWinSizeX, m_iWinSizeY, DXGI_FORMAT_R32G32B32A32_FLOAT, Vec4(0.0f, 0.0f, 0.0f, 0.f))))
@@ -313,8 +323,8 @@ HRESULT CSky::Ready_RenderTargets()
 	if (FAILED(m_pTarget_Manager->Add_MRT(L"MRT_MultiScatLUT", L"Target_MultiScatLUT")))
 		return E_FAIL;
 
-	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_MultiScatLUT"), 100.0f, m_iWinSizeY * 0.5f + 100.0f, 200.0f, 200.0f)))
-		return E_FAIL;
+// 	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_MultiScatLUT"), 100.0f, m_iWinSizeY * 0.5f + 100.0f, 200.0f, 200.0f)))
+// 		return E_FAIL;
 
 	return S_OK;
 }

@@ -62,16 +62,16 @@ HRESULT CRenderer::Initialize_Prototype()
 // 		return E_FAIL;
 
 #ifdef _DEBUG
-	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_Diffuse"), 100.0f, 100.f, 200.0f, 200.0f)))
+	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_Diffuse"), 0.0f, 0.f, 0.0f, 0.0f)))
 		return E_FAIL;
-	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_Normal"), 100.0f, 300.0f, 200.0f, 200.0f)))
+	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_Normal"), 0.0f, 0.0f, 0.0f, 0.0f)))
 		return E_FAIL;
-	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_Depth"), 100.0f, 500.0f, 200.0f, 200.0f)))
+	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_Depth"), 200.0f, 200.0f, 400.0f, 400.0f)))
 		return E_FAIL;
-	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_Shade"), 300.0f, 100.f, 200.0f, 200.0f)))
-		return E_FAIL;
-	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_Specular"), 300.0f, 300.0f, 200.0f, 200.0f)))
-		return E_FAIL;
+// 	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_Shade"), 300.0f, 100.f, 200.0f, 200.0f)))
+// 		return E_FAIL;
+// 	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_Specular"), 300.0f, 300.0f, 200.0f, 200.0f)))
+// 		return E_FAIL;
 
 // 	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_VolumeRender"), ViewportDesc.Width - 250.0f, 250.0f, 500.0f, 500.0f)))
 // 		return E_FAIL;
@@ -139,8 +139,6 @@ HRESULT CRenderer::Add_RenderGroup(RENDERGROUP eRenderGroup, CGameObject * pGame
 
 HRESULT CRenderer::Draw_RenderObjects()
 {
-	if (FAILED(Render_Sky()))
-		return E_FAIL;
 	if (FAILED(Render_Priority()))
 		return E_FAIL;
 	if (FAILED(Render_NonLight()))
@@ -150,6 +148,8 @@ HRESULT CRenderer::Draw_RenderObjects()
 	if (FAILED(Render_NonBlend()))
 		return E_FAIL;
 	if (FAILED(Render_LightAcc()))
+		return E_FAIL;
+	if (FAILED(Render_Sky()))
 		return E_FAIL;
 	if (FAILED(Render_Deferred()))
 		return E_FAIL;
@@ -366,6 +366,16 @@ HRESULT CRenderer::Render_Deferred()
 	//if (FAILED(m_pVIBuffer->Render()))
 	//	return E_FAIL;
 
+
+	if (FAILED(m_pTarget_Manager->Bind_SRV(m_pShader, L"Target_Atmosphere", "g_SkyTexture")))
+		return E_FAIL;
+
+	if (FAILED(m_pShader->Begin(4)))
+		return E_FAIL;
+
+	if (FAILED(m_pVIBuffer->Render()))
+		return E_FAIL;
+
 	return S_OK;
 }
 
@@ -414,16 +424,16 @@ HRESULT CRenderer::Render_Debug()
 	if (FAILED(m_pShader->Bind_Matrix("g_ProjMatrix", &m_ProjMatrix)))
 		return E_FAIL;
 
-	/*if (FAILED(m_pTarget_Manager->Render(TEXT("MRT_GameObjects"), m_pShader, m_pVIBuffer)))
+	if (FAILED(m_pTarget_Manager->Render(TEXT("MRT_GameObjects"), m_pShader, m_pVIBuffer)))
 		return E_FAIL;
-	if (FAILED(m_pTarget_Manager->Render(TEXT("MRT_Lights"), m_pShader, m_pVIBuffer)))
-		return E_FAIL;*/
+// 	if (FAILED(m_pTarget_Manager->Render(TEXT("MRT_Lights"), m_pShader, m_pVIBuffer)))
+// 		return E_FAIL;
 		/*if (FAILED(m_pTarget_Manager->Render(TEXT("MRT_VolumeRender"), m_pShader, m_pVIBuffer)))
 			return E_FAIL;*/
-	if (FAILED(m_pTarget_Manager->Render(TEXT("MRT_SkyViewLUT"), m_pShader, m_pVIBuffer)))
-		return E_FAIL;
-	if (FAILED(m_pTarget_Manager->Render(TEXT("MRT_MultiScatLUT"), m_pShader, m_pVIBuffer)))
-		return E_FAIL;
+// 	if (FAILED(m_pTarget_Manager->Render(TEXT("MRT_SkyViewLUT"), m_pShader, m_pVIBuffer)))
+// 		return E_FAIL;
+// 	if (FAILED(m_pTarget_Manager->Render(TEXT("MRT_MultiScatLUT"), m_pShader, m_pVIBuffer)))
+// 		return E_FAIL;
 
 	return S_OK;
 }

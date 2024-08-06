@@ -4,11 +4,11 @@
 #define PI 3.1415926535897932384626433832795f
 #define PLANET_RADIUS_OFFSET 0.01f
 #define DEPTHCOUNT 32.0f
-#define M_PER_SLICE 4000.0f
+#define M_PER_SLICE 100.0f
 
 RWTexture3D<float4> OutputTexture : register (u0);
 Texture2D<float4>	g_TransLUTTexture : register(t0);
-
+Texture2D<float4>	g_MultiScatLUTTexture : register(t1);
 
 cbuffer AtmosphereParams : register(b0)
 {
@@ -171,6 +171,14 @@ void LutTransmittanceParamsToUv(in float fViewHeight, in float fViewZenithCosAng
 	vUV = float2(fX, fY);
 }
 
+float3 GetMultipleScattering(float3 scattering, float3 extinction, float3 worlPos, float viewZenithCosAngle)
+{
+	float2 uv = saturate(float2(viewZenithCosAngle * 0.5f + 0.5f, (length(worlPos) - fEarthRadius) / (fAtmosphereRadius - fEarthRadius)));
+
+	float3 multiScatteredLuminance = g_MultiScatLUTTexture.SampleLevel(LinearClampSampler, uv, 0).rgb;
+	return multiScatteredLuminance;
+}
+
 struct SingleScatteringResult
 {
 	float3 vL;						
@@ -257,7 +265,10 @@ SingleScatteringResult IntegrateScatteredLuminance(
 		float fEarth = raySphereIntersectNearest(vPos, vSunDir, vEarthOrigin + PLANET_RADIUS_OFFSET * vUpVector, fEarthRadius);
 		float fEarthShadow = fEarth >= 0.0f ? 0.0f : 1.0f;
 
-		float3 vS = vGlobalL * (fEarthShadow * vTransmittanceToSun * vPhaseTimesScattering);
+		float3 multiScatteredLuminance = 0.0f;
+		multiScatteredLuminance = GetMultipleScattering(Medium.vScattering, Medium.vExtinction, vPos, fSunZenithCosAngle);
+
+		float3 vS = vGlobalL * (fEarthShadow * vTransmittanceToSun * vPhaseTimesScattering + multiScatteredLuminance * Medium.vScattering);
 
 		float3 vSint = (vS - vS * vSampleTransmittance) / Medium.vExtinction;	
 		vL += vThroughput * vSint;	

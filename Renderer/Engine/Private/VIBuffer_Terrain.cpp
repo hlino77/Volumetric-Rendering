@@ -70,7 +70,7 @@ HRESULT CVIBuffer_Terrain::Initialize_Prototype(const wstring& strHeightMapFileP
 		{
 			_uint		iIndex = i * m_iNumVerticesX + j;
 
-			m_pVerticesPos[iIndex] = pVertices[iIndex].vPosition = Vec3(j, (pPixel[iIndex] & 0x000000ff) / 10.f, i);
+			m_pVerticesPos[iIndex] = pVertices[iIndex].vPosition = Vec3(j, (pPixel[iIndex] & 0x000000ff) / 2.f, i);
 			pVertices[iIndex].vNormal = Vec3(0.f, 0.f, 0.f);
 			pVertices[iIndex].vTexcoord = Vec2(j / (m_iNumVerticesX - 1.f), i / (m_iNumVerticesZ - 1.f));
 		}

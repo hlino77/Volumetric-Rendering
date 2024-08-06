@@ -3,6 +3,7 @@
 
 #define PI 3.1415926535897932384626433832795f
 #define PLANET_RADIUS_OFFSET 0.01f
+#define M_PER_SLICE 100.0f
 
 matrix			g_WorldMatrix, g_ViewMatrix, g_ProjMatrix;
 matrix			g_ProjMatrixInv;
@@ -15,6 +16,8 @@ texture2D		g_TransLUTTexture;
 texture2D		g_SkyViewLUTTexture;
 texture2D		g_MultiScatLUTTexture;
 texture3D		g_AerialLUTTexture;
+
+texture2D		g_DepthTexture;
 
 float3			g_vLightDir;
 float3			g_vSunPos;
@@ -397,9 +400,6 @@ PS_OUT PS_SKY_VEIW_LUT(PS_IN In)
 	float3 vWorldPos = vClipPos.xyz;
 	float3 vWorldDir = normalize(vWorldPos - g_vCamPosition.xyz);
 	vWorldPos = g_vCamPosition.xyz + float3(0, fEarthRadius, 0);
-
-	//vWorldPos = vWorldPos.xzy;
-	//vWorldDir = vWorldDir.xzy;
 	 
 	float2 vUV = In.vTexcoord;
 
@@ -496,12 +496,6 @@ PS_OUT PS_ATMOSPHERE(PS_IN In)
 {
 	PS_OUT		Out = (PS_OUT)0;
 
-// 	Out.vColor = g_AerialLUTTexture.SampleLevel(LinearClampSampler, float3(In.vTexcoord.x, In.vTexcoord.y, g_fTest), 0);
-// 	Out.vColor *= 10.0f;
-// 	Out.vColor.a = 1.0f;
-// 	
-// 	return Out;
-
 	vector		vClipPos;
 
 	vClipPos.x = In.vTexcoord.x * 2.f - 1.f;
@@ -529,7 +523,11 @@ PS_OUT PS_ATMOSPHERE(PS_IN In)
 	float fViewHeight = length(vWorldPos);
 	float3 vL = 0;
 
-	if (fViewHeight < fAtmosphereRadius)
+
+	float4 vDepthDesc = g_DepthTexture.Sample(PointSampler, In.vTexcoord);
+	
+
+	if (vDepthDesc.x == 1.0f && fViewHeight < fAtmosphereRadius)
 	{
 		float2 vUV;
 		float3 vUpVector = normalize(vWorldPos);
@@ -546,12 +544,42 @@ PS_OUT PS_ATMOSPHERE(PS_IN In)
 		SkyViewLutParamsToUv(bIntersectGround, fViewZenithCosAngle, fLightViewCosAngle, fViewHeight, vUV);
 
 		Out.vColor = float4(g_SkyViewLUTTexture.SampleLevel(LinearClampSampler, vUV, 0).rgb + vSunDisk, 1.0f);
+
+		float3 vWhitePoint = float3(1.08241f, 0.96756f, 0.95003f);
+		float fExposure = 10.0f;
+		Out.vColor = float4(pow((float3) 1.0f - exp(-Out.vColor.rgb / vWhitePoint * fExposure), (float3)(1.0f / 2.2f)), 1.0f);
+
+		return Out;
 	}
 
-	float3 vWhitePoint = float3(1.08241f, 0.96756f, 0.95003f);
-	//float3 vWhitePoint = float3(1.0f, 1.0f, 1.0f);
-	float fExposure = 10.0f;
-	Out.vColor = float4(pow((float3) 1.0f - exp(-Out.vColor.rgb / vWhitePoint * fExposure), (float3)(1.0f / 2.2f)), 1.0f);
+	float		fViewZ = vDepthDesc.y * 1000.f;
+
+	float4 vDepthBufferWorldPos;
+
+	vDepthBufferWorldPos.x = In.vTexcoord.x * 2.f - 1.f;
+	vDepthBufferWorldPos.y = In.vTexcoord.y * -2.f + 1.f;
+	vDepthBufferWorldPos.z = vDepthDesc.x;
+	vDepthBufferWorldPos.w = 1.f;
+
+	vDepthBufferWorldPos = vDepthBufferWorldPos * fViewZ;
+	vDepthBufferWorldPos = mul(vDepthBufferWorldPos, g_ProjMatrixInv);
+	vDepthBufferWorldPos = mul(vDepthBufferWorldPos, g_ViewMatrixInv);
+
+	float fDepth = length(vDepthBufferWorldPos.xyz - (vWorldPos + float3(0.0f, -fEarthRadius, 0.0f)));
+	float fSlice = fDepth * (1.0f / M_PER_SLICE);
+	float fWeight = 1.0;
+	if (fSlice < 0.5)
+	{
+		fWeight = saturate(fSlice * 2.0);
+		fSlice = 0.5;
+	}
+	float w = sqrt(fSlice / M_PER_SLICE);
+
+	const float4 vAP = fWeight * g_AerialLUTTexture.SampleLevel(LinearClampSampler, float3(In.vTexcoord, w), 0);
+	vL.rgb += vAP.rgb;
+	float fOpacity = vAP.a;
+
+	Out.vColor = float4(vL, fOpacity);
 
 	return Out;
 }

@@ -20,12 +20,13 @@ CAerialLUT::CAerialLUT(const CAerialLUT & rhs)
 }
 
 
-HRESULT CAerialLUT::Update_AerialLUT(ID3D11Buffer** pAtmosConstant, ID3D11ShaderResourceView** pTransLUT, const Vec3& vLightDir)
+HRESULT CAerialLUT::Update_AerialLUT(ID3D11Buffer** pAtmosConstant, ID3D11ShaderResourceView** pTransLUT, const Vec3& vLightDir, ID3D11ShaderResourceView** pMultiScatLUT)
 {
 	Update_Params(vLightDir);
 
 	m_pContext->CSSetUnorderedAccessViews(0, 1, &m_pUAV, nullptr);
 	m_pContext->CSSetShaderResources(0, 1, pTransLUT);
+	m_pContext->CSSetShaderResources(1, 1, pMultiScatLUT);
 
 	m_pContext->CSSetConstantBuffers(0, 1, pAtmosConstant);
 	m_pContext->CSSetConstantBuffers(1, 1, &m_pGlobalContantBuffer);
