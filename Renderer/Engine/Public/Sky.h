@@ -61,8 +61,9 @@ private:
 	Vec3					m_vLightDir;
 
 	//Test
-	_bool					m_bKeyPress = false;
+	_bool					m_bKeyPress[2];
 	_float					m_fTest = 1.0f;
+	_bool					m_bAerial = true;
 public:
 	virtual CGameObject* Clone(void* pArg) override;
 	static CSky* Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);

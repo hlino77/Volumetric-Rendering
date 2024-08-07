@@ -84,6 +84,9 @@ HRESULT CSky::Initialize(void* pArg)
 	m_MultiScatLUTViewPortDesc.MinDepth = 0.f;
 	m_MultiScatLUTViewPortDesc.MaxDepth = 1.f;
 
+
+	memset(m_bKeyPress, 1, 2);
+
 	return S_OK;
 }
 
@@ -215,6 +218,11 @@ HRESULT CSky::Render()
 		return E_FAIL;
 
 	if (FAILED(m_pShader->Bind_RawValue("g_fTest", &m_fTest, sizeof(_float))))
+	{
+		return E_FAIL;
+	}
+
+	if (FAILED(m_pShader->Bind_RawValue("g_bAerial", &m_bAerial, sizeof(_bool))))
 	{
 		return E_FAIL;
 	}
@@ -392,7 +400,7 @@ void CSky::Update_Sun(_float fTimeDelta)
 	if (pGameInstance->Get_DIKeyState(DIK_M) & 0x80)
 	{
 		//Test
-		if (m_bKeyPress == false)
+		if (m_bKeyPress[0] == false)
 		{
 			m_tUnitAtmo.fMultiScatFactor = 1.0f - (1.0f * m_tUnitAtmo.fMultiScatFactor);
 
@@ -402,12 +410,26 @@ void CSky::Update_Sun(_float fTimeDelta)
 			memcpy(mappedResource.pData, &m_tUnitAtmo, sizeof(AtmosphereProperties));
 			m_pContext->Unmap(m_pAtmosphereBuffer, 0);
 
-			m_bKeyPress = true;
+			m_bKeyPress[0] = true;
 		}
 	}
 	else
 	{
-		m_bKeyPress = false;
+		m_bKeyPress[0] = false;
+	}
+
+	if (pGameInstance->Get_DIKeyState(DIK_N) & 0x80)
+	{
+		//Test
+		if (m_bKeyPress[1] == false)
+		{
+			m_bAerial = !m_bAerial;
+			m_bKeyPress[1] = true;
+		}
+	}
+	else
+	{
+		m_bKeyPress[1] = false;
 	}
 	
 
