@@ -20,7 +20,7 @@ private:
 		Matrix matViewInv;
 		Vec3 vCamPosition;
 		float fPadding1 = 0.0f;
-		Vec3 vLightDir;
+		Vec3 vSunPos;
 		float fPadding2 = 0.0f;
 	} m_tGlobalParams;
 
@@ -32,7 +32,7 @@ public:
 private:
 	HRESULT Ready_Resources();
 	HRESULT Ready_3DTexture();
-	void	Update_Params(const Vec3& vLightDir);
+	void	Update_Params(const Vec3& vSunPos);
 
 private:
 	ID3D11Device* m_pDevice = { nullptr };

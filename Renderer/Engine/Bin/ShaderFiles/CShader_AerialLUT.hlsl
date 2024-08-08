@@ -38,7 +38,7 @@ cbuffer GlobalParams : register(b1)
 	
 	float4 g_vCamPosition;
 
-	float4 g_vLightDir;
+	float4 g_vSunPos;
 };
 
 float Cornette_Shanks_Phase(float fG, float fCosTheta)
@@ -307,7 +307,7 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
 
 	float fEarthR = fEarthRadius;
 	float3 vCamPos = g_vCamPosition.xyz + float3(0, fEarthR, 0);
-	float3 vSunDir = g_vLightDir.xyz;
+	float3 vSunDir = normalize(g_vSunPos - vCamPos);
 
 
 	float fSlice = ((float(DTid.z) + 0.5f) / DEPTHCOUNT);

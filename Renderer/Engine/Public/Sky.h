@@ -58,7 +58,6 @@ private:
 
 
 	Vec3					m_vSunPos;
-	Vec3					m_vLightDir;
 
 	//Test
 	_bool					m_bKeyPress[2];

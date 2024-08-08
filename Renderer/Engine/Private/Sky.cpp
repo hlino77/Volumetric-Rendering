@@ -140,7 +140,7 @@ HRESULT CSky::Render()
 	m_pContext->RSSetViewports(1, &PrevVeiwPort);
 
 	ID3D11ShaderResourceView* pMultiScatLUT = m_pMultiScatLUT->Get_SRV();
-	if (FAILED(m_pAerialLUT->Update_AerialLUT(&m_pAtmosphereBuffer, &m_pTransLUTSRV, m_vLightDir, &pMultiScatLUT)))
+	if (FAILED(m_pAerialLUT->Update_AerialLUT(&m_pAtmosphereBuffer, &m_pTransLUTSRV, m_vSunPos, &pMultiScatLUT)))
 	{
 		return E_FAIL;
 	}
@@ -167,9 +167,6 @@ HRESULT CSky::Render()
 		return E_FAIL;
 
 	if (FAILED(m_pShader->Bind_RawValue("g_vCamPosition", &pPipeLine->Get_CamPosition(), sizeof(Vec3))))
-		return E_FAIL;
-
-	if (FAILED(m_pShader->Bind_RawValue("g_vLightDir", &m_vLightDir, sizeof(Vec3))))
 		return E_FAIL;
 
 	if (FAILED(m_pShader->Bind_RawValue("g_vSunPos", &m_vSunPos, sizeof(Vec3))))
@@ -387,7 +384,7 @@ void CSky::Update_Sun(_float fTimeDelta)
 		if (MouseMove = pGameInstance->Get_DIMouseMove(CInput_Device::MMS_Y))
 		{
 			Vec3 vUp(0.0f, 1.0f, 0.0f);
-			Vec3 vLook = m_vSunPos;
+			Vec3 vLook = m_vSunPos - Vec3(0.0f, -m_tUnitAtmo.fPlanetRadius, 0.0f);
 			vLook.Normalize();
 			Vec3 vRight = XMVector3Cross(vUp, vLook);
 
@@ -447,9 +444,6 @@ void CSky::Update_Sun(_float fTimeDelta)
 
 	RELEASE_INSTANCE(CGameInstance);
 
-
-	m_vLightDir = m_vSunPos;
-	m_vLightDir.Normalize();
 }
 
 

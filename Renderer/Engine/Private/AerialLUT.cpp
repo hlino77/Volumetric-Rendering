@@ -148,7 +148,7 @@ HRESULT CAerialLUT::Ready_3DTexture()
 	return S_OK;
 }
 
-void CAerialLUT::Update_Params(const Vec3& vLightDir)
+void CAerialLUT::Update_Params(const Vec3& vSunPos)
 {
 	CPipeLine* pPipeLine = GET_INSTANCE(CPipeLine);
 
@@ -158,7 +158,7 @@ void CAerialLUT::Update_Params(const Vec3& vLightDir)
 
 	RELEASE_INSTANCE(CPipeLine);
 
-	m_tGlobalParams.vLightDir = vLightDir;
+	m_tGlobalParams.vSunPos = vSunPos;
 
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));

@@ -20,7 +20,6 @@ texture3D		g_AerialLUTTexture;
 
 texture2D		g_DepthTexture;
 
-float3			g_vLightDir;
 float3			g_vSunPos;
 float2			g_vRayMarchMinMaxSPP = float2(4.0f, 14.0f);
 
@@ -411,7 +410,7 @@ PS_OUT PS_SKY_VEIW_LUT(PS_IN In)
 	float fLightViewCosAngle;
 	UvToSkyViewLutParams(fViewZenithCosAngle, fLightViewCosAngle, fViewHeight, vUV);
 
-	float3 vSunDirection = g_vLightDir.xyz;
+	float3 vSunDirection = normalize(g_vSunPos - vWorldPos);
 
 	float3 vSunDir;
 	{
@@ -520,7 +519,7 @@ PS_OUT PS_ATMOSPHERE(PS_IN In)
 
 	float2 pixPos = In.vTexcoord;
 
-	float3 vSunDirection = g_vLightDir.xyz;
+	float3 vSunDirection = normalize(g_vSunPos - vWorldPos);
 
 	float fViewHeight = length(vWorldPos);
 	float3 vL = 0;
