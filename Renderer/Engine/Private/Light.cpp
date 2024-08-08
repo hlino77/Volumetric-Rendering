@@ -42,6 +42,11 @@ HRESULT CLight::Render(CShader * pShader, CVIBuffer_Rect * pVIBuffer)
 			return E_FAIL;
 		}
 
+		if (FAILED(pShader->Bind_ConstantBuffer("AtmosphereParams", m_LightDesc.pAtmosphereBuffer)))
+		{
+			return E_FAIL;
+		}
+
 		iPassIndex = 5;
 	}
 

@@ -546,9 +546,6 @@ PS_OUT PS_ATMOSPHERE(PS_IN In)
 
 		Out.vColor = float4(g_SkyViewLUTTexture.SampleLevel(LinearClampSampler, vUV, 0).rgb + vSunDisk, 1.0f);
 
-		float3 vWhitePoint = float3(1.08241f, 0.96756f, 0.95003f);
-		float fExposure = 10.0f;
-		Out.vColor = float4(pow((float3) 1.0f - exp(-Out.vColor.rgb / vWhitePoint * fExposure), (float3)(1.0f / 2.2f)), 1.0f);
 
 		return Out;
 	}
@@ -587,10 +584,6 @@ PS_OUT PS_ATMOSPHERE(PS_IN In)
 		float fOpacity = vAP.a;
 
 		Out.vColor = float4(vL, fOpacity);
-
-		float3 vWhitePoint = float3(1.08241f, 0.96756f, 0.95003f);
-		float fExposure = 10.0f;
-		Out.vColor = float4(pow((float3) 1.0f - exp(-Out.vColor.rgb / vWhitePoint * fExposure), (float3)(1.0f / 2.2f)), fOpacity);
 	}
 	
 

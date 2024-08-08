@@ -77,8 +77,8 @@ HRESULT CRenderer::Initialize_Prototype()
 // 	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_Specular"), 300.0f, 300.0f, 200.0f, 200.0f)))
 // 		return E_FAIL;
 
-// 	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_VolumeRender"), ViewportDesc.Width - 250.0f, 250.0f, 500.0f, 500.0f)))
-// 		return E_FAIL;
+ 	//if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_Deffered"), ViewportDesc.Width - 250.0f, 250.0f, 500.0f, 500.0f)))
+ 	//	return E_FAIL;
 		/*if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_VolumeRender"), ViewportDesc.Width * 0.5f, ViewportDesc.Height * 0.5f, ViewportDesc.Width, ViewportDesc.Height)))
 			return E_FAIL;*/
 
@@ -378,7 +378,12 @@ HRESULT CRenderer::Render_Deferred()
 
 
 	if (FAILED(m_pTarget_Manager->Bind_SRV(m_pShader, L"Target_Atmosphere", "g_SkyTexture")))
-		return E_FAIL;
+	{
+		if (FAILED(m_pTarget_Manager->End_MRT(m_pContext)))
+			return E_FAIL;
+		return S_OK;
+	}
+		
 
 	if (FAILED(m_pShader->Begin(4)))
 		return E_FAIL;
@@ -389,7 +394,7 @@ HRESULT CRenderer::Render_Deferred()
 	if (FAILED(m_pTarget_Manager->End_MRT(m_pContext)))
 		return E_FAIL;
 
-	/////
+	///////
 
 
 	if (FAILED(m_pTarget_Manager->Bind_SRV(m_pShader, L"Target_Deffered", "g_DefferedTexture")))
@@ -450,8 +455,8 @@ HRESULT CRenderer::Render_Debug()
 	if (FAILED(m_pShader->Bind_Matrix("g_ProjMatrix", &m_ProjMatrix)))
 		return E_FAIL;
 
-// 	if (FAILED(m_pTarget_Manager->Render(TEXT("MRT_GameObjects"), m_pShader, m_pVIBuffer)))
-// 		return E_FAIL;
+ /*	if (FAILED(m_pTarget_Manager->Render(TEXT("MRT_Deffered"), m_pShader, m_pVIBuffer)))
+ 		return E_FAIL;*/
 // 	if (FAILED(m_pTarget_Manager->Render(TEXT("MRT_Lights"), m_pShader, m_pVIBuffer)))
 // 		return E_FAIL;
 		/*if (FAILED(m_pTarget_Manager->Render(TEXT("MRT_VolumeRender"), m_pShader, m_pVIBuffer)))

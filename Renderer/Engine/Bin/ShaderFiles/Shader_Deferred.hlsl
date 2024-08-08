@@ -34,6 +34,27 @@ texture2D		g_TransLUTTexture;
 texture2D		g_Texture;
 
 
+cbuffer AtmosphereParams : register(b0)
+{
+	float4	vScatterRayleigh;
+	float	fHDensityRayleigh;
+
+	float	fScatterMie;
+	float	fPhaseMieG;
+	float	fExtinctionMie;
+	float	fHDensityMie;
+
+	float	fEarthRadius;
+	float	fAtmosphereRadius;
+
+	float	fSunIlluminance;
+
+	float4	vAbsorbOzone;
+	float4	vOzone;
+
+	float	fMultiScatFactor;
+}
+
 
 struct VS_IN
 {
@@ -47,7 +68,21 @@ struct VS_OUT
 	float2		vTexcoord : TEXCOORD0;
 };
 
+void LutTransmittanceParamsToUv(in float fViewHeight, in float fViewZenithCosAngle, out float2 vUV)
+{
+	float fH = sqrt(max(0.0f, fAtmosphereRadius * fAtmosphereRadius - fEarthRadius * fEarthRadius));
+	float fRho = sqrt(max(0.0f, fViewHeight * fViewHeight - fEarthRadius * fEarthRadius));
 
+	float fDiscriminant = fViewHeight * fViewHeight * (fViewZenithCosAngle * fViewZenithCosAngle - 1.0f) + fAtmosphereRadius * fAtmosphereRadius;
+	float fD = max(0.0f, (-fViewHeight * fViewZenithCosAngle + sqrt(fDiscriminant)));
+
+	float fMin = fAtmosphereRadius - fViewHeight;
+	float fMax = fRho + fH;
+	float fX = (fD - fMin) / (fMax - fMin);
+	float fY = fRho / fH;
+
+	vUV = float2(fX, fY);
+}
 
 VS_OUT VS_MAIN(/* 정점 */VS_IN In)
 {
@@ -178,33 +213,39 @@ PS_OUT_LIGHT PS_MAIN_SUN(PS_IN In)
 	vector		vDepthDesc = g_DepthTexture.Sample(PointSampler, In.vTexcoord);
 	float		fViewZ = vDepthDesc.y * 1000.f;
 
+	if (vDepthDesc.x == 1.0f)
+	{
+		return Out;
+	}
+
 	vector		vNormal = vector(vNormalDesc.xyz * 2.f - 1.f, 0.f);
 
-	vector		vWorldPos;
+	vector		vClipPos;
 
-	/* 투영스페이스 상의 위치를 구한다. */
-	vWorldPos.x = In.vTexcoord.x * 2.f - 1.f;
-	vWorldPos.y = In.vTexcoord.y * -2.f + 1.f;
-	vWorldPos.z = vDepthDesc.x;
-	vWorldPos.w = 1.f;
+	vClipPos.x = In.vTexcoord.x * 2.f - 1.f;
+	vClipPos.y = In.vTexcoord.y * -2.f + 1.f;
+	vClipPos.z = vDepthDesc.x;
+	vClipPos.w = 1.f;
 
-	/* 뷰스페이스 상의 위치를 구한다. */
-	vWorldPos = vWorldPos * fViewZ;
-	vWorldPos = mul(vWorldPos, g_ProjMatrixInv);
+	vClipPos = vClipPos * fViewZ;
+	vClipPos = mul(vClipPos, g_ProjMatrixInv);
 
-	/* 월드까지 가자. */
-	vWorldPos = mul(vWorldPos, g_ViewMatrixInv);
+	vClipPos = mul(vClipPos, g_ViewMatrixInv);
 
-	vector		vLightDir = vWorldPos - g_vLightPos;
-	float		fDistance = length(vLightDir);
+	float3 vWorldPos = vClipPos.xyz + float3(0.0f, fEarthRadius, 0.0f);
+	float3	vLightDir = normalize(g_vLightPos - vWorldPos);
 
-	Out.vShade = g_vLightDiffuse * (saturate(dot(normalize(vLightDir) * -1.f, vNormal)) + (g_vLightAmbient * g_vMtrlAmbient));
+	Out.vShade = saturate(dot(vLightDir, vNormal));
 
-	vector		vReflect = reflect(normalize(vLightDir), vNormal);
+	float fViewHeight = length(vWorldPos);
+	const float3 vUpVector = vWorldPos / fViewHeight;
+	float fViewZenithCosAngle = dot(vLightDir, vUpVector);
+	float2 vUV;
+	LutTransmittanceParamsToUv(fViewHeight, fViewZenithCosAngle, vUV);
+	const float3 vTrans = g_TransLUTTexture.SampleLevel(LinearClampSampler, vUV, 0).rgb;
+	float3 vColor = saturate(dot(vLightDir, vNormal)) * vTrans;
 
-	vector		vLook = vWorldPos - g_vCamPosition;
-
-	//Out.vSpecular = (g_vLightSpecular * g_vMtrlSpecular) * pow(saturate(dot(normalize(vLook) * -1.f, normalize(vReflect))), 20.f);
+	Out.vShade = float4(vColor, 1.0f);
 
 	return Out;
 }
@@ -266,7 +307,12 @@ PS_OUT PS_MAIN_DEFERRED_TOMEMAP(PS_IN In)
 {
 	PS_OUT		Out = (PS_OUT)0;
 	
-	Out.vColor = g_DefferedTexture.Sample(LinearSampler, In.vTexcoord);
+	Out.vColor = g_DefferedTexture.Sample(PointSampler, In.vTexcoord);
+
+
+	float3 vWhitePoint = float3(1.08241f, 0.96756f, 0.95003f);
+	float fExposure = 10.0f;
+	Out.vColor = float4(pow((float3) 1.0f - exp(-Out.vColor.rgb / vWhitePoint * fExposure), (float3)(1.0f / 2.2f)), 1.0f);
 
 	return Out;
 }

@@ -26,6 +26,7 @@ namespace Engine
 		Vec4	vSpecular;
 
 		ID3D11ShaderResourceView* pTransLUT = nullptr;
+		ID3D11Buffer* pAtmosphereBuffer = nullptr;
 	}LIGHT_DESC;
 
 	typedef struct tagMeshMaterial

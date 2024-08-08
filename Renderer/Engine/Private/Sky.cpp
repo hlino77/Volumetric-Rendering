@@ -355,6 +355,8 @@ HRESULT CSky::Ready_AtmosphereBuffer()
 		return E_FAIL;
 	}
 
+	CLight_Manager::GetInstance()->Set_AtmosphereBuffer(m_pAtmosphereBuffer);
+
 	return S_OK;
 }
 

@@ -29,6 +29,11 @@ public:
 		m_LightDesc.pTransLUT = pSRV;
 	}
 
+	void	Set_AtmosphereBuffer(ID3D11Buffer* pBuffer)
+	{
+		m_LightDesc.pAtmosphereBuffer = pBuffer;
+	}
+
 private:
 	LIGHT_DESC			m_LightDesc;
 
