@@ -5,6 +5,7 @@
 #include "Renderer.h"
 #include "MultiScatLUT.h"
 #include "AerialLUT.h"
+#include "Light_Manager.h"
 
 CSky::CSky(ID3D11Device * pDevice, ID3D11DeviceContext * pContext)
 	: CGameObject(pDevice, pContext)
@@ -265,6 +266,8 @@ HRESULT CSky::Ready_For_LUT()
 
 	Safe_Release(pTransLUT);
 
+	CLight_Manager::GetInstance()->Set_TransLUT(m_pTransLUTSRV);
+
 
 	m_pMultiScatLUT = CMultiScatLUT::Create(m_pDevice, m_pContext);
 
@@ -359,7 +362,7 @@ HRESULT CSky::Ready_Sun()
 {
 	m_vSunPos = Vec3(-1.0f, 1.0f, -1.0f) * 6300e5;
 
-	
+	CLight_Manager::GetInstance()->Set_SunPos(m_vSunPos);
 	
 	return S_OK;
 }
@@ -379,6 +382,7 @@ void CSky::Update_Sun(_float fTimeDelta)
 			Matrix RotateMatrix = Matrix::CreateFromQuaternion(Quaternion::CreateFromAxisAngle(vUp, MouseMove * 0.001f));
 
 			m_vSunPos = XMVector3Transform(m_vSunPos, RotateMatrix);
+			CLight_Manager::GetInstance()->Set_SunPos(m_vSunPos);
 		}
 
 		if (MouseMove = pGameInstance->Get_DIMouseMove(CInput_Device::MMS_Y))
@@ -391,6 +395,7 @@ void CSky::Update_Sun(_float fTimeDelta)
 			Matrix RotateMatrix = Matrix::CreateFromQuaternion(Quaternion::CreateFromAxisAngle(vRight, MouseMove * 0.001f));
 
 			m_vSunPos = XMVector3Transform(m_vSunPos, RotateMatrix);
+			CLight_Manager::GetInstance()->Set_SunPos(m_vSunPos);
 		}
 	}
 

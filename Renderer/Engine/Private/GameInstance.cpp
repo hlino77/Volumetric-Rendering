@@ -233,6 +233,11 @@ HRESULT CGameInstance::Add_Light(const LIGHT_DESC & LightDesc)
 	return m_pLight_Manager->Add_Light(LightDesc);
 }
 
+HRESULT CGameInstance::Add_SunLight(const LIGHT_DESC& LightDesc)
+{
+	return m_pLight_Manager->Add_Sun(LightDesc);
+}
+
 HRESULT CGameInstance::Bind_SRV(CShader * pShader, const wstring & strTargetTag, const _char * pConstantName)
 {
 	if (nullptr == m_pTarget_Manager)

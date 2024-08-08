@@ -9,7 +9,6 @@ matrix			g_ViewMatrixInv;
 vector			g_vCamPosition;
 vector			g_vLightDir;
 vector			g_vLightPos;
-vector			g_fLightRange;
 
 vector			g_vLightDiffuse;
 vector			g_vLightAmbient;
@@ -23,11 +22,13 @@ texture2D		g_NormalTexture;
 texture2D		g_DiffuseTexture;
 texture2D		g_DepthTexture;
 texture2D		g_SkyTexture;
-
+texture2D		g_DefferedTexture;
 
 texture2D		g_ShadeTexture;
 texture2D		g_SpecularTexture;
 texture2D		g_LightDepthTexture;
+
+texture2D		g_TransLUTTexture;
 
 
 texture2D		g_Texture;
@@ -157,16 +158,53 @@ PS_OUT_LIGHT PS_MAIN_POINT(PS_IN In)
 	vector		vLightDir = vWorldPos - g_vLightPos;
 	float		fDistance = length(vLightDir);
 
-	float		fAtt = saturate((g_fLightRange - fDistance) / g_fLightRange);
-
-	Out.vShade = 2.f * fAtt * g_vLightDiffuse * (saturate(dot(normalize(vLightDir) * -1.f, vNormal)) + (g_vLightAmbient * g_vMtrlAmbient));
+	Out.vShade = g_vLightDiffuse * (saturate(dot(normalize(vLightDir) * -1.f, vNormal)) + (g_vLightAmbient * g_vMtrlAmbient));
 
 	vector		vReflect = reflect(normalize(vLightDir), vNormal);
 
 	vector		vLook = vWorldPos - g_vCamPosition;
 
-	Out.vSpecular = fAtt * (g_vLightSpecular * g_vMtrlSpecular) * pow(saturate(dot(normalize(vLook) * -1.f, normalize(vReflect))), 20.f);
+	//Out.vSpecular = (g_vLightSpecular * g_vMtrlSpecular) * pow(saturate(dot(normalize(vLook) * -1.f, normalize(vReflect))), 20.f);
 
+	return Out;
+}
+
+
+PS_OUT_LIGHT PS_MAIN_SUN(PS_IN In)
+{
+	PS_OUT_LIGHT		Out = (PS_OUT_LIGHT)0;
+
+	vector		vNormalDesc = g_NormalTexture.Sample(PointSampler, In.vTexcoord);
+	vector		vDepthDesc = g_DepthTexture.Sample(PointSampler, In.vTexcoord);
+	float		fViewZ = vDepthDesc.y * 1000.f;
+
+	vector		vNormal = vector(vNormalDesc.xyz * 2.f - 1.f, 0.f);
+
+	vector		vWorldPos;
+
+	/* 투영스페이스 상의 위치를 구한다. */
+	vWorldPos.x = In.vTexcoord.x * 2.f - 1.f;
+	vWorldPos.y = In.vTexcoord.y * -2.f + 1.f;
+	vWorldPos.z = vDepthDesc.x;
+	vWorldPos.w = 1.f;
+
+	/* 뷰스페이스 상의 위치를 구한다. */
+	vWorldPos = vWorldPos * fViewZ;
+	vWorldPos = mul(vWorldPos, g_ProjMatrixInv);
+
+	/* 월드까지 가자. */
+	vWorldPos = mul(vWorldPos, g_ViewMatrixInv);
+
+	vector		vLightDir = vWorldPos - g_vLightPos;
+	float		fDistance = length(vLightDir);
+
+	Out.vShade = g_vLightDiffuse * (saturate(dot(normalize(vLightDir) * -1.f, vNormal)) + (g_vLightAmbient * g_vMtrlAmbient));
+
+	vector		vReflect = reflect(normalize(vLightDir), vNormal);
+
+	vector		vLook = vWorldPos - g_vCamPosition;
+
+	//Out.vSpecular = (g_vLightSpecular * g_vMtrlSpecular) * pow(saturate(dot(normalize(vLook) * -1.f, normalize(vReflect))), 20.f);
 
 	return Out;
 }
@@ -220,6 +258,15 @@ PS_OUT PS_MAIN_DEFERRED_VOLUMERENDER(PS_IN In)
 	PS_OUT		Out = (PS_OUT)0;
 	
 	Out.vColor = g_SkyTexture.Sample(LinearSampler, In.vTexcoord);
+
+	return Out;
+}
+
+PS_OUT PS_MAIN_DEFERRED_TOMEMAP(PS_IN In)
+{
+	PS_OUT		Out = (PS_OUT)0;
+	
+	Out.vColor = g_DefferedTexture.Sample(LinearSampler, In.vTexcoord);
 
 	return Out;
 }
@@ -289,6 +336,33 @@ technique11 DefaultTechnique
 		HullShader = NULL;
 		DomainShader = NULL;
 		PixelShader = compile ps_5_0 PS_MAIN_DEFERRED_VOLUMERENDER();
+	}
+
+	pass Light_Sun
+	{
+		SetRasterizerState(RS_Default);
+		SetDepthStencilState(DSS_None, 0);
+		SetBlendState(BS_OneBlend, float4(0.f, 0.f, 0.f, 1.f), 0xffffffff);
+
+		VertexShader = compile vs_5_0 VS_MAIN();
+		GeometryShader = NULL;
+		HullShader = NULL;
+		DomainShader = NULL;
+		PixelShader = compile ps_5_0 PS_MAIN_SUN();
+	}
+
+
+	pass Deferred_ToneMap
+	{
+		SetRasterizerState(RS_Default);
+		SetDepthStencilState(DSS_None, 0);
+		SetBlendState(BS_Default, float4(0.f, 0.f, 0.f, 1.f), 0xffffffff);
+
+		VertexShader = compile vs_5_0 VS_MAIN();
+		GeometryShader = NULL;
+		HullShader = NULL;
+		DomainShader = NULL;
+		PixelShader = compile ps_5_0 PS_MAIN_DEFERRED_TOMEMAP();
 	}
 	
 }

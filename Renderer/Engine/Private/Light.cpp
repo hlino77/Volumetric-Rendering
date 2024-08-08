@@ -28,9 +28,21 @@ HRESULT CLight::Render(CShader * pShader, CVIBuffer_Rect * pVIBuffer)
 	{
 		if (FAILED(pShader->Bind_RawValue("g_vLightPos", &m_LightDesc.vLightPos, sizeof(Vec4))))
 			return E_FAIL;
-		if (FAILED(pShader->Bind_RawValue("g_fLightRange", &m_LightDesc.fLightRange, sizeof(_float))))
-			return E_FAIL;
+
 		iPassIndex = 2;
+	}
+
+	else if (LIGHT_DESC::LIGHT_SUN == m_LightDesc.eLightType)
+	{
+		if (FAILED(pShader->Bind_RawValue("g_vLightPos", &m_LightDesc.vLightPos, sizeof(Vec4))))
+			return E_FAIL;
+
+		if (FAILED(pShader->Bind_Texture("g_TransLUTTexture", m_LightDesc.pTransLUT)))
+		{
+			return E_FAIL;
+		}
+
+		iPassIndex = 5;
 	}
 
 

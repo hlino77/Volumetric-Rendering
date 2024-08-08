@@ -33,14 +33,46 @@ HRESULT CLight_Manager::Add_Light(const LIGHT_DESC & LightDesc)
 	return S_OK;
 }
 
+HRESULT CLight_Manager::Add_Sun(const LIGHT_DESC& LightDesc)
+{
+	m_pSunLight = CLight::Create(LightDesc);
+
+	if (nullptr == m_pSunLight)
+		return E_FAIL;
+
+	m_Lights.push_back(m_pSunLight);
+
+	return S_OK;
+}
+
 HRESULT CLight_Manager::Render(CShader * pShader, CVIBuffer_Rect * pVIBuffer)
 {
 	for (auto& pLight : m_Lights)
 	{
-		pLight->Render(pShader, pVIBuffer);
+ 		pLight->Render(pShader, pVIBuffer);
 	}
 
 	return S_OK;
+}
+
+void CLight_Manager::Set_SunPos(Vec3 vPos)
+{
+	if (m_pSunLight == nullptr)
+	{
+		return;
+	}
+
+	m_pSunLight->Set_LightPos(vPos);
+}
+
+void CLight_Manager::Set_TransLUT(ID3D11ShaderResourceView* pSRV)
+{
+	if (m_pSunLight == nullptr)
+	{
+		return;
+	}
+
+	m_pSunLight->Set_TransLUT(pSRV);
 }
 
 void CLight_Manager::Free()

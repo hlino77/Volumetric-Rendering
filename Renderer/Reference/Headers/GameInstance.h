@@ -58,6 +58,7 @@ public: /* For.PipeLine */
 public: /* For.Light_Manager */
 	const LIGHT_DESC* Get_LightDesc(_uint iLightIndex);
 	HRESULT Add_Light(const LIGHT_DESC& LightDesc);
+	HRESULT Add_SunLight(const LIGHT_DESC & LightDesc);
 
 public: /* For.Target_Manager */
 	HRESULT Bind_SRV(class CShader* pShader, const wstring& strTargetTag, const _char* pConstantName);

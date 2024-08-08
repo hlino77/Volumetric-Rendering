@@ -43,7 +43,7 @@ HRESULT CRenderer::Initialize_Prototype()
 
 	/* For.Target_Shade */
 	if (FAILED(m_pTarget_Manager->Add_RenderTarget(m_pDevice, m_pContext, TEXT("Target_Shade"),
-		ViewportDesc.Width, ViewportDesc.Height, DXGI_FORMAT_R16G16B16A16_UNORM, Vec4(0.f, 0.f, 0.f, 1.f))))
+		ViewportDesc.Width, ViewportDesc.Height, DXGI_FORMAT_R16G16B16A16_FLOAT, Vec4(0.f, 0.f, 0.f, 1.f))))
 		return E_FAIL;
 
 	/* For.Target_Specular */
@@ -54,6 +54,10 @@ HRESULT CRenderer::Initialize_Prototype()
 	/* For.Target_LightDepth */
 	if (FAILED(m_pTarget_Manager->Add_RenderTarget(m_pDevice, m_pContext, TEXT("Target_LightDepth"),
 		ViewportDesc.Width, ViewportDesc.Height, DXGI_FORMAT_R32G32B32A32_FLOAT, Vec4(1.0f, 1.0f, 1.0f, 1.f))))
+		return E_FAIL;
+
+	if (FAILED(m_pTarget_Manager->Add_RenderTarget(m_pDevice, m_pContext, TEXT("Target_Deffered"),
+		ViewportDesc.Width, ViewportDesc.Height, DXGI_FORMAT_R32G32B32A32_FLOAT, Vec4(0.0f, 0.0f, 0.0f, 0.0f))))
 		return E_FAIL;
 
 	/* For.Target_VolumeRender */
@@ -99,6 +103,9 @@ HRESULT CRenderer::Initialize_Prototype()
 		return E_FAIL;
 
 	if (FAILED(m_pTarget_Manager->Add_MRT(TEXT("MRT_LightDepth"), TEXT("Target_LightDepth"))))
+		return E_FAIL;
+
+	if (FAILED(m_pTarget_Manager->Add_MRT(TEXT("MRT_Deffered"), TEXT("Target_Deffered"))))
 		return E_FAIL;
 
 
@@ -287,6 +294,9 @@ HRESULT CRenderer::Render_LightAcc()
 
 HRESULT CRenderer::Render_Deferred()
 {
+	if (FAILED(m_pTarget_Manager->Begin_MRT(m_pContext, TEXT("MRT_Deffered"))))
+		return E_FAIL;
+	
 	D3D11_VIEWPORT		ViewportDesc;
 
 	_uint				iNumViewports = 1;
@@ -375,6 +385,22 @@ HRESULT CRenderer::Render_Deferred()
 
 	if (FAILED(m_pVIBuffer->Render()))
 		return E_FAIL;
+
+	if (FAILED(m_pTarget_Manager->End_MRT(m_pContext)))
+		return E_FAIL;
+
+	/////
+
+
+	if (FAILED(m_pTarget_Manager->Bind_SRV(m_pShader, L"Target_Deffered", "g_DefferedTexture")))
+		return E_FAIL;
+
+	if (FAILED(m_pShader->Begin(6)))
+		return E_FAIL;
+
+	if (FAILED(m_pVIBuffer->Render()))
+		return E_FAIL;
+
 
 	return S_OK;
 }

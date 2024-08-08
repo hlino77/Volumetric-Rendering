@@ -13,18 +13,19 @@ namespace Engine
 
 	typedef struct tagLightDesc
 	{
-		enum TYPE { LIGHT_DIRECTIONAL, LIGHT_POINT, LIGHT_END };
+		enum TYPE { LIGHT_DIRECTIONAL, LIGHT_POINT, LIGHT_SUN, LIGHT_END };
 
 		TYPE		eLightType = { LIGHT_END };
 
 		Vec4	vLightPos;
-		float		fLightRange;
 
 		Vec4	vLightDir;
 
 		Vec4	vDiffuse;
 		Vec4	vAmbient;
 		Vec4	vSpecular;
+
+		ID3D11ShaderResourceView* pTransLUT = nullptr;
 	}LIGHT_DESC;
 
 	typedef struct tagMeshMaterial

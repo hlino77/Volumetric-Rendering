@@ -46,14 +46,15 @@ HRESULT CLevel_GamePlay::Ready_Lights()
 
 	/* 방향성 광원을 추가하낟. */
 	ZeroMemory(&LightDesc, sizeof LightDesc);
-	LightDesc.eLightType = LIGHT_DESC::LIGHT_DIRECTIONAL;
-	LightDesc.vLightDir = Vec4(1.f, -1.f, 1.f, 0.f);
+	LightDesc.eLightType = LIGHT_DESC::LIGHT_SUN;
 
 	LightDesc.vDiffuse = Vec4(0.5f, 0.5f, 0.5f, 1.f);
 	LightDesc.vAmbient = Vec4(1.f, 1.f, 1.f, 1.f);
 	LightDesc.vSpecular = Vec4(1.f, 1.f, 1.f, 1.f);
+	LightDesc.vLightPos = Vec4(1.0f, 1.0f, 1.0f, 1.0f);
 
-	if (FAILED(pGameInstance->Add_Light(LightDesc)))
+
+	if (FAILED(pGameInstance->Add_SunLight(LightDesc)))
 		return E_FAIL;
 
 	///* 점 광원을 추가한다. */

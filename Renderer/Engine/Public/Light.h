@@ -19,6 +19,16 @@ public:
 	HRESULT Initialize(const LIGHT_DESC& LightDesc);
 	HRESULT Render(class CShader* pShader, class CVIBuffer_Rect* pVIBuffer);
 
+	void	Set_LightPos(Vec3 vPos)
+	{
+		m_LightDesc.vLightPos = Vec4(vPos.x, vPos.y, vPos.z, 1.0f);
+	}
+
+	void	Set_TransLUT(ID3D11ShaderResourceView* pSRV)
+	{
+		m_LightDesc.pTransLUT = pSRV;
+	}
+
 private:
 	LIGHT_DESC			m_LightDesc;
 
