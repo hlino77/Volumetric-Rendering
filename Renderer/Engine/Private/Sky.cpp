@@ -307,7 +307,7 @@ HRESULT CSky::Ready_Components()
 HRESULT CSky::Ready_RenderTargets()
 {
 	if (FAILED(m_pTarget_Manager->Add_RenderTarget(m_pDevice, m_pContext, L"Target_SkyViewLUT",
-		m_iSkyLUTX, m_iSkyLUTY, DXGI_FORMAT_R11G11B10_FLOAT, Vec4(0.0f, 0.0f, 0.0f, 0.f))))
+		m_iSkyLUTX, m_iSkyLUTY, DXGI_FORMAT_R32G32B32A32_FLOAT, Vec4(0.0f, 0.0f, 0.0f, 0.f))))
 		return E_FAIL;
 
 	if (FAILED(m_pTarget_Manager->Add_MRT(L"MRT_SkyViewLUT", L"Target_SkyViewLUT")))

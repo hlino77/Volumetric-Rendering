@@ -243,7 +243,7 @@ PS_OUT_LIGHT PS_MAIN_SUN(PS_IN In)
 	float2 vUV;
 	LutTransmittanceParamsToUv(fViewHeight, fViewZenithCosAngle, vUV);
 	const float3 vTrans = g_TransLUTTexture.SampleLevel(LinearClampSampler, vUV, 0).rgb;
-	float3 vColor = saturate(dot(vLightDir, vNormal)) * vTrans;
+	float3 vColor = saturate(dot(vLightDir, vNormal)) * vTrans * 100000.0f;
 
 	Out.vShade = float4(vColor, 1.0f);
 
@@ -285,10 +285,11 @@ PS_OUT PS_MAIN_DEFERRED(PS_IN In)
 	if (vDiffuse.a == 0.f)
 		discard;
 
-	vector		vShade = g_ShadeTexture.Sample(LinearSampler, In.vTexcoord);
-	vector		vSpecular = g_SpecularTexture.Sample(LinearSampler, In.vTexcoord);
+	vDiffuse = pow(vDiffuse, 2.2f);
 
-	Out.vColor = (vDiffuse * vShade + vSpecular);
+	vector		vShade = g_ShadeTexture.Sample(LinearSampler, In.vTexcoord);
+
+	Out.vColor = (vDiffuse * vShade);
 
 	return Out;
 }
@@ -311,7 +312,7 @@ PS_OUT PS_MAIN_DEFERRED_TOMEMAP(PS_IN In)
 
 
 	float3 vWhitePoint = float3(1.08241f, 0.96756f, 0.95003f);
-	float fExposure = 10.0f;
+	float fExposure = 0.0001f;
 	Out.vColor = float4(pow((float3) 1.0f - exp(-Out.vColor.rgb / vWhitePoint * fExposure), (float3)(1.0f / 2.2f)), 1.0f);
 
 	return Out;

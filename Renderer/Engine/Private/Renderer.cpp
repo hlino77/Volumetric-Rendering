@@ -43,7 +43,7 @@ HRESULT CRenderer::Initialize_Prototype()
 
 	/* For.Target_Shade */
 	if (FAILED(m_pTarget_Manager->Add_RenderTarget(m_pDevice, m_pContext, TEXT("Target_Shade"),
-		ViewportDesc.Width, ViewportDesc.Height, DXGI_FORMAT_R16G16B16A16_FLOAT, Vec4(0.f, 0.f, 0.f, 1.f))))
+		ViewportDesc.Width, ViewportDesc.Height, DXGI_FORMAT_R32G32B32A32_FLOAT, Vec4(0.f, 0.f, 0.f, 1.f))))
 		return E_FAIL;
 
 	/* For.Target_Specular */

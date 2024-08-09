@@ -188,7 +188,7 @@ SingleScatteringResult IntegrateScatteredLuminance(
 	const float3 fWo = vWorldDir;
 	float fCosTheta = dot(fWi, fWo);
 
-	float3 vGlobalL = 1.0f;
+	float3 vGlobalL = fSunIlluminance;
 
 	float3 vL = 0.0f;
 	float3 vThroughput = 1.0;

@@ -546,46 +546,47 @@ PS_OUT PS_ATMOSPHERE(PS_IN In)
 
 		Out.vColor = float4(g_SkyViewLUTTexture.SampleLevel(LinearClampSampler, vUV, 0).rgb + vSunDisk, 1.0f);
 
-
-		return Out;
 	}
-
-
-	if (g_bAerial == true)
+	else
 	{
-		float		fViewZ = vDepthDesc.y * 1000.f;
-
-		float4 vDepthBufferWorldPos;
-
-		vDepthBufferWorldPos.x = In.vTexcoord.x * 2.f - 1.f;
-		vDepthBufferWorldPos.y = In.vTexcoord.y * -2.f + 1.f;
-		vDepthBufferWorldPos.z = vDepthDesc.x;
-		vDepthBufferWorldPos.w = 1.f;
-
-		vDepthBufferWorldPos = vDepthBufferWorldPos * fViewZ;
-		vDepthBufferWorldPos = mul(vDepthBufferWorldPos, g_ProjMatrixInv);
-		vDepthBufferWorldPos = mul(vDepthBufferWorldPos, g_ViewMatrixInv);
-
-		float fDepth = length(vDepthBufferWorldPos.xyz - (vWorldPos + float3(0.0f, -fEarthRadius, 0.0f)));
-		fDepth *= 30.0f;
-		float fSlice = fDepth * (1.0f / M_PER_SLICE);
-
-
-		float fWeight = 1.0;
-		if (fSlice < 0.5)
+		if (g_bAerial == true)
 		{
-			fWeight = saturate(fSlice * 2.0);
-			fSlice = 0.5;
+			float		fViewZ = vDepthDesc.y * 1000.f;
+
+			float4 vDepthBufferWorldPos;
+
+			vDepthBufferWorldPos.x = In.vTexcoord.x * 2.f - 1.f;
+			vDepthBufferWorldPos.y = In.vTexcoord.y * -2.f + 1.f;
+			vDepthBufferWorldPos.z = vDepthDesc.x;
+			vDepthBufferWorldPos.w = 1.f;
+
+			vDepthBufferWorldPos = vDepthBufferWorldPos * fViewZ;
+			vDepthBufferWorldPos = mul(vDepthBufferWorldPos, g_ProjMatrixInv);
+			vDepthBufferWorldPos = mul(vDepthBufferWorldPos, g_ViewMatrixInv);
+
+			float fDepth = length(vDepthBufferWorldPos.xyz - (vWorldPos + float3(0.0f, -fEarthRadius, 0.0f)));
+			fDepth *= 30.0f;
+			float fSlice = fDepth * (1.0f / M_PER_SLICE);
+
+
+			float fWeight = 1.0;
+			if (fSlice < 0.5)
+			{
+				fWeight = saturate(fSlice * 2.0);
+				fSlice = 0.5;
+			}
+			float w = sqrt(fSlice / DEPTHCOUNT);
+
+			const float4 vAP = fWeight * g_AerialLUTTexture.SampleLevel(LinearClampSampler, float3(In.vTexcoord, w), 0);
+			vL.rgb += vAP.rgb;
+			float fOpacity = vAP.a;
+
+			Out.vColor = float4(vL, fOpacity);
 		}
-		float w = sqrt(fSlice / DEPTHCOUNT);
-
-		const float4 vAP = fWeight * g_AerialLUTTexture.SampleLevel(LinearClampSampler, float3(In.vTexcoord, w), 0);
-		vL.rgb += vAP.rgb;
-		float fOpacity = vAP.a;
-
-		Out.vColor = float4(vL, fOpacity);
 	}
 	
+	Out.vColor.xyz *= 100000.0f;
+
 
 	return Out;
 }
