@@ -315,7 +315,7 @@ SingleScatteringResult IntegrateScatteredLuminance(
 	float fMiePhaseValue = Cornette_Shanks_Phase(fPhaseMieG, -fCosTheta);
 	float fRayleighPhaseValue = RayleighPhase(fCosTheta);
 
-	float3 vGlobalL = fSunIlluminance;
+	float3 vGlobalL = 1.0f;
 
 	float3 vL = 0.0f;
 	float3 vThroughput = 1.0;
@@ -585,7 +585,7 @@ PS_OUT PS_ATMOSPHERE(PS_IN In)
 		}
 	}
 	
-	Out.vColor.xyz *= 100000.0f;
+	Out.vColor.xyz *= fSunIlluminance;
 
 
 	return Out;

@@ -233,7 +233,7 @@ SingleScatteringResult IntegrateScatteredLuminance(
 	float fMiePhaseValue = Cornette_Shanks_Phase(fPhaseMieG, -fCosTheta);
 	float fRayleighPhaseValue = RayleighPhase(fCosTheta);
 
-	float3 vGlobalL = fSunIlluminance;
+	float3 vGlobalL = 1.0f;
 
 	float3 vL = 0.0f;
 	float3 vThroughput = 1.0;

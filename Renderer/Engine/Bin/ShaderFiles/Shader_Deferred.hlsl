@@ -243,7 +243,7 @@ PS_OUT_LIGHT PS_MAIN_SUN(PS_IN In)
 	float2 vUV;
 	LutTransmittanceParamsToUv(fViewHeight, fViewZenithCosAngle, vUV);
 	const float3 vTrans = g_TransLUTTexture.SampleLevel(LinearClampSampler, vUV, 0).rgb;
-	float3 vColor = saturate(dot(vLightDir, vNormal)) * vTrans * 100000.0f;
+	float3 vColor = saturate(dot(vLightDir, vNormal)) * vTrans * fSunIlluminance;
 
 	Out.vShade = float4(vColor, 1.0f);
 
