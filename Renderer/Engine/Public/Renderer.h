@@ -77,11 +77,18 @@ private:
 	HRESULT Render_Blend();
 	HRESULT Render_UI();
 
+
+	HRESULT Ready_LightDepth();
+
+
+	ID3D11DepthStencilView* m_pShadowDSV = nullptr;
+
 #ifdef _DEBUG
 private:
 	HRESULT Render_Debug();
 
 #endif
+
 
 public:
 	static CRenderer* Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);

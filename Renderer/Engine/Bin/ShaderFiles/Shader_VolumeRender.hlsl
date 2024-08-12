@@ -258,6 +258,7 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir, float fStepLength)
 
 	}
 
+	vResultColor *= 100000.0f;
 	float fAlpha = (1.0f - fAccum_Transmittance);
 
 	return float4(vResultColor, fAlpha);

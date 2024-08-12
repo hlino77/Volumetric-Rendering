@@ -75,6 +75,16 @@ void CLight_Manager::Set_TransLUT(ID3D11ShaderResourceView* pSRV)
 	m_pSunLight->Set_TransLUT(pSRV);
 }
 
+void CLight_Manager::Set_MultiScatLUT(ID3D11ShaderResourceView* pSRV)
+{
+	if (m_pSunLight == nullptr)
+	{
+		return;
+	}
+
+	m_pSunLight->Set_MultiScatLUT(pSRV);
+}
+
 void CLight_Manager::Set_AtmosphereBuffer(ID3D11Buffer* pBuffer)
 {
 	if (m_pSunLight == nullptr)

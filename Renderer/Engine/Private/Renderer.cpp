@@ -53,12 +53,13 @@ HRESULT CRenderer::Initialize_Prototype()
 
 	/* For.Target_LightDepth */
 	if (FAILED(m_pTarget_Manager->Add_RenderTarget(m_pDevice, m_pContext, TEXT("Target_LightDepth"),
-		ViewportDesc.Width, ViewportDesc.Height, DXGI_FORMAT_R32G32B32A32_FLOAT, Vec4(1.0f, 1.0f, 1.0f, 1.f))))
+		ViewportDesc.Width * 4.0f, ViewportDesc.Height * 4.0f, DXGI_FORMAT_R32G32B32A32_FLOAT, Vec4(1.0f, 1.0f, 1.0f, 1.f))))
 		return E_FAIL;
 
 	if (FAILED(m_pTarget_Manager->Add_RenderTarget(m_pDevice, m_pContext, TEXT("Target_Deffered"),
 		ViewportDesc.Width, ViewportDesc.Height, DXGI_FORMAT_R32G32B32A32_FLOAT, Vec4(0.0f, 0.0f, 0.0f, 0.0f))))
 		return E_FAIL;
+
 
 	/* For.Target_VolumeRender */
 // 	if (FAILED(m_pTarget_Manager->Add_RenderTarget(m_pDevice, m_pContext, TEXT("Target_VolumeRender"),
@@ -217,7 +218,7 @@ HRESULT CRenderer::Render_NonLight()
 
 HRESULT CRenderer::Render_LightDepth()
 {
-	if (FAILED(m_pTarget_Manager->Begin_MRT(m_pContext, TEXT("MRT_LightDepth"))))
+	if (FAILED(m_pTarget_Manager->Begin_MRT(m_pContext, TEXT("MRT_LightDepth"), m_pShadowDSV)))
 		return E_FAIL;
 
 	for (auto& pGameObject : m_RenderObjects[RG_SHADOW])
@@ -352,19 +353,7 @@ HRESULT CRenderer::Render_Deferred()
 	if (FAILED(m_pVIBuffer->Render()))
 		return E_FAIL;
 
-	/*if (m_szSkyTargetName.empty() == false)
-	{
-		if (FAILED(m_pTarget_Manager->Bind_SRV(m_pShader, m_szSkyTargetName, "g_SkyTexture")))
-			return E_FAIL;
 
-		if (FAILED(m_pShader->Begin(4)))
-			return E_FAIL;
-
-		if (FAILED(m_pVIBuffer->Render()))
-			return E_FAIL;
-
-		m_szSkyTargetName.clear();
-	}*/
 
 
 	//if (FAILED(m_pTarget_Manager->Bind_SRV(m_pShader, L"Target_TransLUT", "g_SkyTexture")))
@@ -377,19 +366,28 @@ HRESULT CRenderer::Render_Deferred()
 	//	return E_FAIL;
 
 
-	if (FAILED(m_pTarget_Manager->Bind_SRV(m_pShader, L"Target_Atmosphere", "g_SkyTexture")))
+	if (SUCCEEDED(m_pTarget_Manager->Bind_SRV(m_pShader, L"Target_Atmosphere", "g_SkyTexture")))
 	{
-		if (FAILED(m_pTarget_Manager->End_MRT(m_pContext)))
+		if (FAILED(m_pShader->Begin(4)))
 			return E_FAIL;
-		return S_OK;
+
+		if (FAILED(m_pVIBuffer->Render()))
+			return E_FAIL;
 	}
-		
 
-	if (FAILED(m_pShader->Begin(4)))
-		return E_FAIL;
-
-	if (FAILED(m_pVIBuffer->Render()))
-		return E_FAIL;
+// 	if (m_szSkyTargetName.empty() == false)
+// 	{
+// 		if (FAILED(m_pTarget_Manager->Bind_SRV(m_pShader, m_szSkyTargetName, "g_SkyTexture")))
+// 			return E_FAIL;
+// 
+// 		if (FAILED(m_pShader->Begin(4)))
+// 			return E_FAIL;
+// 
+// 		if (FAILED(m_pVIBuffer->Render()))
+// 			return E_FAIL;
+// 
+// 		m_szSkyTargetName.clear();
+// 	}
 
 	if (FAILED(m_pTarget_Manager->End_MRT(m_pContext)))
 		return E_FAIL;
@@ -435,6 +433,49 @@ HRESULT CRenderer::Render_UI()
 	}
 	m_RenderObjects[RG_UI].clear();
 
+
+	return S_OK;
+}
+
+
+
+
+HRESULT CRenderer::Ready_LightDepth()
+{
+
+	D3D11_VIEWPORT		ViewportDesc;
+
+	_uint				iNumViewports = 1;
+	m_pContext->RSGetViewports(&iNumViewports, &ViewportDesc);
+
+
+	//ShadowDepth
+	{
+		ID3D11Texture2D* pDepthStencilTexture = nullptr;
+
+		D3D11_TEXTURE2D_DESC	TextureDesc;
+		ZeroMemory(&TextureDesc, sizeof(D3D11_TEXTURE2D_DESC));
+
+		TextureDesc.Width = 4.0f * ViewportDesc.Width;
+		TextureDesc.Height = 4.0f * ViewportDesc.Height;
+		TextureDesc.MipLevels = 1;
+		TextureDesc.ArraySize = 1;
+		TextureDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
+		TextureDesc.SampleDesc.Quality = 0;
+		TextureDesc.SampleDesc.Count = 1;
+
+		TextureDesc.Usage = D3D11_USAGE_DEFAULT;
+		TextureDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+		TextureDesc.CPUAccessFlags = 0;
+		TextureDesc.MiscFlags = 0;
+
+		if (FAILED(m_pDevice->CreateTexture2D(&TextureDesc, nullptr, &pDepthStencilTexture)))
+			return E_FAIL;
+
+		if (FAILED(m_pDevice->CreateDepthStencilView(pDepthStencilTexture, nullptr, &m_pShadowDSV)))
+			return E_FAIL;
+	}
 
 	return S_OK;
 }

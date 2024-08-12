@@ -22,6 +22,7 @@ public:
 
 	void	Set_SunPos(Vec3 vPos);
 	void	Set_TransLUT(ID3D11ShaderResourceView* pSRV);
+	void	Set_MultiScatLUT(ID3D11ShaderResourceView* pSRV);
 	void	Set_AtmosphereBuffer(ID3D11Buffer* pBuffer);
 
 private:

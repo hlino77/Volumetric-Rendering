@@ -1,6 +1,8 @@
 
 #include "Engine_Shader_Defines.hpp"
 
+#define PI 3.1415926535897932384626433832795f
+
 matrix			g_WorldMatrix, g_ViewMatrix, g_ProjMatrix;
 matrix			g_LightViewMatrix, g_LightProjMatrix;
 matrix			g_ProjMatrixInv;
@@ -29,7 +31,7 @@ texture2D		g_SpecularTexture;
 texture2D		g_LightDepthTexture;
 
 texture2D		g_TransLUTTexture;
-
+texture2D		g_MultiScatLUTTexture;
 
 texture2D		g_Texture;
 
@@ -67,6 +69,15 @@ struct VS_OUT
 	float4		vPosition : SV_POSITION;
 	float2		vTexcoord : TEXCOORD0;
 };
+
+float3 GetMultipleScattering(float3 vWorlPos, float fViewZenithCosAngle)
+{
+	float2 vUV = saturate(float2(fViewZenithCosAngle * 0.5f + 0.5f, (length(vWorlPos) - fEarthRadius) / (fAtmosphereRadius - fEarthRadius)));
+
+	float3 vMultiScatteredLuminance = g_MultiScatLUTTexture.SampleLevel(LinearClampSampler, vUV, 0).rgb;
+	return vMultiScatteredLuminance;
+}
+
 
 void LutTransmittanceParamsToUv(in float fViewHeight, in float fViewZenithCosAngle, out float2 vUV)
 {
@@ -235,15 +246,18 @@ PS_OUT_LIGHT PS_MAIN_SUN(PS_IN In)
 	float3 vWorldPos = vClipPos.xyz + float3(0.0f, fEarthRadius, 0.0f);
 	float3	vLightDir = normalize(g_vLightPos - vWorldPos);
 
-	Out.vShade = saturate(dot(vLightDir, vNormal));
-
 	float fViewHeight = length(vWorldPos);
 	const float3 vUpVector = vWorldPos / fViewHeight;
-	float fViewZenithCosAngle = dot(vLightDir, vUpVector);
+	float fSunZenithCosAngle = dot(vLightDir, vUpVector);
 	float2 vUV;
-	LutTransmittanceParamsToUv(fViewHeight, fViewZenithCosAngle, vUV);
+	LutTransmittanceParamsToUv(fViewHeight, fSunZenithCosAngle, vUV);
 	const float3 vTrans = g_TransLUTTexture.SampleLevel(LinearClampSampler, vUV, 0).rgb;
-	float3 vColor = saturate(dot(vLightDir, vNormal)) * vTrans * fSunIlluminance;
+
+
+	float3 fMultiScatteredLuminance = GetMultipleScattering(vWorldPos, fSunZenithCosAngle);
+
+	float fLamBRDF = saturate(dot(vLightDir, vNormal)) / PI;
+	float3 vColor = (fLamBRDF * vTrans + fMultiScatteredLuminance) * fSunIlluminance;
 
 	Out.vShade = float4(vColor, 1.0f);
 
@@ -285,7 +299,6 @@ PS_OUT PS_MAIN_DEFERRED(PS_IN In)
 	if (vDiffuse.a == 0.f)
 		discard;
 
-	vDiffuse = pow(vDiffuse, 2.2f);
 
 	vector		vShade = g_ShadeTexture.Sample(LinearSampler, In.vTexcoord);
 

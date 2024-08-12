@@ -26,6 +26,8 @@ namespace Engine
 		Vec4	vSpecular;
 
 		ID3D11ShaderResourceView* pTransLUT = nullptr;
+		ID3D11ShaderResourceView* pMultiScatLUT = nullptr;
+
 		ID3D11Buffer* pAtmosphereBuffer = nullptr;
 	}LIGHT_DESC;
 

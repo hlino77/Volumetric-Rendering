@@ -34,6 +34,11 @@ public:
 		m_LightDesc.pAtmosphereBuffer = pBuffer;
 	}
 
+	void	Set_MultiScatLUT(ID3D11ShaderResourceView* pSRV)
+	{
+		m_LightDesc.pMultiScatLUT = pSRV;
+	}
+
 private:
 	LIGHT_DESC			m_LightDesc;
 

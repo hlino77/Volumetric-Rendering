@@ -258,12 +258,12 @@ float RayleighPhase(float fCosTheta)
 	return fFactor * (1.0f + fCosTheta * fCosTheta);
 }
 
-float3 GetMultipleScattering(float3 scattering, float3 extinction, float3 worlPos, float viewZenithCosAngle)
+float3 GetMultipleScattering(float3 vWorlPos, float fViewZenithCosAngle)
 {
-	float2 uv = saturate(float2(viewZenithCosAngle * 0.5f + 0.5f, (length(worlPos) - fEarthRadius) / (fAtmosphereRadius - fEarthRadius)));
+	float2 vUV = saturate(float2(fViewZenithCosAngle * 0.5f + 0.5f, (length(vWorlPos) - fEarthRadius) / (fAtmosphereRadius - fEarthRadius)));
 
-	float3 multiScatteredLuminance = g_MultiScatLUTTexture.SampleLevel(LinearClampSampler, uv, 0).rgb;
-	return multiScatteredLuminance;
+	float3 vMultiScatteredLuminance = g_MultiScatLUTTexture.SampleLevel(LinearClampSampler, vUV, 0).rgb;
+	return vMultiScatteredLuminance;
 }
 
 SingleScatteringResult IntegrateScatteredLuminance(
@@ -362,12 +362,12 @@ SingleScatteringResult IntegrateScatteredLuminance(
 		float tEarth = raySphereIntersectNearest(vPos, vSunDir, vEarthOrigin + PLANET_RADIUS_OFFSET * vUpVector, fEarthRadius);
 		float fEarthShadow = tEarth >= 0.0f ? 0.0f : 1.0f;
 
-		float3 multiScatteredLuminance = 0.0f;
-		multiScatteredLuminance = GetMultipleScattering(tMedium.vScattering, tMedium.vExtinction, vPos, fSunZenithCosAngle);
+		float3 fMultiScatteredLuminance = 0.0f;
+		fMultiScatteredLuminance = GetMultipleScattering(vPos, fSunZenithCosAngle);
 
 		float fShadow = 1.0f;
 
-		float3 vS = vGlobalL * (fEarthShadow * fShadow * vTransmittanceToSun * vPhaseTimesScattering + multiScatteredLuminance * tMedium.vScattering);
+		float3 vS = vGlobalL * (fEarthShadow * fShadow * vTransmittanceToSun * vPhaseTimesScattering + fMultiScatteredLuminance * tMedium.vScattering);
 
 		float3 vSint = (vS - vS * vSampleTransmittance) / tMedium.vExtinction;	
 		vL += vThroughput * vSint;					
@@ -485,7 +485,7 @@ float3 GetSunLuminance(float3 vWorldPos, float3 vWorldDir, float3 vLightDir)
 		float fT = raySphereIntersectNearest(vWorldPos, vWorldDir, float3(0.0f, 0.0f, 0.0f), fEarthRadius);
 		if (fT < 0.0f)
 		{
-			const float3 vSunLuminance = 1000000.0f;
+			const float3 vSunLuminance = fSunIlluminance;
 			return vSunLuminance;
 		}
 	}
@@ -530,6 +530,12 @@ PS_OUT PS_ATMOSPHERE(PS_IN In)
 
 	if (vDepthDesc.x == 1.0f && fViewHeight < fAtmosphereRadius)
 	{
+		if (vSunDisk.x > 0.0f)
+		{
+			Out.vColor = float4(vSunDisk, 1.0f);
+			return Out;
+		}
+
 		float2 vUV;
 		float3 vUpVector = normalize(vWorldPos);
 		float fViewZenithCosAngle = dot(vWorldDir, vUpVector);
@@ -544,8 +550,7 @@ PS_OUT PS_ATMOSPHERE(PS_IN In)
 
 		SkyViewLutParamsToUv(bIntersectGround, fViewZenithCosAngle, fLightViewCosAngle, fViewHeight, vUV);
 
-		Out.vColor = float4(g_SkyViewLUTTexture.SampleLevel(LinearClampSampler, vUV, 0).rgb + vSunDisk, 1.0f);
-
+		Out.vColor = float4(g_SkyViewLUTTexture.SampleLevel(LinearClampSampler, vUV, 0).rgb, 1.0f);
 	}
 	else
 	{

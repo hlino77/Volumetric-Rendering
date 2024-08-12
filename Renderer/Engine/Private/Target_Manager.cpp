@@ -78,6 +78,30 @@ HRESULT CTarget_Manager::Begin_MRT(ID3D11DeviceContext* pContext, const wstring 
 	return	S_OK;
 }
 
+HRESULT CTarget_Manager::Begin_MRT(ID3D11DeviceContext* pContext, const wstring& strMRTTag, ID3D11DepthStencilView* pDSV)
+{
+	list<CRenderTarget*>* pMRTList = Find_MRT(strMRTTag);
+
+	if (nullptr == pMRTList)
+		return E_FAIL;
+
+	pContext->OMGetRenderTargets(1, &m_pBackBufferRTV, &m_pDSV);
+
+	ID3D11RenderTargetView* pRenderTargets[8] = {};
+
+	_uint			iNumRTVs = 0;
+
+	for (auto& pRenderTarget : *pMRTList)
+	{
+		pRenderTargets[iNumRTVs++] = pRenderTarget->Get_RTV();
+		pRenderTarget->Clear();
+	}
+
+	pContext->OMSetRenderTargets(iNumRTVs, pRenderTargets, pDSV);
+
+	return	S_OK;
+}
+
 HRESULT CTarget_Manager::End_MRT(ID3D11DeviceContext* pContext)
 {
 

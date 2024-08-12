@@ -276,6 +276,8 @@ HRESULT CSky::Ready_For_LUT()
 		return E_FAIL;
 	}
 
+	CLight_Manager::GetInstance()->Set_MultiScatLUT(m_pMultiScatLUT->Get_SRV());
+
 	m_pAerialLUT = CAerialLUT::Create(m_pDevice, m_pContext);
 	
 	if (m_pAerialLUT == nullptr)

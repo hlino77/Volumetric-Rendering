@@ -16,7 +16,7 @@ CTexture::CTexture(const CTexture & rhs)
 	
 }
 
-HRESULT CTexture::Initialize_Prototype(const wstring & strTextureFilePath, _uint iNumTextures)
+HRESULT CTexture::Initialize_Prototype(const wstring & strTextureFilePath, _uint iNumTextures, _bool bForceSRGB)
 {
 	/* ../Bin/Resources/Textures/Explosion%d.png */
 
@@ -40,7 +40,14 @@ HRESULT CTexture::Initialize_Prototype(const wstring & strTextureFilePath, _uint
 
 		if (false == lstrcmp(szExt, TEXT(".dds")))
 		{
-			hr = CreateDDSTextureFromFile(m_pDevice, szTextureFilePath, nullptr, &pSRV);
+			if (bForceSRGB == true)
+			{
+				hr = CreateDDSTextureFromFileEx(m_pDevice, szTextureFilePath, 0Ui64, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE, 0, 0, true, nullptr, &pSRV);
+			}
+			else
+			{
+				hr = CreateDDSTextureFromFile(m_pDevice, szTextureFilePath, nullptr, &pSRV);
+			}
 		}
 		else if(false == lstrcmp(szExt, TEXT(".tga")))
 		{
@@ -48,7 +55,15 @@ HRESULT CTexture::Initialize_Prototype(const wstring & strTextureFilePath, _uint
 		}
 		else
 		{
-			hr = CreateWICTextureFromFile(m_pDevice, szTextureFilePath, nullptr, &pSRV);
+			if (bForceSRGB == true)
+			{
+				hr = CreateWICTextureFromFileEx(m_pDevice, szTextureFilePath, 0Ui64, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE, 0, 0, true, nullptr, &pSRV);
+			}
+			else
+			{
+				hr = CreateWICTextureFromFile(m_pDevice, szTextureFilePath, nullptr, &pSRV);
+			}
+			
 		}
 
 		if (FAILED(hr))
@@ -56,7 +71,6 @@ HRESULT CTexture::Initialize_Prototype(const wstring & strTextureFilePath, _uint
 
 		m_ppSRVs[i] = pSRV;
 	}
-
 
 	return S_OK;
 }
@@ -76,11 +90,11 @@ HRESULT CTexture::Bind_ShaderResources(const CShader * pShader, const char * pCo
 	return pShader->Bind_Textures(pConstantName, m_ppSRVs, m_iNumTextures);
 }
 
-CTexture * CTexture::Create(ID3D11Device * pDevice, ID3D11DeviceContext * pContext, const wstring & strTextureFilePath, _uint iNumTextures)
+CTexture * CTexture::Create(ID3D11Device * pDevice, ID3D11DeviceContext * pContext, const wstring & strTextureFilePath, _uint iNumTextures, _bool bForceSRGB)
 {
 	CTexture*	pInstance = new CTexture(pDevice, pContext);
 
-	if (FAILED(pInstance->Initialize_Prototype(strTextureFilePath, iNumTextures)))
+	if (FAILED(pInstance->Initialize_Prototype(strTextureFilePath, iNumTextures, bForceSRGB)))
 	{
 		MSG_BOX("Failed to Created : CTexture");
 		Safe_Release(pInstance);

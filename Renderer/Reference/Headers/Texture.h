@@ -11,7 +11,7 @@ private:
 	CTexture(const CTexture& rhs);
 	virtual ~CTexture() = default;
 public:
-	virtual HRESULT Initialize_Prototype(const wstring& strTextureFilePath, _uint iNumTextures);
+	virtual HRESULT Initialize_Prototype(const wstring& strTextureFilePath, _uint iNumTextures, _bool bForceSRGB);
 	virtual HRESULT Initialize(void* pArg) override;
 
 public:
@@ -27,7 +27,7 @@ private:
 
 public:
 	static CTexture* Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, 
-		const wstring& strTextureFilePath, _uint iNumTextures = 1);
+		const wstring& strTextureFilePath, _uint iNumTextures = 1, _bool bForceSRGB = false);
 	virtual CComponent* Clone(void* pArg) override;
 	virtual void Free() override;
 };
