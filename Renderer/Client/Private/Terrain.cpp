@@ -43,6 +43,7 @@ void CTerrain::LateTick(_float fTimeDelta)
 {
 	// m_pVIBufferCom->Culling(m_pTransformCom);
 
+	//m_pRendererCom->Add_RenderGroup(CRenderer::RG_SHADOW, this);
 	m_pRendererCom->Add_RenderGroup(CRenderer::RG_NONBLEND, this);	
 }
 
@@ -54,6 +55,27 @@ HRESULT CTerrain::Render()
 	m_pVIBufferCom->Render();
 
 
+	return S_OK;
+}
+
+HRESULT CTerrain::Render_LightDepth()
+{
+	if (FAILED(m_pTransformCom->Bind_ShaderResources(m_pShaderCom, "g_WorldMatrix")))
+		return E_FAIL;
+
+	CGameInstance* pGameInstance = CGameInstance::GetInstance();
+	Safe_AddRef(pGameInstance);
+
+	if (FAILED(pGameInstance->Bind_TransformToShader(m_pShaderCom, "g_LightViewMatrix", CPipeLine::D3DTS_LIGHTVIEW)))
+		return E_FAIL;
+	if (FAILED(pGameInstance->Bind_TransformToShader(m_pShaderCom, "g_LightProjMatrix", CPipeLine::D3DTS_LIGHTPROJ)))
+		return E_FAIL;
+
+	Safe_Release(pGameInstance);
+
+	m_pShaderCom->Begin(1);
+
+	m_pVIBufferCom->Render();
 
 	return S_OK;
 }

@@ -67,11 +67,13 @@ HRESULT CRenderer::Initialize_Prototype()
 // 		return E_FAIL;
 
 #ifdef _DEBUG
-	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_Diffuse"), 0.0f, 0.f, 0.0f, 0.0f)))
-		return E_FAIL;
-	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_Normal"), 0.0f, 0.0f, 0.0f, 0.0f)))
-		return E_FAIL;
-	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_Depth"), 200.0f, 200.0f, 400.0f, 400.0f)))
+	//if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_Diffuse"), 0.0f, 0.f, 0.0f, 0.0f)))
+	//	return E_FAIL;
+	//if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_Normal"), 0.0f, 0.0f, 0.0f, 0.0f)))
+	//	return E_FAIL;
+	//if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_Depth"), 200.0f, 200.0f, 400.0f, 400.0f)))
+	//	return E_FAIL;
+	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_LightDepth"), 200.0f, 200.0f, 400.0f, 400.0f)))
 		return E_FAIL;
 // 	if (FAILED(m_pTarget_Manager->Ready_Debug(TEXT("Target_Shade"), 300.0f, 100.f, 200.0f, 200.0f)))
 // 		return E_FAIL;
@@ -375,19 +377,19 @@ HRESULT CRenderer::Render_Deferred()
 			return E_FAIL;
 	}
 
-// 	if (m_szSkyTargetName.empty() == false)
-// 	{
-// 		if (FAILED(m_pTarget_Manager->Bind_SRV(m_pShader, m_szSkyTargetName, "g_SkyTexture")))
-// 			return E_FAIL;
-// 
-// 		if (FAILED(m_pShader->Begin(4)))
-// 			return E_FAIL;
-// 
-// 		if (FAILED(m_pVIBuffer->Render()))
-// 			return E_FAIL;
-// 
-// 		m_szSkyTargetName.clear();
-// 	}
+	if (m_szSkyTargetName.empty() == false)
+	{
+		if (FAILED(m_pTarget_Manager->Bind_SRV(m_pShader, m_szSkyTargetName, "g_SkyTexture")))
+			return E_FAIL;
+
+		if (FAILED(m_pShader->Begin(7)))
+			return E_FAIL;
+
+		if (FAILED(m_pVIBuffer->Render()))
+			return E_FAIL;
+
+		m_szSkyTargetName.clear();
+	}
 
 	if (FAILED(m_pTarget_Manager->End_MRT(m_pContext)))
 		return E_FAIL;
@@ -505,6 +507,9 @@ HRESULT CRenderer::Render_Debug()
 // 	if (FAILED(m_pTarget_Manager->Render(TEXT("MRT_SkyViewLUT"), m_pShader, m_pVIBuffer)))
 // 		return E_FAIL;
 // 	if (FAILED(m_pTarget_Manager->Render(TEXT("MRT_MultiScatLUT"), m_pShader, m_pVIBuffer)))
+// 		return E_FAIL;
+
+// 	if (FAILED(m_pTarget_Manager->Render(TEXT("MRT_LightDepth"), m_pShader, m_pVIBuffer)))
 // 		return E_FAIL;
 
 	return S_OK;

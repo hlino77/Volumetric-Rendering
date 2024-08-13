@@ -4,27 +4,17 @@
 #include "Target_Manager.h"
 #include "Renderer.h"
 
-CCloud::CCloud(ID3D11Device * pDevice, ID3D11DeviceContext * pContext)
-	: CGameObject(pDevice, pContext)
-	, m_pTarget_Manager(CTarget_Manager::GetInstance())
+CCloud::CCloud(ID3D11Device * pDevice, ID3D11DeviceContext * pContext, CRenderer* pRenderer)
+	: m_pTarget_Manager(CTarget_Manager::GetInstance())
+	, m_pRendererCom(pRenderer)
+	, m_pDevice(pDevice)
+	, m_pContext(pContext)
 {
 	Safe_AddRef(m_pTarget_Manager);
 }
 
-CCloud::CCloud(const CCloud& rhs)
-	: CGameObject(rhs)
-	, m_pTarget_Manager(CTarget_Manager::GetInstance())
-	, m_Targets(rhs.m_Targets)
-	, m_WorldMatrix(rhs.m_WorldMatrix)
-	, m_ViewMatrix(rhs.m_ViewMatrix)
-	, m_ProjMatrix(rhs.m_ProjMatrix)
-	, m_iWinSizeX(rhs.m_iWinSizeX)
-	, m_iWinSizeY(rhs.m_iWinSizeY)
-{
-	Safe_AddRef(m_pTarget_Manager);
-}
 
-HRESULT CCloud::Initialize_Prototype()
+HRESULT CCloud::Initialize()
 {
 	m_WorldMatrix = XMMatrixIdentity();
 	m_WorldMatrix._11 = m_iWinSizeX;
@@ -34,13 +24,6 @@ HRESULT CCloud::Initialize_Prototype()
 	m_ViewMatrix = XMMatrixIdentity();
 	m_ProjMatrix = XMMatrixOrthographicLH(m_iWinSizeX, m_iWinSizeY, 0.f, 1.f);
 
-
-
-	return S_OK;
-}
-
-HRESULT CCloud::Initialize(void* pArg)
-{
 	if (FAILED(Ready_RenderTargets()))
 	{
 		return E_FAIL;
@@ -64,10 +47,6 @@ HRESULT CCloud::Initialize(void* pArg)
 	return S_OK;
 }
 
-void CCloud::PriorityTick(_float fTimeDelta)
-{
-
-}
 
 void CCloud::Tick(_float fTimeDelta)
 {
@@ -76,12 +55,9 @@ void CCloud::Tick(_float fTimeDelta)
 	m_bSwap = !m_bSwap;
 }
 
-void CCloud::LateTick(_float fTimeDelta)
-{
-	m_pRendererCom->Add_RenderGroup(CRenderer::RG_SKY, this);
-}
 
-HRESULT CCloud::Render()
+
+HRESULT CCloud::Render(Vec3 vLightPos, ID3D11Buffer* pAtmoBuffer, ID3D11ShaderResourceView* pTransLUT)
 {
 	if (FAILED(m_pTarget_Manager->Begin_MRT(m_pContext, m_Targets[m_bSwap].szMRT)))
 		return E_FAIL;
@@ -112,6 +88,11 @@ HRESULT CCloud::Render()
 	}
 
 	if (FAILED(m_pShader->Bind_Texture("g_DetailTexture", m_pDetailSRV)))
+	{
+		return E_FAIL;
+	}
+
+	if (FAILED(m_pShader->Bind_Texture("g_TransLUTTexture", pTransLUT)))
 	{
 		return E_FAIL;
 	}
@@ -150,6 +131,15 @@ HRESULT CCloud::Render()
 		return E_FAIL;
 	}
 
+	if (FAILED(m_pShader->Bind_RawValue("g_vLightPos", &vLightPos, sizeof(Vec3))))
+	{
+		return E_FAIL;
+	}
+
+	if (FAILED(m_pShader->Bind_ConstantBuffer("AtmosphereParams", pAtmoBuffer)))
+	{
+		return E_FAIL;
+	}
 
 	RELEASE_INSTANCE(CPipeLine);
 
@@ -207,11 +197,6 @@ HRESULT CCloud::Ready_Components()
 
 	m_pVIBuffer = CVIBuffer_Rect::Create(m_pDevice, m_pContext);
 	if (nullptr == m_pVIBuffer)
-		return E_FAIL;
-
-	/* Com_Renderer */
-	if (FAILED(__super::Add_Component(0, TEXT("Prototype_Component_Renderer"),
-		TEXT("Com_Renderer"), (CComponent**)&m_pRendererCom)))
 		return E_FAIL;
 
 	return S_OK;
@@ -274,25 +259,11 @@ HRESULT CCloud::Ready_UpdatePixel()
 }
 
 
-
-CGameObject* CCloud::Clone(void* pArg)
+CCloud* CCloud::Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, CRenderer* pRenderer)
 {
-	CCloud* pInstance = new CCloud(*this);
+	CCloud* pInstance = new CCloud(pDevice, pContext, pRenderer);
 
-	if (FAILED(pInstance->Initialize(pArg)))
-	{
-		MSG_BOX("Failed to Cloned : CTerrain");
-		Safe_Release(pInstance);
-	}
-
-	return pInstance;
-}
-
-CCloud* CCloud::Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
-{
-	CCloud* pInstance = new CCloud(pDevice, pContext);
-
-	if (FAILED(pInstance->Initialize_Prototype()))
+	if (FAILED(pInstance->Initialize()))
 	{
 		MSG_BOX("Failed to Created : CCloud");
 		Safe_Release(pInstance);

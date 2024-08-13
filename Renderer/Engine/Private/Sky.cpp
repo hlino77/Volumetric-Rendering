@@ -6,6 +6,7 @@
 #include "MultiScatLUT.h"
 #include "AerialLUT.h"
 #include "Light_Manager.h"
+#include "Cloud.h"
 
 CSky::CSky(ID3D11Device * pDevice, ID3D11DeviceContext * pContext)
 	: CGameObject(pDevice, pContext)
@@ -88,6 +89,12 @@ HRESULT CSky::Initialize(void* pArg)
 
 	memset(m_bKeyPress, 1, 2);
 
+	m_pCloud = CCloud::Create(m_pDevice, m_pContext, m_pRendererCom);
+	if (m_pCloud == nullptr)
+	{
+		return E_FAIL;
+	}
+
 	return S_OK;
 }
 
@@ -101,6 +108,8 @@ void CSky::Tick(_float fTimeDelta)
 	Update_Sun(fTimeDelta);
 
 	m_pMultiScatLUT->Update_MultiScatteringLUT(&m_pAtmosphereBuffer, &m_pTransLUTSRV);
+
+	m_pCloud->Tick(fTimeDelta);
 }
 
 void CSky::LateTick(_float fTimeDelta)
@@ -248,6 +257,9 @@ HRESULT CSky::Render()
 
 	if (FAILED(m_pTarget_Manager->End_MRT(m_pContext)))
 		return E_FAIL;
+
+	if (FAILED(m_pCloud->Render(m_vSunPos, m_pAtmosphereBuffer, m_pTransLUTSRV)))
+		return E_FAIL;
 	
 
 	return S_OK;
@@ -367,6 +379,12 @@ HRESULT CSky::Ready_Sun()
 	m_vSunPos = Vec3(-1.0f, 1.0f, -1.0f) * 6300e5;
 
 	CLight_Manager::GetInstance()->Set_SunPos(m_vSunPos);
+
+	Matrix LightView = XMMatrixLookAtLH(m_vSunPos, Vec3(0.0f, 0.0f, 0.0f), Vec3(0.0f, 1.0f, 0.0f));
+	Matrix LightProj = XMMatrixPerspectiveFovLH(XMConvertToRadians(60.0f), m_iWinSizeX/(_float)m_iWinSizeY, 0.2f, 630010000.f);
+
+	CPipeLine::GetInstance()->Set_Transform(CPipeLine::D3DTS_LIGHTVIEW, LightView);
+	CPipeLine::GetInstance()->Set_Transform(CPipeLine::D3DTS_LIGHTPROJ, LightProj);
 	
 	return S_OK;
 }
@@ -450,6 +468,9 @@ void CSky::Update_Sun(_float fTimeDelta)
 		m_fTest = min(1.0f, m_fTest + 0.0004f);
 	}
 
+
+	Matrix LightView = XMMatrixLookAtLH(m_vSunPos, Vec3(0.0f, 0.0f, 0.0f), Vec3(0.0f, 1.0f, 0.0f));
+	CPipeLine::GetInstance()->Set_Transform(CPipeLine::D3DTS_LIGHTVIEW, LightView);
 
 	RELEASE_INSTANCE(CGameInstance);
 

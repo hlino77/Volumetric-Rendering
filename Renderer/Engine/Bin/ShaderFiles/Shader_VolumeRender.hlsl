@@ -16,20 +16,19 @@ texture2D		g_CurlNoiseTexture;
 
 texture2D		g_PrevFrameTexture;
 
-float3			g_vLightPos = float3(-1.0f, 1.0f, -1.0f) * 6300e5;
+texture2D		g_TransLUTTexture;
 
-float			g_fMaxHeight = 1400.0f;
+float3			g_vLightPos;
+
+float			g_fMaxHeight = 2000.0f;
 float			g_fMinHeight = 1000.0f;
-float3			g_vEarthCenter = float3(0.0f, -6300e3, 0.0f);
-float			g_fEarthRadius = 6300e3;
 
 int				g_iMaxStep = 64;
 
 int				g_iSunStep = 8;
 float			g_fSunStepLength = 30.0f;
 
-
-float			g_fAbsorption = 1.0f;
+float			g_fAbsorption = 0.5f;
 float			g_fCurlNoiseScale = 7.44f;
 float			g_fDetailNoiseScale = 0.15f;
 float			g_fDetailNoiseModif = 0.5f;
@@ -39,6 +38,28 @@ int				g_iGridSize;
 
 uint				g_iWinSizeX;
 uint				g_iWinSizeY;
+
+
+cbuffer AtmosphereParams : register(b0)
+{
+	float4	vScatterRayleigh;
+	float	fHDensityRayleigh;
+
+	float	fScatterMie;
+	float	fPhaseMieG;
+	float	fExtinctionMie;
+	float	fHDensityMie;
+
+	float	fEarthRadius;
+	float	fAtmosphereRadius;
+
+	float	fSunIlluminance;
+
+	float4	vAbsorbOzone;
+ 	float4	vOzone;
+
+	float	fMultiScatFactor;
+}
 
 struct VS_IN
 {
@@ -52,7 +73,21 @@ struct VS_OUT
 	float2		vTexcoord : TEXCOORD0;
 };
 
+void LutTransmittanceParamsToUv(in float fViewHeight, in float fViewZenithCosAngle, out float2 vUV)
+{
+	float fH = sqrt(max(0.0f, fAtmosphereRadius * fAtmosphereRadius - fEarthRadius * fEarthRadius));
+	float fRho = sqrt(max(0.0f, fViewHeight * fViewHeight - fEarthRadius * fEarthRadius));
 
+	float fDiscriminant = fViewHeight * fViewHeight * (fViewZenithCosAngle * fViewZenithCosAngle - 1.0f) + fAtmosphereRadius * fAtmosphereRadius;
+	float fD = max(0.0f, (-fViewHeight * fViewZenithCosAngle + sqrt(fDiscriminant)));
+
+	float fMin = fAtmosphereRadius - fViewHeight;
+	float fMax = fRho + fH;
+	float fX = (fD - fMin) / (fMax - fMin);
+	float fY = fRho / fH;
+
+	vUV = float2(fX, fY);
+}
 
 VS_OUT VS_MAIN(VS_IN In)
 {
@@ -130,7 +165,8 @@ float3 Ray_Sphere_Intersection(float3 vOrigin, float3 vRayDir, float3 vCenter, f
 
 float Height_Fraction(float3 vWorldPos)
 {
-	return  clamp((distance(vWorldPos,  g_vEarthCenter) - (g_fMinHeight + g_fEarthRadius)) / (g_fMaxHeight - g_fMinHeight), 0.0f, 1.0f);
+	float3 vEarthCenter = float3(0.0f, -fEarthRadius, 0.0f);
+	return  clamp((distance(vWorldPos,  vEarthCenter) - (g_fMinHeight + fEarthRadius)) / (g_fMaxHeight - g_fMinHeight), 0.0f, 1.0f);
 }
 
 
@@ -166,7 +202,7 @@ float Calculate_Light_Energy(float fDensity, float fCos, float fPowderDensity)
 
 float Sample_CloudDensity(float3 vWorldPos)
 {
-	float3 vTexcoord = vWorldPos * 0.0002f;
+	float3 vTexcoord = vWorldPos * 0.0001f;
 
 	float fHeightFraction = Height_Fraction(vWorldPos);
 
@@ -177,17 +213,17 @@ float Sample_CloudDensity(float3 vWorldPos)
 
     float fDensity = remap(vSample.x, fWfbm - 1.0f, 1.0f, 0.0f, 1.0f);
 
-	fDensity *= saturate(remap(fHeightFraction, 0.0f, 0.25f * (1.0f - fDensity), 0.0f, 1.0f))
-           * saturate(remap(fHeightFraction, 0.75f * 1.0f, 1.0f, 1.0f, 0.0f));
+	fDensity *= saturate(remap(fHeightFraction, 0.0f, 0.007f, 0.0f, 1.0f))
+           * saturate(remap(fHeightFraction, 0.75f, 1.0f, 1.0f, 0.0f));
 
 	float fCoverage = lerp(0.75f, 1.0f, fHeightFraction);
 
     fDensity = remap(fDensity, fCoverage, 1.0f, 0.0f, 1.0f);
 	fDensity *= 0.3f;
 
-	float4 vDetail = g_DetailTexture.SampleLevel(CloudSampler, vTexcoord * 10.0f, 0.0f);
+	float4 vDetail = g_DetailTexture.SampleLevel(CloudSampler, vTexcoord * 12.0f, 0.0f);
 	float fDetailfbm = vDetail.x * 0.625f + vDetail.y * 0.25f + vDetail.z * 0.125f;
-
+			
 	fDensity -= fDetailfbm * g_fDetailNoiseScale;
 	
    
@@ -242,9 +278,19 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir, float fStepLength)
 				
 				float fSunDensity = Calculate_LightDensity(vStartPos);
 			
-				float3 vScatteredLight = Calculate_Light_Energy(fSunDensity * g_fSunStepLength, fCos, fSampleDensity * fStepLength) * vLightColor * 5.0f;
-				vResultColor += vScatteredLight* fAccum_Transmittance * fSampleDensity * fStepLength;
+				float3 vScatteredLight = Calculate_Light_Energy(fSunDensity * g_fSunStepLength, fCos, fSampleDensity * fStepLength) * vLightColor;
+
+				float3 vWorldPos = vStartPos + float3(0.0f, fEarthRadius, 0.0f);
+
+				float fViewHeight = length(vWorldPos);
+				const float3 vUpVector = vWorldPos / fViewHeight;
+				float fSunZenithCosAngle = dot(vLightDir, vUpVector);
+				float2 vUV;
+				LutTransmittanceParamsToUv(fViewHeight, fSunZenithCosAngle, vUV);
+				const float3 vTrans = g_TransLUTTexture.SampleLevel(LinearClampSampler, vUV, 0).rgb;
 			
+				
+				vResultColor += vScatteredLight * vTrans * fAccum_Transmittance * fSampleDensity * fStepLength;
 				fAccum_Transmittance *= fStep_Transmittance;
 			}
 
@@ -258,7 +304,7 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir, float fStepLength)
 
 	}
 
-	vResultColor *= 100000.0f;
+	vResultColor *= fSunIlluminance;
 	float fAlpha = (1.0f - fAccum_Transmittance);
 
 	return float4(vResultColor, fAlpha);
@@ -266,8 +312,10 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir, float fStepLength)
 
 float4 Get_Cloud(float3 vWorldPos, float3 vRayDir, float2 vTexcoord)
 {
-	float3		vStart = Ray_Sphere_Intersection(vWorldPos, vRayDir, g_vEarthCenter, g_fEarthRadius + g_fMinHeight);
-	float3		vEnd = Ray_Sphere_Intersection(vWorldPos, vRayDir, g_vEarthCenter, g_fEarthRadius + g_fMaxHeight);
+	float3		vEarthCenter = float3(0.0f, -fEarthRadius, 0.0f);
+
+	float3		vStart = Ray_Sphere_Intersection(vWorldPos, vRayDir, vEarthCenter, fEarthRadius + g_fMinHeight);
+	float3		vEnd = Ray_Sphere_Intersection(vWorldPos, vRayDir, vEarthCenter, fEarthRadius + g_fMaxHeight);
 
 	float		fLength = distance(vStart, vEnd);
 	float		fStepLength = fLength / (float)g_iMaxStep;
@@ -304,6 +352,7 @@ PS_OUT PS_MAIN_CLOUD(PS_IN In)
 	vClipPos = mul(vClipPos, g_ViewMatrixInv);
 
 	float3		vWorldPos = vClipPos.xyz;
+
 
 	if (g_iUpdatePixel == iPixelIndex)
 	{

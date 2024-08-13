@@ -1,10 +1,10 @@
 #pragma once
 
-#include "GameObject.h"
+#include "Base.h"
 
 BEGIN(Engine)
 
-class ENGINE_DLL CCloud : public CGameObject
+class  CCloud : public CBase
 {
 private:
 	struct CloudTarget
@@ -15,18 +15,14 @@ private:
 
 
 private:
-	CCloud(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
-	CCloud(const CCloud& rhs);
+	CCloud(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, class CRenderer* pRenderer);
 	virtual ~CCloud() = default;
 
 
 public:
-	virtual HRESULT Initialize_Prototype();
-	virtual HRESULT Initialize(void* pArg);
-	virtual void PriorityTick(_float fTimeDelta);
-	virtual void Tick(_float fTimeDelta);
-	virtual void LateTick(_float fTimeDelta);
-	virtual HRESULT Render();
+	HRESULT Initialize();
+	void Tick(_float fTimeDelta);
+	HRESULT Render(Vec3 vLightPos, ID3D11Buffer* pAtmoBuffer, ID3D11ShaderResourceView* pTransLUT);
 
 private:
 	HRESULT Ready_For_NoiseTexture3D();
@@ -34,6 +30,8 @@ private:
 	HRESULT Ready_RenderTargets();
 	HRESULT Ready_UpdatePixel();
 private:
+	ID3D11Device* m_pDevice = { nullptr };
+	ID3D11DeviceContext* m_pContext = { nullptr };
 
 	BoundingBox					m_tBoundingBox;
 
@@ -60,9 +58,8 @@ private:
 
 	bool m_bSwap = true;
 public:
-	virtual CGameObject* Clone(void* pArg) override;
-	static CCloud* Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
-	virtual void Free() override;
+	static CCloud* Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, class CRenderer* pRenderer);
+	virtual void Free();
 };
 
 END

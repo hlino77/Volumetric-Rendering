@@ -11,7 +11,7 @@ class CPipeLine final : public CBase
 {
 	DECLARE_SINGLETON(CPipeLine)
 public:
-	enum TRANSFORMSTATE { D3DTS_VIEW, D3DTS_PROJ, D3DTS_LIGHTVIEW, D3DTS_END };
+	enum TRANSFORMSTATE { D3DTS_VIEW, D3DTS_PROJ, D3DTS_LIGHTVIEW, D3DTS_LIGHTPROJ, D3DTS_END };
 private:
 	CPipeLine();
 	virtual ~CPipeLine() = default;

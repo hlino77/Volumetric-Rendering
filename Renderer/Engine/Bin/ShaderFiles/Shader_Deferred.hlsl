@@ -308,11 +308,26 @@ PS_OUT PS_MAIN_DEFERRED(PS_IN In)
 }
 
 
-PS_OUT PS_MAIN_DEFERRED_VOLUMERENDER(PS_IN In)
+PS_OUT PS_MAIN_DEFERRED_ATMOSPHERE(PS_IN In)
 {
 	PS_OUT		Out = (PS_OUT)0;
+
 	
 	Out.vColor = g_SkyTexture.Sample(LinearSampler, In.vTexcoord);
+
+	return Out;
+}
+
+PS_OUT PS_MAIN_DEFERRED_CLOUD(PS_IN In)
+{
+	PS_OUT		Out = (PS_OUT)0;
+
+	float4 vDepthDesc = g_DepthTexture.Sample(PointSampler, In.vTexcoord);
+
+	if (vDepthDesc.x == 1.0f)
+	{
+		Out.vColor = g_SkyTexture.Sample(LinearSampler, In.vTexcoord);
+	}
 
 	return Out;
 }
@@ -385,7 +400,7 @@ technique11 DefaultTechnique
 		PixelShader = compile ps_5_0 PS_MAIN_DEFERRED();
 	}
 	
-	pass Deferred_VolumeRender
+	pass Deferred_Atmosphere
 	{
 		SetRasterizerState(RS_Default);
 		SetDepthStencilState(DSS_None, 0);
@@ -395,7 +410,7 @@ technique11 DefaultTechnique
 		GeometryShader = NULL;
 		HullShader = NULL;
 		DomainShader = NULL;
-		PixelShader = compile ps_5_0 PS_MAIN_DEFERRED_VOLUMERENDER();
+		PixelShader = compile ps_5_0 PS_MAIN_DEFERRED_ATMOSPHERE();
 	}
 
 	pass Light_Sun
@@ -423,6 +438,19 @@ technique11 DefaultTechnique
 		HullShader = NULL;
 		DomainShader = NULL;
 		PixelShader = compile ps_5_0 PS_MAIN_DEFERRED_TOMEMAP();
+	}
+
+		pass Deferred_Cloud
+	{
+		SetRasterizerState(RS_Default);
+		SetDepthStencilState(DSS_None, 0);
+		SetBlendState(BS_AlphaBlend, float4(0.f, 0.f, 0.f, 1.f), 0xffffffff);
+
+		VertexShader = compile vs_5_0 VS_MAIN();
+		GeometryShader = NULL;
+		HullShader = NULL;
+		DomainShader = NULL;
+		PixelShader = compile ps_5_0 PS_MAIN_DEFERRED_CLOUD();
 	}
 	
 }

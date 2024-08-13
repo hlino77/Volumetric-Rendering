@@ -234,9 +234,6 @@ HRESULT CLoader::Loading_For_Level_GamePlay()
 		CTerrain::Create(m_pDevice, m_pContext))))
 		return E_FAIL;
 
-	if (FAILED(pGameInstance->Add_Prototype(TEXT("Prototype_GameObject_Cloud"),
-		CCloud::Create(m_pDevice, m_pContext))))
-		return E_FAIL;
 
 	if (FAILED(pGameInstance->Add_Prototype(TEXT("Prototype_GameObject_Sky"),
 		CSky::Create(m_pDevice, m_pContext))))

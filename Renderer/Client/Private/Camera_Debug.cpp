@@ -40,19 +40,19 @@ void CCamera_Debug::Tick(_float fTimeDelta)
 
 	if (pGameInstance->Get_DIKeyState(DIK_A) & 0x80)
 	{
-		m_pTransform->Go_Left(fTimeDelta);
+		m_pTransform->Go_Left(fTimeDelta * 10.0f);
 	}
 	if (pGameInstance->Get_DIKeyState(DIK_D) & 0x80)
 	{
-		m_pTransform->Go_Right(fTimeDelta);
+		m_pTransform->Go_Right(fTimeDelta * 10.0f);
 	}
 	if (pGameInstance->Get_DIKeyState(DIK_W) & 0x80)
 	{
-		m_pTransform->Go_Straight(fTimeDelta);
+		m_pTransform->Go_Straight(fTimeDelta * 10.0f);
 	}
 	if (pGameInstance->Get_DIKeyState(DIK_S) & 0x80)
 	{
-		m_pTransform->Go_Backward(fTimeDelta);
+		m_pTransform->Go_Backward(fTimeDelta * 10.0f);
 	}
 
 	_long	MouseMove = 0l;
