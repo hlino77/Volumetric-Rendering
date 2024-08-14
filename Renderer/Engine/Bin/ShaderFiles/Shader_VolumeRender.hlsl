@@ -123,7 +123,7 @@ float remap(float fValue, float fIn1, float fIn2, float fOut1, float fOut2)
 
 float Blue_Noise(float2 vTexcoord, float fStepLength)
 {
-	return (g_BlueNoiseTexture.Sample(LinearSampler, vTexcoord).x - 0.5f) * 2.0f * fStepLength;
+	return g_BlueNoiseTexture.Sample(LinearSampler, vTexcoord).x * (fStepLength * 0.5f);
 }
 
 float3 Ray_Sphere_Intersection(float3 vOrigin, float3 vRayDir, float3 vCenter, float fRadius)
@@ -213,7 +213,8 @@ float Sample_CloudDensity(float3 vWorldPos)
 
     float fDensity = remap(vSample.x, fWfbm - 1.0f, 1.0f, 0.0f, 1.0f);
 
-	fDensity *= saturate(remap(fHeightFraction, 0.0f, 0.007f, 0.0f, 1.0f))
+
+	fDensity *= saturate(remap(fHeightFraction, 0.0f, 0.2f, 0.0f, 1.0f))
            * saturate(remap(fHeightFraction, 0.75f, 1.0f, 1.0f, 0.0f));
 
 	float fCoverage = lerp(0.75f, 1.0f, fHeightFraction);
@@ -221,10 +222,10 @@ float Sample_CloudDensity(float3 vWorldPos)
     fDensity = remap(fDensity, fCoverage, 1.0f, 0.0f, 1.0f);
 	fDensity *= 0.3f;
 
-	float4 vDetail = g_DetailTexture.SampleLevel(CloudSampler, vTexcoord * 12.0f, 0.0f);
+	float4 vDetail = g_DetailTexture.SampleLevel(CloudSampler, vTexcoord * 14.0f, 0.0f);
 	float fDetailfbm = vDetail.x * 0.625f + vDetail.y * 0.25f + vDetail.z * 0.125f;
 			
-	fDensity -= fDetailfbm * g_fDetailNoiseScale;
+	fDensity -= saturate(fDetailfbm) * g_fDetailNoiseScale;
 	
    
 	return saturate(fDensity);
@@ -252,25 +253,35 @@ float Calculate_LightDensity(float3 vStart)
 }
 
 
-float4 RayMarch(float3 vStartPos, float3 vRayDir, float fStepLength)
+float4 RayMarch(float3 vStartPos, float3 vRayDir, float fMaxStepLength)
 {
 	float fAccum_Transmittance = 1.0f;
 	
 	float3 vLightColor = float3(1.0f, 1.0f, 1.0f);
 	float3 vResultColor = float3(0.0f, 0.0f, 0.0f);
 	float fTotalDensity = 0.0f;
+	float fStepLength = fMaxStepLength;
 
 	for (int i = 0; i < g_iMaxStep; ++i)
 	{
+		vStartPos += vRayDir * fStepLength;
+		
 		if (vStartPos.y > 10.0f)
 		{
 			float fSampleDensity = Sample_CloudDensity(vStartPos);
 			
 			float fStep_Transmittance = Beer_Lambert_Law(fSampleDensity * fStepLength);
 
-
 			if (fSampleDensity > 0.0f)
 			{
+				if (fStepLength == fMaxStepLength)
+				{
+					--i;
+					vStartPos -= vRayDir * fStepLength;
+					fStepLength = max(fStepLength * 0.5f, 10.0f);
+					continue;
+				}
+
 				float3 vLightDir = normalize(g_vLightPos - vStartPos);
 				float fCos = dot(vRayDir, vLightDir);
 			
@@ -293,14 +304,16 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir, float fStepLength)
 				vResultColor += vScatteredLight * vTrans * fAccum_Transmittance * fSampleDensity * fStepLength;
 				fAccum_Transmittance *= fStep_Transmittance;
 			}
+			else
+			{
+				fStepLength = fMaxStepLength;
+			}
 
  			if (fAccum_Transmittance < 0.0001f)
  			{
  				break;
  			}
 		}
-
-		vStartPos += vRayDir * fStepLength;
 
 	}
 
