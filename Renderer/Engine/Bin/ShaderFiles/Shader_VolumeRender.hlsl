@@ -26,11 +26,11 @@ float			g_fMinHeight = 1000.0f;
 int				g_iMaxStep = 64;
 
 int				g_iSunStep = 8;
-float			g_fSunStepLength = 30.0f;
+float			g_fSunStepLength = 60.0f;
 
 float			g_fAbsorption = 0.5f;
 float			g_fCurlNoiseScale = 7.44f;
-float			g_fDetailNoiseScale = 0.15f;
+float			g_fDetailNoiseScale = 0.035f;
 float			g_fDetailNoiseModif = 0.5f;
 
 int				g_iUpdatePixel;
@@ -220,11 +220,11 @@ float Sample_CloudDensity(float3 vWorldPos)
 	float fCoverage = lerp(0.75f, 1.0f, fHeightFraction);
 
     fDensity = remap(fDensity, fCoverage, 1.0f, 0.0f, 1.0f);
-	fDensity *= 0.3f;
+	fDensity *= 0.1f;
 
 	float4 vDetail = g_DetailTexture.SampleLevel(CloudSampler, vTexcoord * 14.0f, 0.0f);
 	float fDetailfbm = vDetail.x * 0.625f + vDetail.y * 0.25f + vDetail.z * 0.125f;
-			
+
 	fDensity -= saturate(fDetailfbm) * g_fDetailNoiseScale;
 	
    
@@ -261,6 +261,7 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir, float fMaxStepLength)
 	float3 vResultColor = float3(0.0f, 0.0f, 0.0f);
 	float fTotalDensity = 0.0f;
 	float fStepLength = fMaxStepLength;
+	float fMinStepLength = 30.0f;
 
 	for (int i = 0; i < g_iMaxStep; ++i)
 	{
@@ -274,11 +275,11 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir, float fMaxStepLength)
 
 			if (fSampleDensity > 0.0f)
 			{
-				if (fStepLength == fMaxStepLength)
+				if (fStepLength == fMaxStepLength && fStepLength > fMinStepLength)
 				{
 					--i;
 					vStartPos -= vRayDir * fStepLength;
-					fStepLength = max(fStepLength * 0.5f, 10.0f);
+					fStepLength = fMinStepLength;
 					continue;
 				}
 
