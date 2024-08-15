@@ -23,14 +23,14 @@ float3			g_vLightPos;
 float			g_fMaxHeight = 2000.0f;
 float			g_fMinHeight = 1000.0f;
 
-int				g_iMaxStep = 5;
+int				g_iMaxStep = 64;
 
 int				g_iSunStep = 8;
 float			g_fSunStepLength = 60.0f;
 
 float			g_fAbsorption = 0.5f;
 float			g_fCurlNoiseScale = 7.44f;
-float			g_fDetailNoiseScale = 0.035f;
+float			g_fDetailNoiseScale = 0.04f;
 float			g_fDetailNoiseModif = 0.5f;
 
 int				g_iUpdatePixel;
@@ -214,18 +214,23 @@ float Sample_CloudDensity(float3 vWorldPos)
     float fDensity = remap(vSample.x, fWfbm - 1.0f, 1.0f, 0.0f, 1.0f);
 
 
-	//fDensity *= saturate(remap(fHeightFraction, 0.0f, 0.2f, 0.0f, 1.0f))
-           //* saturate(remap(fHeightFraction, 0.75f, 1.0f, 1.0f, 0.0f));
+	fDensity *= saturate(remap(fHeightFraction, 0.0f, 0.2f, 0.0f, 1.0f))
+           * saturate(remap(fHeightFraction, 0.75f, 1.0f, 1.0f, 0.0f));
 
-	//float fCoverage = lerp(0.75f, 1.0f, fHeightFraction);
+	float fCoverage = lerp(0.75f, 1.0f, fHeightFraction);
 
-    fDensity = remap(fDensity, 0.9f, 1.0f, 0.0f, 1.0f);
-	fDensity *= 0.5f;
+    fDensity = remap(fDensity, fCoverage, 1.0f, 0.0f, 1.0f);
+	fDensity *= 0.1f;
+	
+	if (fHeightFraction < 0.2f)
+	{
+		fDensity *= fHeightFraction / 0.2f;
+	}
 
-// 	float4 vDetail = g_DetailTexture.SampleLevel(CloudSampler, vTexcoord * 14.0f, 0.0f);
-// 	float fDetailfbm = vDetail.x * 0.625f + vDetail.y * 0.25f + vDetail.z * 0.125f;
-// 
-// 	fDensity -= saturate(fDetailfbm) * g_fDetailNoiseScale;
+ 	float4 vDetail = g_DetailTexture.SampleLevel(CloudSampler, vTexcoord * 14.0f, 0.0f);
+ 	float fDetailfbm = vDetail.x * 0.625f + vDetail.y * 0.25f + vDetail.z * 0.125f;
+ 
+ 	fDensity -= saturate(fDetailfbm) * g_fDetailNoiseScale;
 	
    
 	return saturate(fDensity);
@@ -266,6 +271,7 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir, float fMaxStepLength)
 	{
 		vStartPos += vRayDir * fStepLength;
 		
+
 		if (vStartPos.y > 10.0f)
 		{
 			float fSampleDensity = Sample_CloudDensity(vStartPos);
@@ -274,13 +280,13 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir, float fMaxStepLength)
 
 			if (fSampleDensity > 0.0f)
 			{
-// 				if (fStepLength == fMaxStepLength && fStepLength > fMinStepLength)
-// 				{
-// 					--i;
-// 					vStartPos -= vRayDir * fStepLength;
-// 					fStepLength = fMinStepLength;
-// 					continue;
-// 				}
+ 				if (fStepLength == fMaxStepLength && fStepLength > fMinStepLength)
+ 				{
+ 					--i;
+ 					vStartPos -= vRayDir * fStepLength;
+ 					fStepLength = fMinStepLength;
+ 					continue;
+ 				}
 
 				float3 vLightDir = normalize(g_vLightPos - vStartPos);
 				float fCos = dot(vRayDir, vLightDir);
@@ -301,13 +307,6 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir, float fMaxStepLength)
 				
 				vResultColor += vScatteredLight * vTrans * fAccum_Transmittance * fSampleDensity * fStepLength;
 				fAccum_Transmittance *= fStep_Transmittance;
-				
-// 				float fClampedExtinction = max(fSampleDensity, 0.0000001f);
-// 				float3 vLuminance = vScatteredLight * vTrans;
-// 				float3 vIntegScatt = (vLuminance - vLuminance * fStep_Transmittance) / fClampedExtinction;
-// 
-// 				vResultColor += vIntegScatt * fAccum_Transmittance;
-// 				fAccum_Transmittance *= fStep_Transmittance;
 			}
 			else
 			{
@@ -336,24 +335,15 @@ float4 Get_Cloud(float3 vWorldPos, float3 vRayDir, float2 vTexcoord)
 	float3		vEnd = Ray_Sphere_Intersection(vWorldPos, vRayDir, vEarthCenter, fEarthRadius + g_fMaxHeight);
 
 	float		fLength = distance(vStart, vEnd);
-	//float		fStepLength = fLength / (float)g_iMaxStep;
-	float		fStepLength = 20.0f;
+	float		fStepLength = fLength / (float)g_iMaxStep;
 
-	//vStart += vRayDir * Blue_Noise(vTexcoord, fStepLength);
+	vStart += vRayDir * Blue_Noise(vTexcoord, fStepLength);
 
-// 	if (distance(vStart, g_vCamPosition) < 20000.0f)
-// 	{
-// 		return RayMarch(vStart, vRayDir, fStepLength);
-// 	}
+ 	if (distance(vStart, g_vCamPosition) < 20000.0f)
+ 	{
+ 		return RayMarch(vStart, vRayDir, fStepLength);
+ 	}
 	
-	
-
-	if (vWorldPos.x > 100.0f && vWorldPos.x < 200.0f && vWorldPos.y > 100.0f && vWorldPos.y < 200.0f && vWorldPos.z > 100.0f && vWorldPos.z < 200.0f)
-	{
-		return RayMarch(vWorldPos, vRayDir, fStepLength);
-	}
-
-
 	return float4(0.0f, 0.0f, 0.0f, 0.0f);
 }
 
