@@ -258,7 +258,7 @@ HRESULT CSky::Render()
 	if (FAILED(m_pTarget_Manager->End_MRT(m_pContext)))
 		return E_FAIL;
 
-	if (FAILED(m_pCloud->Render(m_vSunPos, m_pAtmosphereBuffer, m_pTransLUTSRV)))
+	if (FAILED(m_pCloud->Render(m_vSunPos, m_pAtmosphereBuffer, m_pTransLUTSRV, m_pAerialLUT->Get_SRV())))
 		return E_FAIL;
 	
 

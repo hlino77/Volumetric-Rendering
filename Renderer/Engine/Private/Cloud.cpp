@@ -57,7 +57,7 @@ void CCloud::Tick(_float fTimeDelta)
 
 
 
-HRESULT CCloud::Render(Vec3 vLightPos, ID3D11Buffer* pAtmoBuffer, ID3D11ShaderResourceView* pTransLUT)
+HRESULT CCloud::Render(Vec3 vLightPos, ID3D11Buffer* pAtmoBuffer, ID3D11ShaderResourceView* pTransLUT, ID3D11ShaderResourceView* pAerialLUT)
 {
 	if (FAILED(m_pTarget_Manager->Begin_MRT(m_pContext, m_Targets[m_bSwap].szMRT)))
 		return E_FAIL;
@@ -93,6 +93,11 @@ HRESULT CCloud::Render(Vec3 vLightPos, ID3D11Buffer* pAtmoBuffer, ID3D11ShaderRe
 	}
 
 	if (FAILED(m_pShader->Bind_Texture("g_TransLUTTexture", pTransLUT)))
+	{
+		return E_FAIL;
+	}
+
+	if (FAILED(m_pShader->Bind_Texture("g_AerialLUTTexture", pAerialLUT)))
 	{
 		return E_FAIL;
 	}

@@ -22,7 +22,7 @@ private:
 public:
 	HRESULT Initialize();
 	void Tick(_float fTimeDelta);
-	HRESULT Render(Vec3 vLightPos, ID3D11Buffer* pAtmoBuffer, ID3D11ShaderResourceView* pTransLUT);
+	HRESULT Render(Vec3 vLightPos, ID3D11Buffer* pAtmoBuffer, ID3D11ShaderResourceView* pTransLUT, ID3D11ShaderResourceView* pAerialLUT);
 
 private:
 	HRESULT Ready_For_NoiseTexture3D();

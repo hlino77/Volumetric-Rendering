@@ -17,6 +17,7 @@ texture2D		g_CurlNoiseTexture;
 texture2D		g_PrevFrameTexture;
 
 texture2D		g_TransLUTTexture;
+texture3D		g_AerialLUTTexture;
 
 float3			g_vLightPos;
 
@@ -26,7 +27,7 @@ float			g_fMinHeight = 1000.0f;
 int				g_iMaxStep = 64;
 
 int				g_iSunStep = 8;
-float			g_fSunStepLength = 60.0f;
+float			g_fSunStepLength = 30.0f;
 
 float			g_fAbsorption = 0.5f;
 float			g_fCurlNoiseScale = 7.44f;
@@ -39,6 +40,7 @@ int				g_iGridSize;
 uint				g_iWinSizeX;
 uint				g_iWinSizeY;
 
+float			g_fAerialMaxDepth = 60000.0f;
 
 cbuffer AtmosphereParams : register(b0)
 {
@@ -173,7 +175,7 @@ float Height_Fraction(float3 vWorldPos)
 float Beer_Law(float fDensity)
 {
 	float fD = fDensity * -g_fAbsorption;
-	return max(exp(fD), exp(fD * 0.25f) * 0.7f);
+	return max(exp(fD), exp(fD * 0.5f) * 0.7f);
 }
 
 float Beer_Lambert_Law(float fDensity)
@@ -257,13 +259,15 @@ float Calculate_LightDensity(float3 vStart)
 }
 
 
-float4 RayMarch(float3 vStartPos, float3 vRayDir, float fMaxStepLength)
+float4 RayMarch(float3 vStartPos, float3 vRayDir, float fMaxStepLength, float3 vOrigin, out float fAerialDepth)
 {
 	float fAccum_Transmittance = 1.0f;
 	
 	float3 vLightColor = float3(1.0f, 1.0f, 1.0f);
 	float3 vResultColor = float3(0.0f, 0.0f, 0.0f);
 	float fTotalDensity = 0.0f;
+	float fTotalTrans = 0.0f;
+	float fTotalTransDepth = 0.0f;
 	float fStepLength = fMaxStepLength;
 	float fMinStepLength = 30.0f;
 
@@ -317,12 +321,17 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir, float fMaxStepLength)
  			{
  				break;
  			}
+
+			fTotalTrans += (1.0f - fStep_Transmittance);
+			fTotalTransDepth += (1.0f - fStep_Transmittance) * (distance(vStartPos, vOrigin) / g_fAerialMaxDepth);
 		}
 
 	}
 
 	vResultColor *= fSunIlluminance;
 	float fAlpha = (1.0f - fAccum_Transmittance);
+
+	fAerialDepth = fTotalTrans > 0.0f ? fTotalTransDepth / fTotalTrans : 0.0f;
 
 	return float4(vResultColor, fAlpha);
 }
@@ -337,11 +346,20 @@ float4 Get_Cloud(float3 vWorldPos, float3 vRayDir, float2 vTexcoord)
 	float		fLength = distance(vStart, vEnd);
 	float		fStepLength = fLength / (float)g_iMaxStep;
 
-	vStart += vRayDir * Blue_Noise(vTexcoord, fStepLength);
+	float		fAerialDepth = 0.0f;
 
- 	if (distance(vStart, g_vCamPosition) < 20000.0f)
+ 	if (distance(vEnd, g_vCamPosition) < 20000.0f)
  	{
- 		return RayMarch(vStart, vRayDir, fStepLength);
+		float3 vWorldPos = vStart + vRayDir * Blue_Noise(vTexcoord, fStepLength);
+		float4 vCloud = RayMarch(vWorldPos, vRayDir, fStepLength, vStart, fAerialDepth);
+
+		if (fAerialDepth > 0.0f)
+		{	
+ 			const float4 vAP = g_AerialLUTTexture.SampleLevel(LinearClampSampler, float3(vTexcoord, fAerialDepth * 20.0f), 0);
+ 			vCloud.rgb += (vAP.rgb * fSunIlluminance);
+		}
+
+ 		return vCloud;
  	}
 	
 	return float4(0.0f, 0.0f, 0.0f, 0.0f);
