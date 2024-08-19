@@ -188,6 +188,14 @@ CGameObject * CGameInstance::Get_GameObject(_uint iLevelIndex, const wstring & s
 	return m_pObject_Manager->Get_GameObject(iLevelIndex, strLayerTag, iIndex);
 }
 
+CGameObject* CGameInstance::Find_GameObject(_uint iLevelIndex, const wstring& strLayerTag, const wstring& strName)
+{
+	if (nullptr == m_pObject_Manager)
+		return nullptr;
+
+	return m_pObject_Manager->Find_GameObject(iLevelIndex, strLayerTag, strName);
+}
+
 CComponent * CGameInstance::Get_Component(_uint iLevelIndex, const wstring & strLayerTag, const wstring & strComponentTag, _uint iIndex)
 {
 	if (nullptr == m_pObject_Manager)

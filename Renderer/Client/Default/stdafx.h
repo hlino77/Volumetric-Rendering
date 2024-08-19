@@ -17,5 +17,8 @@
 #include <memory.h>
 #include <tchar.h>
 
+#include "imgui.h"
+#include "imgui_impl_win32.h"
+#include "imgui_impl_dx11.h"
 
 // TODO: 프로그램에 필요한 추가 헤더는 여기에서 참조합니다.

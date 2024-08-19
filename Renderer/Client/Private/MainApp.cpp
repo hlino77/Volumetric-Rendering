@@ -4,6 +4,8 @@
 #include "GameInstance.h"
 #include "Level_Loading.h"
 
+
+
 CMainApp::CMainApp()	
 	: m_pGameInstance(CGameInstance::GetInstance())
 {	
@@ -84,8 +86,18 @@ HRESULT CMainApp::Initialize()
 	if (FAILED(Open_Level(LEVEL_GAMEPLAY)))
 		return E_FAIL;
 
-	
+	//Imgui
 
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+
+	ImGui::StyleColorsDark();
+
+	ImGui_ImplWin32_Init(g_hWnd);
+	ImGui_ImplDX11_Init(m_pDevice, m_pContext);
 
 	/* 1-4-1. 게임내에서 사용할 여러 자원(텍스쳐, 모델, 객체) 들을 준비한다.  */
 
@@ -96,6 +108,13 @@ void CMainApp::Tick(_float fTimeDelta)
 {
 	/* 게임내에 존재하는 여러 객체들의 갱신. */
 	/* 레벨의 갱신 */
+
+	ImGui_ImplDX11_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+
+	if (m_bShowDemoWindow)
+		ImGui::ShowDemoWindow(&m_bShowDemoWindow);
 
 #ifdef _DEBUG
 	m_fTimeAcc += fTimeDelta;
@@ -125,9 +144,10 @@ HRESULT CMainApp::Render()
 	
 
 	m_pGameInstance->Render_Font(TEXT("Font_Default"), m_szFPS, Vec2(0.f, 0.f), XMVectorSet(1.f, 0.f, 0.f, 1.f));
-
 #endif
-
+	
+	ImGui::Render();
+	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 	/* 초기화한 장면에 객체들을 그린다. */
 	m_pGameInstance->Present();
 

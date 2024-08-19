@@ -20,6 +20,12 @@ public:
 	virtual void LateTick(_float fTimeDelta);
 	virtual HRESULT Render();
 
+
+	AtmosphereProperties	Get_Properties(_bool bOrigin) { return bOrigin == true ? m_tUnitAtmo.ToOriginUnit() : m_tUnitAtmo; }
+	void					Set_PropertiesToStd(AtmosphereProperties tAtmo) { m_tUnitAtmo = tAtmo.ToStdUnit(); }
+
+	_bool	Is_Aerial() { return m_bAerial; }
+	void	Set_Aerial(_bool bAerial) { m_bAerial = bAerial; }
 private:
 	HRESULT Ready_For_LUT();
 	HRESULT Ready_Components();
@@ -29,6 +35,9 @@ private:
 
 
 	void	Update_Sun(_float fTimeDelta);
+	void	Update_Atmosphere();
+
+	
 private:
 	ID3D11ShaderResourceView*	m_pTransLUTSRV = { nullptr };
 
@@ -59,8 +68,7 @@ private:
 
 	Vec3					m_vSunPos;
 
-	//Test
-	_bool					m_bKeyPress[2];
+
 	_float					m_fTest = 1.0f;
 	_bool					m_bAerial = true;
 

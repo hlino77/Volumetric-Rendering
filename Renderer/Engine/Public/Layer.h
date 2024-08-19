@@ -14,6 +14,8 @@ private:
 
 public:
 	class CGameObject* Get_GameObject(_uint iIndex);
+	class CGameObject* Get_GameObject(const wstring& strName);
+
 	class CComponent* Get_Component(const wstring& strComponentTag, _uint iIndex);
 
 public:

@@ -192,6 +192,7 @@ namespace Engine
 		float	fMultiScatFactor = 1.0f;
 
 		AtmosphereProperties ToStdUnit() const;
+		AtmosphereProperties ToOriginUnit() const;
 	};
 
 	

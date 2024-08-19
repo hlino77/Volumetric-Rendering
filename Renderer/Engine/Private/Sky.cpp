@@ -35,7 +35,7 @@ HRESULT CSky::Initialize_Prototype()
 	m_ViewMatrix = XMMatrixIdentity();
 	m_ProjMatrix = XMMatrixOrthographicLH(m_iWinSizeX, m_iWinSizeY, 0.f, 1.f);
 
-
+	m_strName = L"Sky";
 	
 
 	return S_OK;
@@ -87,7 +87,6 @@ HRESULT CSky::Initialize(void* pArg)
 	m_MultiScatLUTViewPortDesc.MaxDepth = 1.f;
 
 
-	memset(m_bKeyPress, 1, 2);
 
 	m_pCloud = CCloud::Create(m_pDevice, m_pContext, m_pRendererCom);
 	if (m_pCloud == nullptr)
@@ -100,20 +99,20 @@ HRESULT CSky::Initialize(void* pArg)
 
 void CSky::PriorityTick(_float fTimeDelta)
 {
-
+	
 }
 
 void CSky::Tick(_float fTimeDelta)
 {
 	Update_Sun(fTimeDelta);
 
-	m_pMultiScatLUT->Update_MultiScatteringLUT(&m_pAtmosphereBuffer, &m_pTransLUTSRV);
-
 	m_pCloud->Tick(fTimeDelta);
 }
 
 void CSky::LateTick(_float fTimeDelta)
 {
+	Update_Atmosphere();	
+	m_pMultiScatLUT->Update_MultiScatteringLUT(&m_pAtmosphereBuffer, &m_pTransLUTSRV);
 	m_pRendererCom->Add_RenderGroup(CRenderer::RG_SKY, this);
 }
 
@@ -258,7 +257,7 @@ HRESULT CSky::Render()
 	if (FAILED(m_pTarget_Manager->End_MRT(m_pContext)))
 		return E_FAIL;
 
-	if (FAILED(m_pCloud->Render(m_vSunPos, m_pAtmosphereBuffer, m_pTransLUTSRV, m_pAerialLUT->Get_SRV())))
+	if (FAILED(m_pCloud->Render(m_vSunPos, m_pAtmosphereBuffer, m_pTransLUTSRV, m_pAerialLUT->Get_SRV(), m_bAerial)))
 		return E_FAIL;
 	
 
@@ -421,41 +420,6 @@ void CSky::Update_Sun(_float fTimeDelta)
 		}
 	}
 
-	if (pGameInstance->Get_DIKeyState(DIK_M) & 0x80)
-	{
-		//Test
-		if (m_bKeyPress[0] == false)
-		{
-			m_tUnitAtmo.fMultiScatFactor = 1.0f - (1.0f * m_tUnitAtmo.fMultiScatFactor);
-
-			D3D11_MAPPED_SUBRESOURCE mappedResource;
-			ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
-			m_pContext->Map(m_pAtmosphereBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-			memcpy(mappedResource.pData, &m_tUnitAtmo, sizeof(AtmosphereProperties));
-			m_pContext->Unmap(m_pAtmosphereBuffer, 0);
-
-			m_bKeyPress[0] = true;
-		}
-	}
-	else
-	{
-		m_bKeyPress[0] = false;
-	}
-
-	if (pGameInstance->Get_DIKeyState(DIK_N) & 0x80)
-	{
-		//Test
-		if (m_bKeyPress[1] == false)
-		{
-			m_bAerial = !m_bAerial;
-			m_bKeyPress[1] = true;
-		}
-	}
-	else
-	{
-		m_bKeyPress[1] = false;
-	}
-	
 
 	//Test
 	if (pGameInstance->Get_DIKeyState(DIK_O) & 0x80)
@@ -474,6 +438,15 @@ void CSky::Update_Sun(_float fTimeDelta)
 
 	RELEASE_INSTANCE(CGameInstance);
 
+}
+
+void CSky::Update_Atmosphere()
+{
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
+	m_pContext->Map(m_pAtmosphereBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	memcpy(mappedResource.pData, &m_tUnitAtmo, sizeof(AtmosphereProperties));
+	m_pContext->Unmap(m_pAtmosphereBuffer, 0);
 }
 
 

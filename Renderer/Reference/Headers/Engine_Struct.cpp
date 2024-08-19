@@ -105,5 +105,23 @@ namespace Engine
 
 		return ret;
 	}
+	AtmosphereProperties AtmosphereProperties::ToOriginUnit() const
+	{
+		AtmosphereProperties ret = *this;
+		ret.fScatterRayleigh = 1e6f * ret.fScatterRayleigh;
+		ret.fHDensityRayleigh = 1e-3f * ret.fHDensityRayleigh;
+
+		ret.fScatterMie = 1e6f * ret.fScatterMie;
+		ret.fExtinctionMie = 1e6f * ret.fExtinctionMie;
+		ret.fHDensityMie = 1e-3f * ret.fHDensityMie;
+
+		ret.fAbsorbOzone = 1e6f * ret.fAbsorbOzone;
+		ret.vOzone = 1e-3f * ret.vOzone;
+
+		ret.fAtmosphereRadius = 1e-3f * ret.fAtmosphereRadius;
+		ret.fPlanetRadius = 1e-3f * ret.fPlanetRadius;
+
+		return ret;
+	}
 }
 

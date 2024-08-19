@@ -27,12 +27,14 @@ public:
 	virtual HRESULT Render();
 	virtual HRESULT Render_LightDepth() { return S_OK; }
 
+	wstring Get_ObjectName() { return m_strName; }
+
 protected:
 	ID3D11Device*			m_pDevice = { nullptr };
 	ID3D11DeviceContext*	m_pContext = { nullptr };
 
 
-
+	wstring					m_strName;
 protected:
 	/* 특정 컴포넌트의 검색을 용이하게 하기 위해서. */
 	/* 검색을 고려하는 이유?! : 타 객체가 현재 객체의 정보(컴포넌트)를 참조하고자 하는 경우가 빈번하다. */

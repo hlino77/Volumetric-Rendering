@@ -42,6 +42,8 @@ uint				g_iWinSizeY;
 
 float			g_fAerialMaxDepth = 60000.0f;
 
+bool			g_bAerial;
+
 cbuffer AtmosphereParams : register(b0)
 {
 	float4	vScatterRayleigh;
@@ -348,12 +350,12 @@ float4 Get_Cloud(float3 vWorldPos, float3 vRayDir, float2 vTexcoord)
 
 	float		fAerialDepth = 0.0f;
 
- 	if (distance(vEnd, g_vCamPosition) < 20000.0f)
+ 	if (distance(vEnd, g_vCamPosition) < 50000.0f)
  	{
 		float3 vWorldPos = vStart + vRayDir * Blue_Noise(vTexcoord, fStepLength);
 		float4 vCloud = RayMarch(vWorldPos, vRayDir, fStepLength, vStart, fAerialDepth);
 
-		if (fAerialDepth > 0.0f)
+		if (g_bAerial && fAerialDepth > 0.0f)
 		{	
  			const float4 vAP = g_AerialLUTTexture.SampleLevel(LinearClampSampler, float3(vTexcoord, fAerialDepth * 20.0f), 0);
  			vCloud.rgb += (vAP.rgb * fSunIlluminance);

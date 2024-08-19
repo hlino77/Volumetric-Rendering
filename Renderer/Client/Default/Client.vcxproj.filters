@@ -40,6 +40,9 @@
     <Filter Include="02.GameObjects\Camera\Debug">
       <UniqueIdentifier>{b848d910-d440-4932-a887-9d28dbf7ce27}</UniqueIdentifier>
     </Filter>
+    <Filter Include="96. ImGUI">
+      <UniqueIdentifier>{82546afd-82ca-4585-8d59-3d4f3fa79faf}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -81,6 +84,30 @@
     <ClInclude Include="..\public\Camera_Debug.h">
       <Filter>02.GameObjects\Camera\Debug</Filter>
     </ClInclude>
+    <ClInclude Include="..\Public\ImGUI\imgui_impl_dx11.h">
+      <Filter>96. ImGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\ImGUI\imgui_impl_win32.h">
+      <Filter>96. ImGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\ImGUI\imgui_internal.h">
+      <Filter>96. ImGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\ImGUI\imstb_rectpack.h">
+      <Filter>96. ImGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\ImGUI\imstb_textedit.h">
+      <Filter>96. ImGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\ImGUI\imstb_truetype.h">
+      <Filter>96. ImGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\ImGUI\imconfig.h">
+      <Filter>96. ImGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\ImGUI\imgui.h">
+      <Filter>96. ImGUI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -109,6 +136,27 @@
     </ClCompile>
     <ClCompile Include="..\private\Camera_Debug.cpp">
       <Filter>02.GameObjects\Camera\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Public\ImGUI\imgui_impl_win32.cpp">
+      <Filter>96. ImGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Public\ImGUI\imgui_tables.cpp">
+      <Filter>96. ImGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Public\ImGUI\imgui_widgets.cpp">
+      <Filter>96. ImGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Public\ImGUI\imgui.cpp">
+      <Filter>96. ImGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Public\ImGUI\imgui_demo.cpp">
+      <Filter>96. ImGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Public\ImGUI\imgui_draw.cpp">
+      <Filter>96. ImGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Public\ImGUI\imgui_impl_dx11.cpp">
+      <Filter>96. ImGUI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

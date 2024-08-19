@@ -3,6 +3,12 @@
 #include "Client_Defines.h"
 #include "Level.h"
 
+BEGIN(Engine)
+class CGameObject;
+class CSky;
+END
+
+
 BEGIN(Client)
 
 class CLevel_GamePlay final : public CLevel
@@ -22,6 +28,17 @@ private:
 
 	HRESULT Ready_Layer_Camera(const wstring& strLayerTag);
 	
+
+
+	void	Update_Sky();
+	void	Update_Performance();
+
+
+private:
+	_uint m_iFrameCount = 0;
+	_float m_fTimer = 1.0f;
+
+	CSky* m_pSky = nullptr;
 
 public:
 	static class CLevel_GamePlay* Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);

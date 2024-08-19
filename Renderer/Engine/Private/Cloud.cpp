@@ -57,7 +57,7 @@ void CCloud::Tick(_float fTimeDelta)
 
 
 
-HRESULT CCloud::Render(Vec3 vLightPos, ID3D11Buffer* pAtmoBuffer, ID3D11ShaderResourceView* pTransLUT, ID3D11ShaderResourceView* pAerialLUT)
+HRESULT CCloud::Render(Vec3 vLightPos, ID3D11Buffer* pAtmoBuffer, ID3D11ShaderResourceView* pTransLUT, ID3D11ShaderResourceView* pAerialLUT, _bool bAerial)
 {
 	if (FAILED(m_pTarget_Manager->Begin_MRT(m_pContext, m_Targets[m_bSwap].szMRT)))
 		return E_FAIL;
@@ -132,6 +132,10 @@ HRESULT CCloud::Render(Vec3 vLightPos, ID3D11Buffer* pAtmoBuffer, ID3D11ShaderRe
 		return E_FAIL;
 	}
 	if (FAILED(m_pShader->Bind_RawValue("g_iWinSizeY", &m_iWinSizeY, sizeof(_uint))))
+	{
+		return E_FAIL;
+	}
+	if (FAILED(m_pShader->Bind_RawValue("g_bAerial", &bAerial, sizeof(_bool))))
 	{
 		return E_FAIL;
 	}

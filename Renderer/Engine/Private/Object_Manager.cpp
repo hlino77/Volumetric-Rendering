@@ -18,6 +18,15 @@ CGameObject * CObject_Manager::Get_GameObject(_uint iLevelIndex, const wstring &
 	
 }
 
+CGameObject* CObject_Manager::Find_GameObject(_uint iLevelIndex, const wstring& strLayerTag, const wstring& strName)
+{
+	CLayer* pLayer = Find_Layer(iLevelIndex, strLayerTag);
+	if (nullptr == pLayer)
+		return nullptr;
+
+	return pLayer->Get_GameObject(strName);
+}
+
 CComponent * CObject_Manager::Get_Component(_uint iLevelIndex, const wstring & strLayerTag, const wstring & strComponentTag, _uint iIndex)
 {
 	CLayer*		pLayer = Find_Layer(iLevelIndex, strLayerTag);

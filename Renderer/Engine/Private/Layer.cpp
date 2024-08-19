@@ -15,6 +15,19 @@ CGameObject * CLayer::Get_GameObject(_uint iIndex)
 	return *iter;
 }
 
+CGameObject* CLayer::Get_GameObject(const wstring& strName)
+{
+	for (auto iter = m_GameObjects.begin(); iter != m_GameObjects.end(); ++iter)
+	{
+		if ((*iter)->Get_ObjectName() == strName)
+		{
+			return *iter;
+		}
+	}
+
+	return nullptr;
+}
+
 CComponent * CLayer::Get_Component(const wstring & strComponentTag, _uint iIndex)
 {
 	auto	iter = m_GameObjects.begin();
