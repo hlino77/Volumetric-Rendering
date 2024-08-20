@@ -26,7 +26,7 @@ private:
 
 
 public:
-	HRESULT Update_AerialLUT(ID3D11Buffer** pAtmosConstant, ID3D11ShaderResourceView** pTransLUT, const Vec3& vLightDir, ID3D11ShaderResourceView** pMultiScatLUT);
+	HRESULT Update_AerialLUT(ID3D11Buffer** pAtmosConstant, ID3D11ShaderResourceView** pTransLUT, const Vec3& vLightDir, ID3D11ShaderResourceView** pMultiScatLUT, OUT _float* fTime);
 
 	ID3D11ShaderResourceView* Get_SRV() { return m_pSRV; }
 private:

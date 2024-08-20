@@ -94,6 +94,11 @@ HRESULT CSky::Initialize(void* pArg)
 		return E_FAIL;
 	}
 
+	CGameInstance* pGameInstance = GET_INSTANCE(CGameInstance);
+
+	pGameInstance->Add_Timer(L"Timer_LUT");
+
+	RELEASE_INSTANCE(CGameInstance);
 	return S_OK;
 }
 
@@ -112,50 +117,36 @@ void CSky::Tick(_float fTimeDelta)
 void CSky::LateTick(_float fTimeDelta)
 {
 	Update_Atmosphere();	
+
+	CGameInstance::GetInstance()->Compute_TimeDelta(L"Timer_LUT");
 	m_pMultiScatLUT->Update_MultiScatteringLUT(&m_pAtmosphereBuffer, &m_pTransLUTSRV);
+	m_tPerformance.fMultiScatLUT = CGameInstance::GetInstance()->Compute_TimeDelta(L"Timer_LUT");
+
+
 	m_pRendererCom->Add_RenderGroup(CRenderer::RG_SKY, this);
 }
 
 HRESULT CSky::Render()
 {
+	CGameInstance* pGameInstance = GET_INSTANCE(CGameInstance);
 
 	D3D11_VIEWPORT		PrevVeiwPort;
 	_uint				iNumViewports = 1;
 	m_pContext->RSGetViewports(&iNumViewports, &PrevVeiwPort);
 
-
-	//MultiScatLUT
-
-	if (FAILED(m_pTarget_Manager->Begin_MRT(m_pContext, L"MRT_MultiScatLUT")))
-		return E_FAIL;
-
-	m_pContext->RSSetViewports(1, &m_MultiScatLUTViewPortDesc);
-
-	if (FAILED(m_pShader->Bind_Texture("g_MultiScatLUTTexture", m_pMultiScatLUT->Get_SRV())))
-	{
-		return E_FAIL;
-	}
-
-	if (FAILED(m_pShader->Begin(2)))
-		return E_FAIL;
-
-	if (FAILED(m_pVIBuffer->Render()))
-		return E_FAIL;
-
-	if (FAILED(m_pTarget_Manager->End_MRT(m_pContext)))
-		return E_FAIL;
-
+	
 	//AerialLUT
 	m_pContext->RSSetViewports(1, &PrevVeiwPort);
 
 	ID3D11ShaderResourceView* pMultiScatLUT = m_pMultiScatLUT->Get_SRV();
-	if (FAILED(m_pAerialLUT->Update_AerialLUT(&m_pAtmosphereBuffer, &m_pTransLUTSRV, m_vSunPos, &pMultiScatLUT)))
+	if (FAILED(m_pAerialLUT->Update_AerialLUT(&m_pAtmosphereBuffer, &m_pTransLUTSRV, m_vSunPos, &pMultiScatLUT, &m_tPerformance.fAerialLUT)))
 	{
 		return E_FAIL;
 	}
 
-
 	//Sky_View LUT
+	pGameInstance->Compute_TimeDelta(L"Timer_LUT");
+
 	m_pContext->RSSetViewports(1, &m_SkyLUTViewPortDesc);
 
 	if (FAILED(m_pTarget_Manager->Begin_MRT(m_pContext, L"MRT_SkyViewLUT")))
@@ -216,9 +207,20 @@ HRESULT CSky::Render()
 	if (FAILED(m_pTarget_Manager->End_MRT(m_pContext)))
 		return E_FAIL;
 
+	m_tPerformance.fSkyViewLUT = pGameInstance->Compute_TimeDelta(L"Timer_LUT");
+
 	m_pContext->RSSetViewports(1, &PrevVeiwPort);
 
+	//Cloud
+	pGameInstance->Compute_TimeDelta(L"Timer_LUT");
+	if (FAILED(m_pCloud->Render(m_vSunPos, m_pAtmosphereBuffer, m_pTransLUTSRV, m_pAerialLUT->Get_SRV(), m_bAerial)))
+		return E_FAIL;
+	m_tPerformance.fCloudRender = pGameInstance->Compute_TimeDelta(L"Timer_LUT");
+
+
 	//Atmosphere
+
+	pGameInstance->Compute_TimeDelta(L"Timer_LUT");
 
 	if (FAILED(m_pTarget_Manager->Begin_MRT(m_pContext, L"MRT_Atmosphere")))
 		return E_FAIL;
@@ -254,14 +256,53 @@ HRESULT CSky::Render()
 	if (FAILED(m_pVIBuffer->Render()))
 		return E_FAIL;
 
+	m_tPerformance.fAtmosphereRender = pGameInstance->Compute_TimeDelta(L"Timer_LUT");
+
+	if (FAILED(m_pTarget_Manager->Bind_SRV(m_pShader, m_pCloud->Get_RenderTargetTag(), "g_CloudTexture")))
+	{
+		return E_FAIL;
+	}
+
+	if (FAILED(m_pShader->Begin(3)))
+		return E_FAIL;
+
+	if (FAILED(m_pVIBuffer->Render()))
+		return E_FAIL;
+
+
 	if (FAILED(m_pTarget_Manager->End_MRT(m_pContext)))
 		return E_FAIL;
 
-	if (FAILED(m_pCloud->Render(m_vSunPos, m_pAtmosphereBuffer, m_pTransLUTSRV, m_pAerialLUT->Get_SRV(), m_bAerial)))
+	if (FAILED(m_pTarget_Manager->Begin_MRT(m_pContext, L"MRT_Sky")))
+		return E_FAIL;
+
+	if (FAILED(m_pTarget_Manager->Bind_SRV(m_pShader, L"Target_Atmosphere", "g_AtmosphereTexture")))
+	{
+		return E_FAIL;
+	}
+
+	if (FAILED(m_pShader->Begin(4)))
+		return E_FAIL;
+
+	if (FAILED(m_pVIBuffer->Render()))
 		return E_FAIL;
 	
+	if (FAILED(m_pTarget_Manager->End_MRT(m_pContext)))
+		return E_FAIL;
+
+	RELEASE_INSTANCE(CGameInstance);
 
 	return S_OK;
+}
+
+CloudParams CSky::Get_CloudParams()
+{
+	return m_pCloud->Get_CloudParams();
+}
+
+void CSky::Set_CloudParams(const CloudParams& tCloud)
+{
+	m_pCloud->Set_CloudParams(tCloud);
 }
 
 HRESULT CSky::Ready_For_LUT()
@@ -336,6 +377,12 @@ HRESULT CSky::Ready_RenderTargets()
 	if (FAILED(m_pTarget_Manager->Add_MRT(L"MRT_Atmosphere", L"Target_Atmosphere")))
 		return E_FAIL;
 
+	if (FAILED(m_pTarget_Manager->Add_RenderTarget(m_pDevice, m_pContext, L"Target_Sky",
+		m_iWinSizeX, m_iWinSizeY, DXGI_FORMAT_R32G32B32A32_FLOAT, Vec4(0.0f, 0.0f, 0.0f, 0.f))))
+		return E_FAIL;
+
+	if (FAILED(m_pTarget_Manager->Add_MRT(L"MRT_Sky", L"Target_Sky")))
+		return E_FAIL;
 
 	if (FAILED(m_pTarget_Manager->Add_RenderTarget(m_pDevice, m_pContext, L"Target_MultiScatLUT",
 		32, 32, DXGI_FORMAT_R32G32B32A32_FLOAT, Vec4(0.0f, 0.0f, 0.0f, 0.f))))

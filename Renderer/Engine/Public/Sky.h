@@ -24,6 +24,11 @@ public:
 	AtmosphereProperties	Get_Properties(_bool bOrigin) { return bOrigin == true ? m_tUnitAtmo.ToOriginUnit() : m_tUnitAtmo; }
 	void					Set_PropertiesToStd(AtmosphereProperties tAtmo) { m_tUnitAtmo = tAtmo.ToStdUnit(); }
 
+	CloudParams				Get_CloudParams();
+	void					Set_CloudParams(const CloudParams& tCloud);
+
+	SkyPerformance			Get_Performance() { return m_tPerformance; }
+
 	_bool	Is_Aerial() { return m_bAerial; }
 	void	Set_Aerial(_bool bAerial) { m_bAerial = bAerial; }
 private:
@@ -75,6 +80,10 @@ private:
 
 	//Cloud
 	class CCloud*					m_pCloud = { nullptr };
+
+	//Performance
+
+	SkyPerformance			m_tPerformance;
 public:
 	virtual CGameObject* Clone(void* pArg) override;
 	static CSky* Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);

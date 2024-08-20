@@ -195,7 +195,26 @@ namespace Engine
 		AtmosphereProperties ToOriginUnit() const;
 	};
 
-	
+	struct CloudParams
+	{
+		_float fAbsorption = 0.5f;
+		_float fDetailNoiseScale = 0.04f;
+
+		_uint iMaxStep = 64;
+		_uint iSunStep = 8;
+		_float fSunStepLength = 30.0f;
+
+		_float fCoverage = 0.75f;
+	};
+
+	struct SkyPerformance
+	{
+		_float fMultiScatLUT = 0.0f;
+		_float fSkyViewLUT = 0.0f;
+		_float fAerialLUT = 0.0f;
+		_float fAtmosphereRender = 0.0f;
+		_float fCloudRender = 0.0f;
+	};
 }
 
 

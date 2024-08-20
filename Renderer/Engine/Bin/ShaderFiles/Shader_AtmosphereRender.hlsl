@@ -19,6 +19,8 @@ texture2D		g_MultiScatLUTTexture;
 texture3D		g_AerialLUTTexture;
 
 texture2D		g_DepthTexture;
+texture2D		g_CloudTexture;
+texture2D		g_AtmosphereTexture;
 
 float3			g_vSunPos;
 float2			g_vRayMarchMinMaxSPP = float2(4.0f, 14.0f);
@@ -28,6 +30,8 @@ uint				g_iWinSizeY;
 
 float			g_fTest;
 bool			g_bAerial;
+
+float3			g_vLowScatter = float3(1.0f, 0.7f, 0.5f);
 
 cbuffer AtmosphereParams : register(b0)
 {
@@ -101,6 +105,13 @@ struct SingleScatteringResult
 	float3 vNewMultiScatStep0Out;
 	float3 vNewMultiScatStep1Out;
 };
+
+
+float Henyey_Greenstein_Phase(float fCos, float fG)
+{
+	float fG2 = fG * fG;
+	return ((1.0f - fG2) / pow(1.0f + fG2 - 2.0f * fG * fCos, 1.5f)) / (4.0f * 3.1415f);
+}
 
 float raySphereIntersectNearest(float3 r0, float3 rd, float3 s0, float sR)
 {
@@ -606,6 +617,85 @@ PS_OUT PS_LUTTEST(PS_IN In)
 	return Out;
 }
 
+PS_OUT PS_CLOUD(PS_IN In)
+{
+	PS_OUT		Out = (PS_OUT)0;
+
+	float4 vDepthDesc = g_DepthTexture.Sample(PointSampler, In.vTexcoord);
+
+	if (vDepthDesc.x == 1.0f)
+	{
+		Out.vColor = g_CloudTexture.Sample(LinearSampler, In.vTexcoord);
+
+		if (Out.vColor.a == 0.0f)
+		{
+			discard;
+		}
+	}
+
+	return Out;
+}
+
+PS_OUT PS_FOG(PS_IN In)
+{
+	PS_OUT		Out = (PS_OUT)0;
+
+	vector		vClipPos;
+
+	vClipPos.x = In.vTexcoord.x * 2.f - 1.f;
+	vClipPos.y = In.vTexcoord.y * -2.f + 1.f;
+	vClipPos.z = 1.0f;
+	vClipPos.w = 1.f;
+
+	vClipPos = vClipPos * 1000.0f;
+	vClipPos = mul(vClipPos, g_ProjMatrixInv);
+	vClipPos = mul(vClipPos, g_ViewMatrixInv);
+
+	float3 vWorldPos = vClipPos.xyz;
+	float3 vWorldDir = normalize(vWorldPos - g_vCamPosition.xyz);
+	vWorldPos = g_vCamPosition.xyz + float3(0, fEarthRadius, 0);
+
+	float3 vLightDir = normalize(g_vSunPos - vWorldPos);
+
+	float fBottom = raySphereIntersectNearest(vWorldPos, vWorldDir, float3(0, 0, 0), fEarthRadius) * 20.0f;
+	float fTop = raySphereIntersectNearest(vWorldPos, vWorldDir, float3(0, 0, 0), fAtmosphereRadius);
+
+	float fDistance = 0.0f;
+
+	if (fBottom < 0.0f)
+	{
+		fDistance = fTop;
+	}
+	else
+	{
+		if (fTop > 0.0f)
+		{
+			fDistance = min(fTop, fBottom);
+		}
+	}
+
+	float fCos = dot(vLightDir, vWorldDir);
+
+	float fFogPhase = 0.5f * Henyey_Greenstein_Phase(fCos, 0.7f) + 0.5f * Henyey_Greenstein_Phase(fCos, -0.6f);
+
+	float4 vSkyColor = g_AtmosphereTexture.SampleLevel(PointSampler, In.vTexcoord, 0);
+
+	float4 vDepthDesc = g_DepthTexture.Sample(PointSampler, In.vTexcoord);
+
+
+	fDistance *= 0.0000005f;
+	fDistance = pow(fDistance, 5);
+
+	if (vDepthDesc.x == 1.0f)
+	{
+		vSkyColor.xyz = lerp(fFogPhase * 100.0f * g_vLowScatter * fSunIlluminance, vSkyColor.xyz, saturate(exp(-fDistance)));
+	}
+
+	Out.vColor = vSkyColor;
+
+	return Out;
+}
+
 
 technique11 DefaultTechnique
 {
@@ -647,6 +737,32 @@ technique11 DefaultTechnique
 		HullShader = NULL;
 		DomainShader = NULL;
 		PixelShader = compile ps_5_0 PS_LUTTEST();
+	}
+
+	pass Cloud
+	{
+		SetRasterizerState(RS_Default);
+		SetDepthStencilState(DSS_None, 0);
+		SetBlendState(BS_AlphaBlendMax, float4(0.f, 0.f, 0.f, 1.f), 0xffffffff);
+
+		VertexShader = compile vs_5_0 VS_MAIN();
+		GeometryShader = NULL;
+		HullShader = NULL;
+		DomainShader = NULL;
+		PixelShader = compile ps_5_0 PS_CLOUD();
+	}
+
+	pass Sky
+	{
+		SetRasterizerState(RS_Default);
+		SetDepthStencilState(DSS_None, 0);
+		SetBlendState(BS_Default, float4(0.f, 0.f, 0.f, 1.f), 0xffffffff);
+
+		VertexShader = compile vs_5_0 VS_MAIN();
+		GeometryShader = NULL;
+		HullShader = NULL;
+		DomainShader = NULL;
+		PixelShader = compile ps_5_0 PS_FOG();
 	}
 }
 

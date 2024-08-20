@@ -145,6 +145,33 @@ HRESULT CCloud::Render(Vec3 vLightPos, ID3D11Buffer* pAtmoBuffer, ID3D11ShaderRe
 		return E_FAIL;
 	}
 
+	if (FAILED(m_pShader->Bind_RawValue("g_fAbsorption", &m_tCloudParams.fAbsorption, sizeof(_float))))
+	{
+		return E_FAIL;
+	}
+	if (FAILED(m_pShader->Bind_RawValue("g_fDetailNoiseScale", &m_tCloudParams.fDetailNoiseScale, sizeof(_float))))
+	{
+		return E_FAIL;
+	}
+
+	if (FAILED(m_pShader->Bind_RawValue("g_iMaxStep", &m_tCloudParams.iMaxStep, sizeof(_uint))))
+	{
+		return E_FAIL;
+	}
+	if (FAILED(m_pShader->Bind_RawValue("g_iSunStep", &m_tCloudParams.iSunStep, sizeof(_uint))))
+	{
+		return E_FAIL;
+	}
+	if (FAILED(m_pShader->Bind_RawValue("g_fSunStepLength", &m_tCloudParams.fSunStepLength, sizeof(_float))))
+	{
+		return E_FAIL;
+	}
+
+	if (FAILED(m_pShader->Bind_RawValue("g_fCoverage", &m_tCloudParams.fCoverage, sizeof(_float))))
+	{
+		return E_FAIL;
+	}
+
 	if (FAILED(m_pShader->Bind_ConstantBuffer("AtmosphereParams", pAtmoBuffer)))
 	{
 		return E_FAIL;
@@ -161,7 +188,6 @@ HRESULT CCloud::Render(Vec3 vLightPos, ID3D11Buffer* pAtmoBuffer, ID3D11ShaderRe
 	if (FAILED(m_pTarget_Manager->End_MRT(m_pContext)))
 		return E_FAIL;
 
-	m_pRendererCom->Set_SkyTargetName(m_Targets[m_bSwap].szTarget);
 	m_PrevViewProj = pPipeLine->Get_Transform_Matrix(CPipeLine::D3DTS_VIEW) * pPipeLine->Get_Transform_Matrix(CPipeLine::D3DTS_PROJ);
 
 	return S_OK;

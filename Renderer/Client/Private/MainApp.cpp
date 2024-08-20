@@ -93,8 +93,10 @@ HRESULT CMainApp::Initialize()
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; 
 
 	ImGui::StyleColorsDark();
+
 
 	ImGui_ImplWin32_Init(g_hWnd);
 	ImGui_ImplDX11_Init(m_pDevice, m_pContext);
@@ -113,8 +115,6 @@ void CMainApp::Tick(_float fTimeDelta)
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 
-	if (m_bShowDemoWindow)
-		ImGui::ShowDemoWindow(&m_bShowDemoWindow);
 
 #ifdef _DEBUG
 	m_fTimeAcc += fTimeDelta;
@@ -130,24 +130,11 @@ HRESULT CMainApp::Render()
 	m_pGameInstance->Clear_DepthStencil_View();
 
 	m_pRenderer->Draw_RenderObjects();
-
-#ifdef _DEBUG
-	++m_iRenderCount;
-
-	if (1.f <= m_fTimeAcc)
-	{
-		m_fTimeAcc = 0;
-		wsprintf(m_szFPS, TEXT("%d"), m_iRenderCount);
-
-		m_iRenderCount = 0;
-	}
-	
-
-	m_pGameInstance->Render_Font(TEXT("Font_Default"), m_szFPS, Vec2(0.f, 0.f), XMVectorSet(1.f, 0.f, 0.f, 1.f));
-#endif
 	
 	ImGui::Render();
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
+
 	/* 초기화한 장면에 객체들을 그린다. */
 	m_pGameInstance->Present();
 
@@ -219,8 +206,12 @@ void Client::CMainApp::Free()
 
 	Safe_Release(m_pGameInstance);
 
+	ImGui_ImplDX11_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
+
+
 	CGameInstance::Release_Engine();
-	
 
 }
 

@@ -24,15 +24,13 @@ float3			g_vLightPos;
 float			g_fMaxHeight = 2000.0f;
 float			g_fMinHeight = 1000.0f;
 
-int				g_iMaxStep = 64;
+uint			g_iMaxStep;
 
-int				g_iSunStep = 8;
-float			g_fSunStepLength = 30.0f;
+uint			g_iSunStep;
+float			g_fSunStepLength;
 
-float			g_fAbsorption = 0.5f;
-float			g_fCurlNoiseScale = 7.44f;
-float			g_fDetailNoiseScale = 0.04f;
-float			g_fDetailNoiseModif = 0.5f;
+float			g_fAbsorption;
+float			g_fDetailNoiseScale;
 
 int				g_iUpdatePixel;
 int				g_iGridSize;
@@ -43,6 +41,8 @@ uint				g_iWinSizeY;
 float			g_fAerialMaxDepth = 60000.0f;
 
 bool			g_bAerial;
+
+float			g_fCoverage;
 
 cbuffer AtmosphereParams : register(b0)
 {
@@ -221,7 +221,7 @@ float Sample_CloudDensity(float3 vWorldPos)
 	fDensity *= saturate(remap(fHeightFraction, 0.0f, 0.2f, 0.0f, 1.0f))
            * saturate(remap(fHeightFraction, 0.75f, 1.0f, 1.0f, 0.0f));
 
-	float fCoverage = lerp(0.75f, 1.0f, fHeightFraction);
+	float fCoverage = lerp(g_fCoverage, 1.0f, fHeightFraction);
 
     fDensity = remap(fDensity, fCoverage, 1.0f, 0.0f, 1.0f);
 	fDensity *= 0.1f;
@@ -231,11 +231,10 @@ float Sample_CloudDensity(float3 vWorldPos)
 		fDensity *= fHeightFraction / 0.2f;
 	}
 
- 	float4 vDetail = g_DetailTexture.SampleLevel(CloudSampler, vTexcoord * 14.0f, 0.0f);
+	float4 vDetail = g_DetailTexture.SampleLevel(CloudSampler, vTexcoord * 14.0f, 0.0f);
  	float fDetailfbm = vDetail.x * 0.625f + vDetail.y * 0.25f + vDetail.z * 0.125f;
  
  	fDensity -= saturate(fDetailfbm) * g_fDetailNoiseScale;
-	
    
 	return saturate(fDensity);
 }

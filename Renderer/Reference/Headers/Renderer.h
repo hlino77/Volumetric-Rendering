@@ -26,10 +26,7 @@ public:
 	HRESULT Add_RenderGroup(RENDERGROUP eRenderGroup, class CGameObject* pGameObject);
 	HRESULT Draw_RenderObjects();
 
-	void	Set_SkyTargetName(const wstring szTargetName)
-	{
-		m_szSkyTargetName = szTargetName;
-	}
+
 
 #ifdef _DEBUG
 public:
@@ -51,9 +48,6 @@ private:
 private:
 	class CVIBuffer_Rect*		m_pVIBuffer = { nullptr };
 	class CShader*				m_pShader = { nullptr };
-
-
-	wstring				m_szSkyTargetName;
 
 	Matrix					m_WorldMatrix, m_ViewMatrix, m_ProjMatrix;
 

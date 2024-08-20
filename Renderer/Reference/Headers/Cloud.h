@@ -14,6 +14,7 @@ private:
 	};
 
 
+
 private:
 	CCloud(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, class CRenderer* pRenderer);
 	virtual ~CCloud() = default;
@@ -23,6 +24,12 @@ public:
 	HRESULT Initialize();
 	void Tick(_float fTimeDelta);
 	HRESULT Render(Vec3 vLightPos, ID3D11Buffer* pAtmoBuffer, ID3D11ShaderResourceView* pTransLUT, ID3D11ShaderResourceView* pAerialLUT, _bool bAerial);
+
+
+	CloudParams Get_CloudParams() { return m_tCloudParams; }
+	void		Set_CloudParams(const CloudParams& tCloud) { m_tCloudParams = tCloud; }
+
+	const wstring Get_RenderTargetTag() {return m_Targets[m_bSwap].szTarget; }
 
 private:
 	HRESULT Ready_For_NoiseTexture3D();
@@ -57,6 +64,9 @@ private:
 	_uint m_iWinSizeY = 720;
 
 	bool m_bSwap = true;
+
+	CloudParams m_tCloudParams;
+
 public:
 	static CCloud* Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, class CRenderer* pRenderer);
 	virtual void Free();

@@ -41,8 +41,7 @@ private:
 #endif
 
 
-	//ImGUI
-	_bool					m_bShowDemoWindow = true;
+
 
 private:
 	HRESULT Open_Level(LEVELID eLevelID);
