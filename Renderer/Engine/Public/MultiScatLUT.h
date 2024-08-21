@@ -34,6 +34,7 @@ private:
 	ID3D11ShaderResourceView* m_pSRV = { nullptr };
 
 	int m_iLUTSize = 32;
+
 public:
 	static CMultiScatLUT* Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 	virtual void Free() override;

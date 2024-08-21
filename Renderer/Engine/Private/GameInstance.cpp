@@ -60,6 +60,8 @@ HRESULT CGameInstance::Initialize_Engine(_uint iNumLevels, HINSTANCE hInstance, 
 
 	if (FAILED(m_pFrustum->Initialize()))
 		return E_FAIL;
+		
+	m_pTimer_Manager->Initialize_GPUTimer(*ppDevice, *ppContext);
 
 	return S_OK;
 }
@@ -87,6 +89,12 @@ void CGameInstance::Clear(_uint iLevelIndex)
 	// m_pComponent_Manager->Clear(iLevelIndex);
 }
 
+void CGameInstance::AfterRenderTick()
+{
+	m_pObject_Manager->AfterRenderTick();
+}
+
+
 _float CGameInstance::Compute_TimeDelta(const wstring & strTimerTag)
 {
 	if (nullptr == m_pTimer_Manager)
@@ -101,6 +109,26 @@ HRESULT CGameInstance::Add_Timer(const wstring & strTimerTag)
 		return E_FAIL;
 
 	return m_pTimer_Manager->Add_Timer(strTimerTag);
+}
+
+HRESULT CGameInstance::Add_GPUTimer(const wstring& strTimerTag)
+{
+	return m_pTimer_Manager->Add_GPUTimer(strTimerTag);
+}
+
+void CGameInstance::Start_GPUTimer(const wstring& strTimerTag)
+{
+	m_pTimer_Manager->Start_GPUTimer(strTimerTag);
+}
+
+void CGameInstance::End_GPUTimer(const wstring& strTimerTag)
+{
+	m_pTimer_Manager->End_GPUTimer(strTimerTag);
+}
+
+_float CGameInstance::Compute_GPUTimer(const wstring& strTimerTag)
+{
+	return m_pTimer_Manager->Compute_GPUTimer(strTimerTag);
 }
 
 HRESULT CGameInstance::Clear_BackBuffer_View(Vec4 vClearColor)

@@ -26,7 +26,7 @@ private:
 
 
 public:
-	HRESULT Update_AerialLUT(ID3D11Buffer** pAtmosConstant, ID3D11ShaderResourceView** pTransLUT, const Vec3& vLightDir, ID3D11ShaderResourceView** pMultiScatLUT, OUT _float* fTime);
+	HRESULT Update_AerialLUT(ID3D11Buffer** pAtmosConstant, ID3D11ShaderResourceView** pTransLUT, const Vec3& vLightDir, ID3D11ShaderResourceView** pMultiScatLUT);
 
 	ID3D11ShaderResourceView* Get_SRV() { return m_pSRV; }
 private:
@@ -50,6 +50,7 @@ private:
 	D3D11_VIEWPORT m_AerialLUTViewPortDesc;
 
 	ID3D11Buffer* m_pGlobalContantBuffer = { nullptr };
+
 public:
 	static CAerialLUT* Create(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 	virtual void Free() override;

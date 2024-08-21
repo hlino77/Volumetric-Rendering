@@ -24,6 +24,7 @@ public:
 	void PriorityTick(_float fTimeDelta);
 	void Tick(_float fTimeDelta);
 	void LateTick(_float fTimeDelta);
+	void AfterRenderTick();
 
 private:
 	list<class CGameObject*>	m_GameObjects;

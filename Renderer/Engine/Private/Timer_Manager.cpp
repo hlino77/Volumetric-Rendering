@@ -1,10 +1,17 @@
 #include "../Public/Timer_Manager.h"
 #include "Timer.h"
+#include "GPUTimer.h"
 
 IMPLEMENT_SINGLETON(CTimer_Manager)
 
 CTimer_Manager::CTimer_Manager()
 {
+}
+
+void CTimer_Manager::Initialize_GPUTimer(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
+{
+	m_pDevice = pDevice;
+	m_pContext = pContext;
 }
 
 _float CTimer_Manager::Compute_TimeDelta(const wstring & strTimerTag)
@@ -30,6 +37,54 @@ HRESULT CTimer_Manager::Add_Timer(const wstring& strTimerTag)
 	m_Timers.insert({ strTimerTag, CTimer::Create() });
 
 	return S_OK;
+}
+
+HRESULT CTimer_Manager::Add_GPUTimer(const wstring& strTimerTag)
+{
+	auto	iter = m_GPUTimers.find(strTimerTag);
+
+	if (iter == m_GPUTimers.end())
+	{
+		m_GPUTimers.insert({ strTimerTag, new CGPUTimer(m_pDevice, m_pContext) });
+	}
+
+	return S_OK;
+}
+
+void CTimer_Manager::Start_GPUTimer(const wstring& strTimerTag)
+{
+	auto	iter = m_GPUTimers.find(strTimerTag);
+
+	if (iter == m_GPUTimers.end())
+	{
+		return;
+	}
+
+	iter->second->Start();
+}
+
+void CTimer_Manager::End_GPUTimer(const wstring& strTimerTag)
+{
+	auto	iter = m_GPUTimers.find(strTimerTag);
+
+	if (iter == m_GPUTimers.end())
+	{
+		return;
+	}
+
+	iter->second->End();
+}
+
+_float CTimer_Manager::Compute_GPUTimer(const wstring& strTimerTag)
+{
+	auto	iter = m_GPUTimers.find(strTimerTag);
+
+	if (iter == m_GPUTimers.end())
+	{
+		return 0.0f;
+	}
+
+	return iter->second->Compute_Time();
 }
 
 

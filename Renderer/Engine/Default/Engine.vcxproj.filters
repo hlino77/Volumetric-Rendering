@@ -279,6 +279,9 @@
     <ClInclude Include="..\Public\AerialLUT.h">
       <Filter>01.Utiltiy\03.GameObjects\Sky\Atmosphere</Filter>
     </ClInclude>
+    <ClInclude Include="..\Public\GPUTimer.h">
+      <Filter>00.System\00.Timer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\private\Base.cpp">
@@ -406,6 +409,9 @@
     </ClCompile>
     <ClCompile Include="..\Private\AerialLUT.cpp">
       <Filter>01.Utiltiy\03.GameObjects\Sky\Atmosphere</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\GPUTimer.cpp">
+      <Filter>00.System\00.Timer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

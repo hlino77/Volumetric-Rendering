@@ -44,6 +44,8 @@ HRESULT CCloud::Initialize()
 		return E_FAIL;
 	}
 
+	CGameInstance::GetInstance()->Add_GPUTimer(L"CloudRendering");
+
 	return S_OK;
 }
 
@@ -61,6 +63,8 @@ HRESULT CCloud::Render(Vec3 vLightPos, ID3D11Buffer* pAtmoBuffer, ID3D11ShaderRe
 {
 	if (FAILED(m_pTarget_Manager->Begin_MRT(m_pContext, m_Targets[m_bSwap].szMRT)))
 		return E_FAIL;
+
+	CGameInstance::GetInstance()->Start_GPUTimer(L"CloudRendering");
 
 	if (FAILED(m_pShader->Bind_Matrix("g_WorldMatrix", &m_WorldMatrix)))
 		return E_FAIL;
@@ -185,10 +189,14 @@ HRESULT CCloud::Render(Vec3 vLightPos, ID3D11Buffer* pAtmoBuffer, ID3D11ShaderRe
 	if (FAILED(m_pVIBuffer->Render()))
 		return E_FAIL;
 
+	CGameInstance::GetInstance()->End_GPUTimer(L"CloudRendering");
+
 	if (FAILED(m_pTarget_Manager->End_MRT(m_pContext)))
 		return E_FAIL;
 
 	m_PrevViewProj = pPipeLine->Get_Transform_Matrix(CPipeLine::D3DTS_VIEW) * pPipeLine->Get_Transform_Matrix(CPipeLine::D3DTS_PROJ);
+
+	
 
 	return S_OK;
 }

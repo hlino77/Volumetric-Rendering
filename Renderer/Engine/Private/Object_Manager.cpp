@@ -142,6 +142,18 @@ void CObject_Manager::LateTick(_float fTimeDelta)
 	}
 }
 
+void CObject_Manager::AfterRenderTick()
+{
+	for (size_t i = 0; i < m_iNumLevels; i++)
+	{
+		for (auto& Pair : m_pLayers[i])
+		{
+			Pair.second->AfterRenderTick();
+
+		}
+	}
+}
+
 void CObject_Manager::Clear(_uint iLevelIndex)
 {
 	for (auto& Pair : m_pLayers[iLevelIndex])

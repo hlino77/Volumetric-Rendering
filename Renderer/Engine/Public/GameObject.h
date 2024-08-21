@@ -24,6 +24,7 @@ public:
 	virtual void PriorityTick(_float fTimeDelta);
 	virtual void Tick(_float fTimeDelta);
 	virtual void LateTick(_float fTimeDelta);
+	virtual void AfterRenderTick();
 	virtual HRESULT Render();
 	virtual HRESULT Render_LightDepth() { return S_OK; }
 

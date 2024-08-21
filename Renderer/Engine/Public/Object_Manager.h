@@ -29,6 +29,7 @@ public:
 	void PriorityTick(_float fTimeDelta);
 	void Tick(_float fTimeDelta);
 	void LateTick(_float fTimeDelta);
+	void AfterRenderTick();
 	void Clear(_uint iLevelIndex);
 private:
 	/* 원형객체들을 레벨별로 보관할까?! */

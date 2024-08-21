@@ -43,6 +43,10 @@ void CGameObject::LateTick(_float fTimeDelta)
 {
 }
 
+void CGameObject::AfterRenderTick()
+{
+}
+
 HRESULT CGameObject::Render()
 {
 	return S_OK;

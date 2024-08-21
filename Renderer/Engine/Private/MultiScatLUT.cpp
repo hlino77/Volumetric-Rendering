@@ -1,6 +1,6 @@
 #include "..\Public\MultiScatLUT.h"
 #include "GameInstance.h"
-
+#include "GPUTimer.h"
 
 
 CMultiScatLUT::CMultiScatLUT(ID3D11Device * pDevice, ID3D11DeviceContext * pContext)
@@ -21,6 +21,8 @@ CMultiScatLUT::CMultiScatLUT(const CMultiScatLUT & rhs)
 
 HRESULT CMultiScatLUT::Update_MultiScatteringLUT(ID3D11Buffer** pAtmosConstant, ID3D11ShaderResourceView** pTransLUT)
 {
+	CGameInstance::GetInstance()->Start_GPUTimer(L"MultiScattLUT");
+
 	m_pContext->CSSetShaderResources(0, 1, pTransLUT);
 	m_pContext->CSSetUnorderedAccessViews(0, 1, &m_pUAV, nullptr);
 	
@@ -31,6 +33,8 @@ HRESULT CMultiScatLUT::Update_MultiScatteringLUT(ID3D11Buffer** pAtmosConstant, 
 
 	ID3D11UnorderedAccessView* pNullUAV = nullptr;
 	m_pContext->CSSetUnorderedAccessViews(0, 1, &pNullUAV, nullptr);
+
+	CGameInstance::GetInstance()->End_GPUTimer(L"MultiScattLUT");
 
 	return S_OK;
 }
@@ -46,6 +50,8 @@ HRESULT CMultiScatLUT::Ready_Resources()
 	{
 		return E_FAIL;
 	}
+
+	CGameInstance::GetInstance()->Add_GPUTimer(L"MultiScattLUT");
 
 	return S_OK;
 }

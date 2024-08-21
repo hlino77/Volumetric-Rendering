@@ -20,10 +20,16 @@ public: /* For.GameInstance */
 	HRESULT Initialize_Engine(_uint iNumLevels, HINSTANCE hInstance, const GRAPHIC_DESC& GraphicDesc, _Inout_ ID3D11Device** ppDevice, _Inout_ ID3D11DeviceContext** ppContext);
 	void Tick(_float fTimeDelta);
 	void Clear(_uint iLevelIndex);
+	void AfterRenderTick();
 
 public: /* For.Timer_Manager */
-	_float Compute_TimeDelta(const wstring& strTimerTag);
-	HRESULT	Add_Timer(const wstring& strTimerTag);
+	_float			Compute_TimeDelta(const wstring& strTimerTag);
+	HRESULT			Add_Timer(const wstring& strTimerTag);
+
+	HRESULT			Add_GPUTimer(const wstring & strTimerTag);
+	void			Start_GPUTimer(const wstring & strTimerTag);
+	void			End_GPUTimer(const wstring & strTimerTag);
+	_float			Compute_GPUTimer(const wstring & strTimerTag);
 
 public: /* For.Graphic_Device */
 	HRESULT Clear_BackBuffer_View(Vec4 vClearColor);	

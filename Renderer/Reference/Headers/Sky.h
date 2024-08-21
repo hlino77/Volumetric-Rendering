@@ -19,7 +19,7 @@ public:
 	virtual void Tick(_float fTimeDelta);
 	virtual void LateTick(_float fTimeDelta);
 	virtual HRESULT Render();
-
+	virtual void AfterRenderTick();
 
 	AtmosphereProperties	Get_Properties(_bool bOrigin) { return bOrigin == true ? m_tUnitAtmo.ToOriginUnit() : m_tUnitAtmo; }
 	void					Set_PropertiesToStd(AtmosphereProperties tAtmo) { m_tUnitAtmo = tAtmo.ToStdUnit(); }

@@ -80,6 +80,15 @@ void CLayer::LateTick(_float fTimeDelta)
 	}
 }
 
+void CLayer::AfterRenderTick()
+{
+	for (auto& pGameObject : m_GameObjects)
+	{
+		if (nullptr != pGameObject)
+			pGameObject->AfterRenderTick();
+	}
+}
+
 CLayer * CLayer::Create()
 {
 	CLayer*	pInstance = new CLayer();

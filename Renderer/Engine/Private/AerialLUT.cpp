@@ -1,6 +1,6 @@
 #include "..\Public\AerialLUT.h"
 #include "GameInstance.h"
-
+#include "GPUTimer.h"
 
 
 CAerialLUT::CAerialLUT(ID3D11Device * pDevice, ID3D11DeviceContext * pContext)
@@ -20,11 +20,11 @@ CAerialLUT::CAerialLUT(const CAerialLUT & rhs)
 }
 
 
-HRESULT CAerialLUT::Update_AerialLUT(ID3D11Buffer** pAtmosConstant, ID3D11ShaderResourceView** pTransLUT, const Vec3& vLightDir, ID3D11ShaderResourceView** pMultiScatLUT, OUT _float* fTime)
+HRESULT CAerialLUT::Update_AerialLUT(ID3D11Buffer** pAtmosConstant, ID3D11ShaderResourceView** pTransLUT, const Vec3& vLightDir, ID3D11ShaderResourceView** pMultiScatLUT)
 {
 	Update_Params(vLightDir);
 
-	CGameInstance::GetInstance()->Compute_TimeDelta(L"Timer_AerialLUT");
+	CGameInstance::GetInstance()->Start_GPUTimer(L"AerialLUT");
 
 	m_pContext->CSSetUnorderedAccessViews(0, 1, &m_pUAV, nullptr);
 	m_pContext->CSSetShaderResources(0, 1, pTransLUT);
@@ -41,7 +41,7 @@ HRESULT CAerialLUT::Update_AerialLUT(ID3D11Buffer** pAtmosConstant, ID3D11Shader
 	ID3D11UnorderedAccessView* pNullUAV = nullptr;
 	m_pContext->CSSetUnorderedAccessViews(0, 1, &pNullUAV, nullptr);
 
-	*fTime = CGameInstance::GetInstance()->Compute_TimeDelta(L"Timer_AerialLUT");
+	CGameInstance::GetInstance()->End_GPUTimer(L"AerialLUT");
 
 	return S_OK;
 }
@@ -93,7 +93,7 @@ HRESULT CAerialLUT::Ready_Resources()
 		return E_FAIL;
 	}
 
-	CGameInstance::GetInstance()->Add_Timer(L"Timer_AerialLUT");
+	CGameInstance::GetInstance()->Add_GPUTimer(L"AerialLUT");
 
 	return S_OK;
 }
@@ -200,4 +200,5 @@ void CAerialLUT::Free()
 
 	Safe_Release(m_pDevice);
 	Safe_Release(m_pContext);
+
 }

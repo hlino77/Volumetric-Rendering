@@ -93,7 +93,7 @@ HRESULT CMainApp::Initialize()
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
-	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; 
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
 	ImGui::StyleColorsDark();
 
@@ -103,40 +103,38 @@ HRESULT CMainApp::Initialize()
 
 	/* 1-4-1. 게임내에서 사용할 여러 자원(텍스쳐, 모델, 객체) 들을 준비한다.  */
 
+	CGameInstance::GetInstance()->Add_Timer(L"Timer_Test");
+
+
 	return S_OK;
 }
 
 void CMainApp::Tick(_float fTimeDelta)
 {
-	/* 게임내에 존재하는 여러 객체들의 갱신. */
-	/* 레벨의 갱신 */
 
 	ImGui_ImplDX11_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 
-
-#ifdef _DEBUG
-	m_fTimeAcc += fTimeDelta;
-#endif
-
 	m_pGameInstance->Tick(fTimeDelta);
+
+
 }
 
 HRESULT CMainApp::Render()
 {
-	/* 게임내에 존재하는 여러 객체들의 렌더링. */
 	m_pGameInstance->Clear_BackBuffer_View(Vec4(0.f, 0.f, 0.f, 1.f));
 	m_pGameInstance->Clear_DepthStencil_View();
 
 	m_pRenderer->Draw_RenderObjects();
-	
+
+
 	ImGui::Render();
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
-
-	/* 초기화한 장면에 객체들을 그린다. */
 	m_pGameInstance->Present();
+
+	m_pGameInstance->AfterRenderTick();
 
 	return S_OK;
 }

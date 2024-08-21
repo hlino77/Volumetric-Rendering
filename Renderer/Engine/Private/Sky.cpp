@@ -96,7 +96,8 @@ HRESULT CSky::Initialize(void* pArg)
 
 	CGameInstance* pGameInstance = GET_INSTANCE(CGameInstance);
 
-	pGameInstance->Add_Timer(L"Timer_LUT");
+	pGameInstance->Add_GPUTimer(L"SkyViewLUT");
+	pGameInstance->Add_GPUTimer(L"AtmosphereRender");
 
 	RELEASE_INSTANCE(CGameInstance);
 	return S_OK;
@@ -118,9 +119,7 @@ void CSky::LateTick(_float fTimeDelta)
 {
 	Update_Atmosphere();	
 
-	CGameInstance::GetInstance()->Compute_TimeDelta(L"Timer_LUT");
 	m_pMultiScatLUT->Update_MultiScatteringLUT(&m_pAtmosphereBuffer, &m_pTransLUTSRV);
-	m_tPerformance.fMultiScatLUT = CGameInstance::GetInstance()->Compute_TimeDelta(L"Timer_LUT");
 
 
 	m_pRendererCom->Add_RenderGroup(CRenderer::RG_SKY, this);
@@ -139,18 +138,19 @@ HRESULT CSky::Render()
 	m_pContext->RSSetViewports(1, &PrevVeiwPort);
 
 	ID3D11ShaderResourceView* pMultiScatLUT = m_pMultiScatLUT->Get_SRV();
-	if (FAILED(m_pAerialLUT->Update_AerialLUT(&m_pAtmosphereBuffer, &m_pTransLUTSRV, m_vSunPos, &pMultiScatLUT, &m_tPerformance.fAerialLUT)))
+	if (FAILED(m_pAerialLUT->Update_AerialLUT(&m_pAtmosphereBuffer, &m_pTransLUTSRV, m_vSunPos, &pMultiScatLUT)))
 	{
 		return E_FAIL;
 	}
 
 	//Sky_View LUT
-	pGameInstance->Compute_TimeDelta(L"Timer_LUT");
 
 	m_pContext->RSSetViewports(1, &m_SkyLUTViewPortDesc);
 
 	if (FAILED(m_pTarget_Manager->Begin_MRT(m_pContext, L"MRT_SkyViewLUT")))
 		return E_FAIL;
+
+	pGameInstance->Start_GPUTimer(L"SkyViewLUT");
 
 	if (FAILED(m_pShader->Bind_Matrix("g_WorldMatrix", &m_WorldMatrix)))
 		return E_FAIL;
@@ -204,26 +204,24 @@ HRESULT CSky::Render()
 	if (FAILED(m_pVIBuffer->Render()))
 		return E_FAIL;
 
+	pGameInstance->End_GPUTimer(L"SkyViewLUT");
+
 	if (FAILED(m_pTarget_Manager->End_MRT(m_pContext)))
 		return E_FAIL;
-
-	m_tPerformance.fSkyViewLUT = pGameInstance->Compute_TimeDelta(L"Timer_LUT");
 
 	m_pContext->RSSetViewports(1, &PrevVeiwPort);
 
 	//Cloud
-	pGameInstance->Compute_TimeDelta(L"Timer_LUT");
 	if (FAILED(m_pCloud->Render(m_vSunPos, m_pAtmosphereBuffer, m_pTransLUTSRV, m_pAerialLUT->Get_SRV(), m_bAerial)))
 		return E_FAIL;
-	m_tPerformance.fCloudRender = pGameInstance->Compute_TimeDelta(L"Timer_LUT");
 
 
 	//Atmosphere
 
-	pGameInstance->Compute_TimeDelta(L"Timer_LUT");
-
 	if (FAILED(m_pTarget_Manager->Begin_MRT(m_pContext, L"MRT_Atmosphere")))
 		return E_FAIL;
+
+	pGameInstance->Start_GPUTimer(L"AtmosphereRender");
 
 	if (FAILED(m_pShader->Bind_RawValue("g_fTest", &m_fTest, sizeof(_float))))
 	{
@@ -256,7 +254,7 @@ HRESULT CSky::Render()
 	if (FAILED(m_pVIBuffer->Render()))
 		return E_FAIL;
 
-	m_tPerformance.fAtmosphereRender = pGameInstance->Compute_TimeDelta(L"Timer_LUT");
+	pGameInstance->End_GPUTimer(L"AtmosphereRender");
 
 	if (FAILED(m_pTarget_Manager->Bind_SRV(m_pShader, m_pCloud->Get_RenderTargetTag(), "g_CloudTexture")))
 	{
@@ -276,6 +274,15 @@ HRESULT CSky::Render()
 	RELEASE_INSTANCE(CGameInstance);
 
 	return S_OK;
+}
+
+void CSky::AfterRenderTick()
+{
+	m_tPerformance.fCloudRender = CGameInstance::GetInstance()->Compute_GPUTimer(L"CloudRendering");
+	m_tPerformance.fAerialLUT = CGameInstance::GetInstance()->Compute_GPUTimer(L"AerialLUT");
+	m_tPerformance.fMultiScatLUT = CGameInstance::GetInstance()->Compute_GPUTimer(L"MultiScattLUT");
+	m_tPerformance.fSkyViewLUT = CGameInstance::GetInstance()->Compute_GPUTimer(L"SkyViewLUT");
+	m_tPerformance.fAtmosphereRender = CGameInstance::GetInstance()->Compute_GPUTimer(L"AtmosphereRender");
 }
 
 CloudParams CSky::Get_CloudParams()
