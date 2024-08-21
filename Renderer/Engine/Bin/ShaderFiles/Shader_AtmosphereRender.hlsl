@@ -631,71 +631,47 @@ PS_OUT PS_CLOUD(PS_IN In)
 		{
 			discard;
 		}
-	}
 
-	return Out;
-}
+		vector		vClipPos;
 
-PS_OUT PS_FOG(PS_IN In)
-{
-	PS_OUT		Out = (PS_OUT)0;
+		vClipPos.x = In.vTexcoord.x * 2.f - 1.f;
+		vClipPos.y = In.vTexcoord.y * -2.f + 1.f;
+		vClipPos.z = 1.0f;
+		vClipPos.w = 1.f;
 
-	vector		vClipPos;
+		vClipPos = vClipPos * 1000.0f;
+		vClipPos = mul(vClipPos, g_ProjMatrixInv);
+		vClipPos = mul(vClipPos, g_ViewMatrixInv);
 
-	vClipPos.x = In.vTexcoord.x * 2.f - 1.f;
-	vClipPos.y = In.vTexcoord.y * -2.f + 1.f;
-	vClipPos.z = 1.0f;
-	vClipPos.w = 1.f;
+		float3 vWorldPos = vClipPos.xyz;
+		float3 vWorldDir = normalize(vWorldPos - g_vCamPosition.xyz);
+		vWorldPos = g_vCamPosition.xyz + float3(0, fEarthRadius, 0);
 
-	vClipPos = vClipPos * 1000.0f;
-	vClipPos = mul(vClipPos, g_ProjMatrixInv);
-	vClipPos = mul(vClipPos, g_ViewMatrixInv);
+		float fBottom = raySphereIntersectNearest(vWorldPos, vWorldDir, float3(0, 0, 0), fEarthRadius) * 20.0f;
+		float fTop = raySphereIntersectNearest(vWorldPos, vWorldDir, float3(0, 0, 0), fAtmosphereRadius);
 
-	float3 vWorldPos = vClipPos.xyz;
-	float3 vWorldDir = normalize(vWorldPos - g_vCamPosition.xyz);
-	vWorldPos = g_vCamPosition.xyz + float3(0, fEarthRadius, 0);
+		float fDistance = 0.0f;
 
-	float3 vLightDir = normalize(g_vSunPos - vWorldPos);
-
-	float fBottom = raySphereIntersectNearest(vWorldPos, vWorldDir, float3(0, 0, 0), fEarthRadius) * 20.0f;
-	float fTop = raySphereIntersectNearest(vWorldPos, vWorldDir, float3(0, 0, 0), fAtmosphereRadius);
-
-	float fDistance = 0.0f;
-
-	if (fBottom < 0.0f)
-	{
-		fDistance = fTop;
-	}
-	else
-	{
-		if (fTop > 0.0f)
+		if (fBottom < 0.0f)
 		{
-			fDistance = min(fTop, fBottom);
+			fDistance = fTop;
 		}
+		else
+		{
+			if (fTop > 0.0f)
+			{
+				fDistance = min(fTop, fBottom);
+			}
+		}
+
+		fDistance *= 0.0000013f;
+		fDistance = pow(fDistance, 8);
+
+		Out.vColor.a = lerp(0.0f, Out.vColor.a, exp(-fDistance));
 	}
-
-	float fCos = dot(vLightDir, vWorldDir);
-
-	float fFogPhase = 0.5f * Henyey_Greenstein_Phase(fCos, 0.7f) + 0.5f * Henyey_Greenstein_Phase(fCos, -0.6f);
-
-	float4 vSkyColor = g_AtmosphereTexture.SampleLevel(PointSampler, In.vTexcoord, 0);
-
-	float4 vDepthDesc = g_DepthTexture.Sample(PointSampler, In.vTexcoord);
-
-
-	fDistance *= 0.0000005f;
-	fDistance = pow(fDistance, 5);
-
-	if (vDepthDesc.x == 1.0f)
-	{
-		vSkyColor.xyz = lerp(fFogPhase * 100.0f * g_vLowScatter * fSunIlluminance, vSkyColor.xyz, saturate(exp(-fDistance)));
-	}
-
-	Out.vColor = vSkyColor;
 
 	return Out;
 }
-
 
 technique11 DefaultTechnique
 {
@@ -750,19 +726,6 @@ technique11 DefaultTechnique
 		HullShader = NULL;
 		DomainShader = NULL;
 		PixelShader = compile ps_5_0 PS_CLOUD();
-	}
-
-	pass Sky
-	{
-		SetRasterizerState(RS_Default);
-		SetDepthStencilState(DSS_None, 0);
-		SetBlendState(BS_Default, float4(0.f, 0.f, 0.f, 1.f), 0xffffffff);
-
-		VertexShader = compile vs_5_0 VS_MAIN();
-		GeometryShader = NULL;
-		HullShader = NULL;
-		DomainShader = NULL;
-		PixelShader = compile ps_5_0 PS_FOG();
 	}
 }
 

@@ -273,23 +273,6 @@ HRESULT CSky::Render()
 	if (FAILED(m_pTarget_Manager->End_MRT(m_pContext)))
 		return E_FAIL;
 
-	if (FAILED(m_pTarget_Manager->Begin_MRT(m_pContext, L"MRT_Sky")))
-		return E_FAIL;
-
-	if (FAILED(m_pTarget_Manager->Bind_SRV(m_pShader, L"Target_Atmosphere", "g_AtmosphereTexture")))
-	{
-		return E_FAIL;
-	}
-
-	if (FAILED(m_pShader->Begin(4)))
-		return E_FAIL;
-
-	if (FAILED(m_pVIBuffer->Render()))
-		return E_FAIL;
-	
-	if (FAILED(m_pTarget_Manager->End_MRT(m_pContext)))
-		return E_FAIL;
-
 	RELEASE_INSTANCE(CGameInstance);
 
 	return S_OK;
@@ -375,13 +358,6 @@ HRESULT CSky::Ready_RenderTargets()
 		return E_FAIL;
 
 	if (FAILED(m_pTarget_Manager->Add_MRT(L"MRT_Atmosphere", L"Target_Atmosphere")))
-		return E_FAIL;
-
-	if (FAILED(m_pTarget_Manager->Add_RenderTarget(m_pDevice, m_pContext, L"Target_Sky",
-		m_iWinSizeX, m_iWinSizeY, DXGI_FORMAT_R32G32B32A32_FLOAT, Vec4(0.0f, 0.0f, 0.0f, 0.f))))
-		return E_FAIL;
-
-	if (FAILED(m_pTarget_Manager->Add_MRT(L"MRT_Sky", L"Target_Sky")))
 		return E_FAIL;
 
 	if (FAILED(m_pTarget_Manager->Add_RenderTarget(m_pDevice, m_pContext, L"Target_MultiScatLUT",
