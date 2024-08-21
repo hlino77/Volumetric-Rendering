@@ -199,9 +199,9 @@ float Powder_Effect(float fDensity, float fCos)
 
 float Calculate_Light_Energy(float fDensity, float fCos, float fPowderDensity) 
 { 
-	float fBeerPowder = 2.0f * Beer_Law(fDensity);
+	float fBeer = 2.0f * Beer_Law(fDensity);
 	float fHG = lerp(Henyey_Greenstein_Phase(fCos, 0.8f), Henyey_Greenstein_Phase(fCos, -0.5f), 0.5f);
-	return fBeerPowder * fHG;
+	return fBeer * fHG;
 }
 
 float Sample_CloudDensity(float3 vWorldPos)
@@ -306,9 +306,9 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir, float fMaxStepLength, float3 v
 				const float3 vUpVector = vWorldPos / fViewHeight;
 				float fSunZenithCosAngle = dot(vLightDir, vUpVector);
 				float2 vUV;
+
 				LutTransmittanceParamsToUv(fViewHeight, fSunZenithCosAngle, vUV);
 				const float3 vTrans = g_TransLUTTexture.SampleLevel(LinearClampSampler, vUV, 0).rgb;
-			
 				
 				vResultColor += vScatteredLight * vTrans * fAccum_Transmittance * fSampleDensity * fStepLength;
 				fAccum_Transmittance *= fStep_Transmittance;

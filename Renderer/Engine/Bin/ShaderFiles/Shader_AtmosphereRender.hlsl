@@ -376,9 +376,7 @@ SingleScatteringResult IntegrateScatteredLuminance(
 		float3 fMultiScatteredLuminance = 0.0f;
 		fMultiScatteredLuminance = GetMultipleScattering(vPos, fSunZenithCosAngle);
 
-		float fShadow = 1.0f;
-
-		float3 vS = vGlobalL * (fEarthShadow * fShadow * vTransmittanceToSun * vPhaseTimesScattering + fMultiScatteredLuminance * tMedium.vScattering);
+		float3 vS = vGlobalL * (fEarthShadow * vTransmittanceToSun * vPhaseTimesScattering + fMultiScatteredLuminance * tMedium.vScattering);
 
 		float3 vSint = (vS - vS * vSampleTransmittance) / tMedium.vExtinction;	
 		vL += vThroughput * vSint;					
@@ -664,10 +662,10 @@ PS_OUT PS_CLOUD(PS_IN In)
 			}
 		}
 
-		fDistance *= 0.0000013f;
-		fDistance = pow(fDistance, 8);
-
-		Out.vColor.a = lerp(0.0f, Out.vColor.a, exp(-fDistance));
+// 		fDistance *= 0.0000013f;
+// 		fDistance = pow(fDistance, 8);
+// 
+// 		Out.vColor.a = lerp(0.0f, Out.vColor.a, exp(-fDistance));
 	}
 
 	return Out;
