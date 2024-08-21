@@ -662,10 +662,10 @@ PS_OUT PS_CLOUD(PS_IN In)
 			}
 		}
 
-// 		fDistance *= 0.0000013f;
-// 		fDistance = pow(fDistance, 8);
-// 
-// 		Out.vColor.a = lerp(0.0f, Out.vColor.a, exp(-fDistance));
+		fDistance *= 0.0000013f;
+		fDistance = pow(fDistance, 8);
+
+		Out.vColor.a = lerp(0.0f, Out.vColor.a, exp(-fDistance));
 	}
 
 	return Out;
