@@ -425,16 +425,16 @@ PS_OUT PS_SKY_VEIW_LUT(PS_IN In)
 	{
 		float3 vUpVector = vWorldPos / fViewHeight;
 		float fSunZenithCosAngle = dot(vUpVector, vSunDirection);
-		vSunDir = normalize(float3(sqrt(1.0 - fSunZenithCosAngle * fSunZenithCosAngle), fSunZenithCosAngle, 0.0));
+		vSunDir = normalize(float3(sqrt(1.0f - fSunZenithCosAngle * fSunZenithCosAngle), fSunZenithCosAngle, 0.0f));
 	}
 
 	vWorldPos = float3(0.0f, fViewHeight, 0.0f);
 
-	float fViewZenithSinAngle = sqrt(1 - fViewZenithCosAngle * fViewZenithCosAngle);
+	float fViewZenithSinAngle = sqrt(1.0f - fViewZenithCosAngle * fViewZenithCosAngle);
 	vWorldDir = float3(
 		fViewZenithSinAngle * fLightViewCosAngle,
 		fViewZenithCosAngle,
-		fViewZenithSinAngle * sqrt(1.0 - fLightViewCosAngle * fLightViewCosAngle));
+		fViewZenithSinAngle * sqrt(1.0f - fLightViewCosAngle * fLightViewCosAngle));
 
 	if (!MoveToTopAtmosphere(vWorldPos, vWorldDir, fAtmosphereRadius))
 	{
