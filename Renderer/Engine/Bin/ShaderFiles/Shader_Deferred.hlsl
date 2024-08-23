@@ -1,61 +1,18 @@
-
-#include "Engine_Shader_Defines.hpp"
+#include "AtmosphereDefines.hlsl"
 
 #define PI 3.1415926535897932384626433832795f
 
-matrix			g_WorldMatrix, g_ViewMatrix, g_ProjMatrix;
-matrix			g_LightViewMatrix, g_LightProjMatrix;
-matrix			g_ProjMatrixInv;
-matrix			g_ViewMatrixInv;
-
-vector			g_vCamPosition;
-vector			g_vLightDir;
-vector			g_vLightPos;
-
-vector			g_vLightDiffuse;
-vector			g_vLightAmbient;
-vector			g_vLightSpecular;
-
-vector			g_vMtrlAmbient = vector(0.5f, 0.5f, 0.5f, 1.f);
-vector			g_vMtrlSpecular = vector(1.f, 1.f, 1.f, 1.f);
-
-
 texture2D		g_NormalTexture;
 texture2D		g_DiffuseTexture;
-texture2D		g_DepthTexture;
 texture2D		g_SkyTexture;
 texture2D		g_DefferedTexture;
 
 texture2D		g_ShadeTexture;
 texture2D		g_SpecularTexture;
-texture2D		g_LightDepthTexture;
 
-texture2D		g_TransLUTTexture;
-texture2D		g_MultiScatLUTTexture;
 
 texture2D		g_Texture;
 
-
-cbuffer AtmosphereParams : register(b0)
-{
-	float4	vScatterRayleigh;
-	float	fHDensityRayleigh;
-
-	float	fScatterMie;
-	float	fPhaseMieG;
-	float	fExtinctionMie;
-	float	fHDensityMie;
-
-	float	fEarthRadius;
-	float	fAtmosphereRadius;
-
-	float	fSunIlluminance;
-
-	float4	vAbsorbOzone;
-	float4	vOzone;
-
-	float	fMultiScatFactor;
-}
 
 
 struct VS_IN
@@ -70,30 +27,6 @@ struct VS_OUT
 	float2		vTexcoord : TEXCOORD0;
 };
 
-float3 GetMultipleScattering(float3 vWorlPos, float fViewZenithCosAngle)
-{
-	float2 vUV = saturate(float2(fViewZenithCosAngle * 0.5f + 0.5f, (length(vWorlPos) - fEarthRadius) / (fAtmosphereRadius - fEarthRadius)));
-
-	float3 vMultiScatteredLuminance = g_MultiScatLUTTexture.SampleLevel(LinearClampSampler, vUV, 0).rgb;
-	return vMultiScatteredLuminance;
-}
-
-
-void LutTransmittanceParamsToUv(in float fViewHeight, in float fViewZenithCosAngle, out float2 vUV)
-{
-	float fH = sqrt(max(0.0f, fAtmosphereRadius * fAtmosphereRadius - fEarthRadius * fEarthRadius));
-	float fRho = sqrt(max(0.0f, fViewHeight * fViewHeight - fEarthRadius * fEarthRadius));
-
-	float fDiscriminant = fViewHeight * fViewHeight * (fViewZenithCosAngle * fViewZenithCosAngle - 1.0f) + fAtmosphereRadius * fAtmosphereRadius;
-	float fD = max(0.0f, (-fViewHeight * fViewZenithCosAngle + sqrt(fDiscriminant)));
-
-	float fMin = fAtmosphereRadius - fViewHeight;
-	float fMax = fRho + fH;
-	float fX = (fD - fMin) / (fMax - fMin);
-	float fY = fRho / fH;
-
-	vUV = float2(fX, fY);
-}
 
 VS_OUT VS_MAIN(/* 정점 */VS_IN In)
 {
@@ -143,74 +76,12 @@ PS_OUT_LIGHT PS_MAIN_DIRECTIONAL(PS_IN In)
 {
 	PS_OUT_LIGHT		Out = (PS_OUT_LIGHT)0;
 
-	vector		vNormalDesc = g_NormalTexture.Sample(PointSampler, In.vTexcoord);
-	vector		vDepthDesc = g_DepthTexture.Sample(PointSampler, In.vTexcoord);
-	float		fViewZ = vDepthDesc.y * 1000.f;
-
-	vector		vNormal = vector(vNormalDesc.xyz * 2.f - 1.f, 0.f);
-
-	Out.vShade = g_vLightDiffuse * (saturate(dot(normalize(g_vLightDir) * -1.f, vNormal)) + (g_vLightAmbient * g_vMtrlAmbient));
-
-	vector		vReflect = reflect(normalize(g_vLightDir), vNormal);
-
-	vector		vWorldPos;
-
-	/* 투영스페이스 상의 위치를 구한다. */
-	vWorldPos.x = In.vTexcoord.x * 2.f - 1.f;
-	vWorldPos.y = In.vTexcoord.y * -2.f + 1.f;
-	vWorldPos.z = vDepthDesc.x;
-	vWorldPos.w = 1.f;
-
-	/* 뷰스페이스 상의 위치를 구한다. */
-	vWorldPos = vWorldPos * fViewZ;
-	vWorldPos = mul(vWorldPos, g_ProjMatrixInv);
-
-	/* 월드까지 가자. */
-	vWorldPos = mul(vWorldPos, g_ViewMatrixInv);
-
-	vector		vLook = vWorldPos - g_vCamPosition;
-
-	//Out.vSpecular = (g_vLightSpecular * g_vMtrlSpecular) * pow(saturate(dot(normalize(vLook) * -1.f, normalize(vReflect))), 20.f);
-		
-
 	return Out;
 }
 
 PS_OUT_LIGHT PS_MAIN_POINT(PS_IN In)
 {
 	PS_OUT_LIGHT		Out = (PS_OUT_LIGHT)0;
-
-	vector		vNormalDesc = g_NormalTexture.Sample(PointSampler, In.vTexcoord);
-	vector		vDepthDesc = g_DepthTexture.Sample(PointSampler, In.vTexcoord);
-	float		fViewZ = vDepthDesc.y * 1000.f;
-
-	vector		vNormal = vector(vNormalDesc.xyz * 2.f - 1.f, 0.f);
-
-	vector		vWorldPos;
-
-	/* 투영스페이스 상의 위치를 구한다. */
-	vWorldPos.x = In.vTexcoord.x * 2.f - 1.f;
-	vWorldPos.y = In.vTexcoord.y * -2.f + 1.f;
-	vWorldPos.z = vDepthDesc.x;
-	vWorldPos.w = 1.f;
-
-	/* 뷰스페이스 상의 위치를 구한다. */
-	vWorldPos = vWorldPos * fViewZ;
-	vWorldPos = mul(vWorldPos, g_ProjMatrixInv);
-
-	/* 월드까지 가자. */
-	vWorldPos = mul(vWorldPos, g_ViewMatrixInv);
-
-	vector		vLightDir = vWorldPos - g_vLightPos;
-	float		fDistance = length(vLightDir);
-
-	Out.vShade = g_vLightDiffuse * (saturate(dot(normalize(vLightDir) * -1.f, vNormal)) + (g_vLightAmbient * g_vMtrlAmbient));
-
-	vector		vReflect = reflect(normalize(vLightDir), vNormal);
-
-	vector		vLook = vWorldPos - g_vCamPosition;
-
-	//Out.vSpecular = (g_vLightSpecular * g_vMtrlSpecular) * pow(saturate(dot(normalize(vLook) * -1.f, normalize(vReflect))), 20.f);
 
 	return Out;
 }
@@ -282,26 +153,11 @@ PS_OUT PS_MAIN_DEFERRED(PS_IN In)
 
 	vWorldPos = mul(vWorldPos, g_ViewMatrixInv);
 
-	vector	vPosition = mul(vWorldPos, g_LightViewMatrix);
-	vPosition = mul(vPosition, g_LightProjMatrix);
-
-
-	float2	vUV;
-	vUV.x = (vPosition.x / vPosition.w) * 0.5f + 0.5f;
-	vUV.y = (vPosition.y / vPosition.w) * -0.5f + 0.5f;
-
-	vector		vLightDepthDesc = g_LightDepthTexture.Sample(PointSampler, vUV);
-
-	float		fOldZ = vLightDepthDesc.x * 1000.f;
-	
-
 	vector		vDiffuse = g_DiffuseTexture.Sample(PointSampler, In.vTexcoord);
 	if (vDiffuse.a == 0.f)
 		discard;
 
-
 	vector		vShade = g_ShadeTexture.Sample(LinearSampler, In.vTexcoord);
-
 	Out.vColor = (vDiffuse * vShade);
 
 	return Out;

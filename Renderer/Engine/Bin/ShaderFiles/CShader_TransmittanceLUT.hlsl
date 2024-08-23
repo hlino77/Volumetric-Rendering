@@ -1,3 +1,4 @@
+#include "AtmosphereDefines.hlsl"
 
 #define THREAD_GROUP_SIZE_X 16
 #define THREAD_GROUP_SIZE_Y 16
@@ -5,57 +6,6 @@
 #define STEP_COUNT 40
 
 RWTexture2D<float4> Transmittance;
-
-cbuffer AtmosphereParams : register(b0)
-{
-	float4	vScatterRayleigh;
-	float	fHDensityRayleigh;
-
-	float	fScatterMie;
-	float	fPhaseMieG;
-	float	fExtinctionMie;
-	float	fHDensityMie;
-
-	float	fEarthRadius;
-	float	fAtmosphereRadius;
-
-	float	fSunIlluminance;
-
-	float4	vAbsorbOzone;
- 	float4	vOzone;
-
-	float	fMultiScatFactor;
-}
-
-float raySphereIntersectNearest(float3 r0, float3 rd, float3 s0, float sR)
-{
-	float a = dot(rd, rd);
-	float3 s0_r0 = r0 - s0;
-	float b = 2.0 * dot(rd, s0_r0);
-	float c = dot(s0_r0, s0_r0) - (sR * sR);
-	float delta = b * b - 4.0*a*c;
-	if (delta < 0.0 || a == 0.0)
-	{
-		return -1.0;
-	}
-	float sol0 = (-b - sqrt(delta)) / (2.0*a);
-	float sol1 = (-b + sqrt(delta)) / (2.0*a);
-	if (sol0 < 0.0 && sol1 < 0.0)
-	{
-		return -1.0;
-	}
-	if (sol0 < 0.0)
-	{
-		return max(0.0, sol1);
-	}
-	else if (sol1 < 0.0)
-	{
-		return max(0.0, sol0);
-	}
-	return max(0.0, min(sol0, sol1));
-}
-
-
 
 void UvToHeightAngle(out float fHeight, out float fAngle, in float2 vUV)
 {

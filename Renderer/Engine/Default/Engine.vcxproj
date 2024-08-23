@@ -261,6 +261,7 @@
     <ClCompile Include="..\Public\Engine_Struct.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="..\Bin\ShaderFiles\AtmosphereDefines.hlsl" />
     <FxCompile Include="..\Bin\ShaderFiles\CShader_Detail.hlsl" />
     <FxCompile Include="..\Bin\ShaderFiles\CShader_MultiScatLUT.hlsl" />
     <FxCompile Include="..\Bin\ShaderFiles\CShader_Shape.hlsl" />

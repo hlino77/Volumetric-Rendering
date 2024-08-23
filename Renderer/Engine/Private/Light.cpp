@@ -17,22 +17,9 @@ HRESULT CLight::Render(CShader * pShader, CVIBuffer_Rect * pVIBuffer)
 {
 	_uint		iPassIndex = 0;
 
-	if (LIGHT_DESC::LIGHT_DIRECTIONAL == m_LightDesc.eLightType)
-	{
-		if (FAILED(pShader->Bind_RawValue("g_vLightDir", &m_LightDesc.vLightDir, sizeof(Vec4))))
-			return E_FAIL;
-		iPassIndex = 1;
-	}
 
-	else if (LIGHT_DESC::LIGHT_POINT == m_LightDesc.eLightType)
-	{
-		if (FAILED(pShader->Bind_RawValue("g_vLightPos", &m_LightDesc.vLightPos, sizeof(Vec4))))
-			return E_FAIL;
 
-		iPassIndex = 2;
-	}
-
-	else if (LIGHT_DESC::LIGHT_SUN == m_LightDesc.eLightType)
+	if (LIGHT_DESC::LIGHT_SUN == m_LightDesc.eLightType)
 	{
 		if (FAILED(pShader->Bind_RawValue("g_vLightPos", &m_LightDesc.vLightPos, sizeof(Vec4))))
 			return E_FAIL;
@@ -54,14 +41,6 @@ HRESULT CLight::Render(CShader * pShader, CVIBuffer_Rect * pVIBuffer)
 
 		iPassIndex = 5;
 	}
-
-
-	if (FAILED(pShader->Bind_RawValue("g_vLightDiffuse", &m_LightDesc.vDiffuse, sizeof(Vec4))))
-		return E_FAIL;
-	if (FAILED(pShader->Bind_RawValue("g_vLightAmbient", &m_LightDesc.vAmbient, sizeof(Vec4))))
-		return E_FAIL;
-	if (FAILED(pShader->Bind_RawValue("g_vLightSpecular", &m_LightDesc.vSpecular, sizeof(Vec4))))
-		return E_FAIL;
 
 	if (FAILED(pShader->Begin(iPassIndex)))
 		return E_FAIL;
