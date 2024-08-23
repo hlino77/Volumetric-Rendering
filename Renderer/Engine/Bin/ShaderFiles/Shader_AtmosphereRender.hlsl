@@ -1,5 +1,6 @@
 #include "AtmosphereDefines.hlsl"
 
+
 struct VS_IN
 {
 	float3		vPosition : POSITION;

@@ -197,11 +197,10 @@ float Powder_Effect(float fDensity, float fCos)
 	return lerp(1.0f, fPowder, clamp((-fCos * 0.5f) + 0.5f, 0.0f, 1.0f));
 }
 
-float Calculate_Light_Energy(float fDensity, float fCos, float fPowderDensity) 
+float Calculate_Light_Energy(float fDensity, float fPowderDensity) 
 { 
 	float fBeer = 2.0f * Beer_Law(fDensity);
-	float fHG = lerp(Henyey_Greenstein_Phase(fCos, 0.8f), Henyey_Greenstein_Phase(fCos, -0.5f), 0.5f);
-	return fBeer * fHG;
+	return fBeer;
 }
 
 float Sample_CloudDensity(float3 vWorldPos)
@@ -221,15 +220,16 @@ float Sample_CloudDensity(float3 vWorldPos)
 	fDensity *= saturate(remap(fHeightFraction, 0.0f, 0.2f, 0.0f, 1.0f))
            * saturate(remap(fHeightFraction, 0.75f, 1.0f, 1.0f, 0.0f));
 
+
 	float fCoverage = lerp(g_fCoverage, 1.0f, fHeightFraction);
 
     fDensity = remap(fDensity, fCoverage, 1.0f, 0.0f, 1.0f);
 	fDensity *= 0.1f;
 	
-	if (fHeightFraction < 0.2f)
-	{
-		fDensity *= fHeightFraction / 0.2f;
-	}
+ 	if (fHeightFraction < 0.2f)
+ 	{
+ 		fDensity *= fHeightFraction / 0.2f;
+ 	}
 
 	float4 vDetail = g_DetailTexture.SampleLevel(CloudSampler, vTexcoord * 14.0f, 0.0f);
  	float fDetailfbm = vDetail.x * 0.625f + vDetail.y * 0.25f + vDetail.z * 0.125f;
@@ -264,13 +264,16 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir, float fMaxStepLength, float3 v
 {
 	float fAccum_Transmittance = 1.0f;
 	
-	float3 vLightColor = float3(1.0f, 1.0f, 1.0f);
 	float3 vResultColor = float3(0.0f, 0.0f, 0.0f);
 	float fTotalDensity = 0.0f;
 	float fTotalTrans = 0.0f;
 	float fTotalTransDepth = 0.0f;
 	float fStepLength = fMaxStepLength;
 	float fMinStepLength = 30.0f;
+
+	float3 vLightDir = normalize(g_vLightPos - vStartPos);
+	float fCos = dot(vRayDir, vLightDir);
+	float fHG = lerp(Henyey_Greenstein_Phase(fCos, 0.8f), Henyey_Greenstein_Phase(fCos, -0.5f), 0.5f);
 
 	for (int i = 0; i < g_iMaxStep; ++i)
 	{
@@ -293,12 +296,12 @@ float4 RayMarch(float3 vStartPos, float3 vRayDir, float fMaxStepLength, float3 v
  					continue;
  				}
 
-				float3 vLightDir = normalize(g_vLightPos - vStartPos);
-				float fCos = dot(vRayDir, vLightDir);
+				
+				
 				
 				float fSunDensity = Calculate_LightDensity(vStartPos);
 			
-				float3 vScatteredLight = Calculate_Light_Energy(fSunDensity, fCos, fSampleDensity * fStepLength) * vLightColor;
+				float3 vScatteredLight = Calculate_Light_Energy(fSunDensity, fSampleDensity * fStepLength) * fHG;
 
 				float3 vWorldPos = vStartPos + float3(0.0f, fEarthRadius, 0.0f);
 
